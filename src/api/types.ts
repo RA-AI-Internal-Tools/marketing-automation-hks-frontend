@@ -137,3 +137,148 @@ export interface CampaignRequest {
   cancellation_event?: string | null
   is_active: boolean
 }
+
+// Analytics types
+
+export interface ExecutiveOverview {
+  revenue: number
+  revenue_delta: number
+  traffic: number
+  traffic_delta: number
+  conversion_rate: number
+  conversion_rate_delta: number
+  active_users: number
+  active_users_delta: number
+  total_orders: number
+  total_orders_delta: number
+  total_campaigns_active: number
+  daily_revenue: { date: string; revenue: number }[]
+  daily_traffic: { date: string; count: number }[]
+}
+
+export interface AcquisitionData {
+  sources: { source: string; count: number; percentage: number }[]
+  utm_campaigns: { campaign: string; count: number; conversions: number }[]
+  new_users: number
+  returning_users: number
+  signup_rate: number
+  daily_signups: { date: string; count: number }[]
+}
+
+export interface FunnelStage {
+  name: string
+  event_type: string
+  count: number
+  conversion_rate: number
+  drop_off_rate: number
+}
+
+export interface FunnelData {
+  stages: FunnelStage[]
+  overall_conversion: number
+}
+
+export interface UsersData {
+  dau: number
+  wau: number
+  mau: number
+  top_events: { event_type: string; count: number }[]
+  geo_distribution: { country: string; count: number }[]
+  language_distribution: { language: string; count: number }[]
+}
+
+export interface ProductsData {
+  products: {
+    product_id: string
+    name: string
+    views: number
+    add_to_cart: number
+    purchases: number
+    cart_rate: number
+    conversion_rate: number
+    revenue: number
+  }[]
+}
+
+export interface PaymentsData {
+  methods: { method: string; count: number; percentage: number }[]
+  approval_rate: number
+  decline_rate: number
+  failure_reasons: { reason: string; count: number }[]
+  daily_approvals: { date: string; approved: number; declined: number }[]
+}
+
+export interface OrdersData {
+  aov: number
+  aov_delta: number
+  total_revenue: number
+  total_revenue_delta: number
+  total_orders: number
+  total_orders_delta: number
+  revenue_trend: { date: string; revenue: number }[]
+  order_status: { status: string; count: number }[]
+}
+
+export interface RetentionData {
+  cohorts: {
+    cohort: string
+    total: number
+    periods: number[]
+  }[]
+  campaign_conversions: {
+    campaign_slug: string
+    enrollments: number
+    conversions: number
+    conversion_rate: number
+  }[]
+  consent_stats: {
+    channel: string
+    opted_in: number
+    opted_out: number
+    rate: number
+  }[]
+}
+
+export interface DataHealthData {
+  services: { name: string; status: string }[]
+  event_freshness: { event_type: string; last_seen: string; count_24h: number }[]
+  volume_anomalies: { event_type: string; current: number; average: number; deviation: number }[]
+  table_stats: { table: string; row_count: number }[]
+}
+
+// User management types
+
+export interface User {
+  id: number
+  email: string
+  name: string
+  role: 'admin' | 'editor' | 'viewer'
+  is_active: boolean
+  last_login_at?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface UserRequest {
+  email: string
+  name: string
+  role: 'admin' | 'editor' | 'viewer'
+  password?: string
+  is_active: boolean
+}
+
+// Report types
+
+export interface ReportSchedule {
+  id: number
+  name: string
+  schedule: 'daily' | 'weekly' | 'monthly'
+  modules: string[]
+  recipients: string[]
+  format: 'email' | 'pdf'
+  is_active: boolean
+  last_run_at?: string
+  next_run_at?: string
+  created_at: string
+  updated_at: string
+}

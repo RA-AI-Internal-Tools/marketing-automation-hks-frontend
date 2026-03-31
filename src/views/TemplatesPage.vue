@@ -4,11 +4,13 @@ import { useRouter } from 'vue-router'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import { useTemplatesStore } from '@/stores/templates'
+import { useAuthStore } from '@/stores/auth'
 import TestSendModal from '@/components/TestSendModal.vue'
 import { PlusIcon, PencilSquareIcon, TrashIcon, PaperAirplaneIcon } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
 const store = useTemplatesStore()
+const auth = useAuthStore()
 const channelFilter = ref('')
 
 const channels = ['', 'email', 'sms', 'whatsapp', 'push']
@@ -44,12 +46,14 @@ const channelColors: Record<string, string> = {
       <PageHeader title="Templates" description="Message templates for each channel" />
       <div class="flex items-center gap-2">
         <button
+          v-if="auth.canWrite"
           @click="testSendOpen = true"
           class="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
         >
           <PaperAirplaneIcon class="h-4 w-4" /> Test Send
         </button>
         <button
+          v-if="auth.canWrite"
           @click="router.push('/templates/new')"
           class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
         >
@@ -110,7 +114,7 @@ const channelColors: Record<string, string> = {
               <StatusBadge :status="tmpl.is_active ? 'active' : 'expired'" />
             </td>
             <td class="px-4 py-3 text-right">
-              <div class="flex items-center justify-end gap-2">
+              <div v-if="auth.canWrite" class="flex items-center justify-end gap-2">
                 <button
                   @click="router.push(`/templates/${tmpl.id}/edit`)"
                   class="p-1.5 text-gray-400 hover:text-indigo-600 transition-colors"

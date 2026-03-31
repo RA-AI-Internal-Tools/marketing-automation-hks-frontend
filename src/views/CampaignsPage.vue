@@ -4,10 +4,12 @@ import { useRouter } from 'vue-router'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import { useCampaignsStore } from '@/stores/campaigns'
+import { useAuthStore } from '@/stores/auth'
 import { PlusIcon, PencilSquareIcon, TrashIcon } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
 const store = useCampaignsStore()
+const auth = useAuthStore()
 
 onMounted(() => store.load())
 
@@ -44,6 +46,7 @@ async function handleDelete(id: number, name: string) {
     <div class="flex items-center justify-between mb-6">
       <PageHeader title="Campaigns" description="Campaign definitions and workflow steps" />
       <button
+        v-if="auth.canWrite"
         @click="router.push('/campaigns/new')"
         class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
       >
@@ -75,7 +78,7 @@ async function handleDelete(id: number, name: string) {
           </div>
           <div class="flex items-center gap-3">
             <!-- Toggle switch -->
-            <label class="relative inline-flex items-center cursor-pointer">
+            <label v-if="auth.canWrite" class="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
                 :checked="campaign.is_active"
@@ -86,6 +89,7 @@ async function handleDelete(id: number, name: string) {
             </label>
             <StatusBadge :status="campaign.is_active ? 'active' : 'expired'" />
             <button
+              v-if="auth.canWrite"
               @click="router.push(`/campaigns/${campaign.id}/edit`)"
               class="p-1.5 text-gray-400 hover:text-indigo-600 transition-colors"
               title="Edit"
@@ -93,6 +97,7 @@ async function handleDelete(id: number, name: string) {
               <PencilSquareIcon class="h-4 w-4" />
             </button>
             <button
+              v-if="auth.canWrite"
               @click="handleDelete(campaign.id, campaign.name)"
               class="p-1.5 text-gray-400 hover:text-red-600 transition-colors"
               title="Delete"

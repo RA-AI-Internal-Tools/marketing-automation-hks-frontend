@@ -14,6 +14,12 @@ const router = createRouter({
       meta: { public: true },
     },
     {
+      path: '/preferences',
+      name: 'preferences',
+      component: () => import('@/views/PreferenceCenterPage.vue'),
+      meta: { public: true },
+    },
+    {
       path: '/overview',
       name: 'overview',
       component: () => import('@/views/OverviewPage.vue'),
@@ -78,6 +84,63 @@ const router = createRouter({
       name: 'settings',
       component: () => import('@/views/SettingsPage.vue'),
     },
+    {
+      path: '/users',
+      name: 'users',
+      component: () => import('@/views/UsersPage.vue'),
+      meta: { requiresAdmin: true },
+    },
+    // Analytics
+    {
+      path: '/analytics/executive',
+      name: 'analytics-executive',
+      component: () => import('@/views/analytics/ExecutivePage.vue'),
+    },
+    {
+      path: '/analytics/acquisition',
+      name: 'analytics-acquisition',
+      component: () => import('@/views/analytics/AcquisitionPage.vue'),
+    },
+    {
+      path: '/analytics/funnel',
+      name: 'analytics-funnel',
+      component: () => import('@/views/analytics/FunnelPage.vue'),
+    },
+    {
+      path: '/analytics/users',
+      name: 'analytics-users',
+      component: () => import('@/views/analytics/UsersPage.vue'),
+    },
+    {
+      path: '/analytics/products',
+      name: 'analytics-products',
+      component: () => import('@/views/analytics/ProductsPage.vue'),
+    },
+    {
+      path: '/analytics/payments',
+      name: 'analytics-payments',
+      component: () => import('@/views/analytics/PaymentsPage.vue'),
+    },
+    {
+      path: '/analytics/orders',
+      name: 'analytics-orders',
+      component: () => import('@/views/analytics/OrdersPage.vue'),
+    },
+    {
+      path: '/analytics/retention',
+      name: 'analytics-retention',
+      component: () => import('@/views/analytics/RetentionPage.vue'),
+    },
+    {
+      path: '/analytics/data-health',
+      name: 'analytics-data-health',
+      component: () => import('@/views/analytics/DataHealthPage.vue'),
+    },
+    {
+      path: '/analytics/reports',
+      name: 'analytics-reports',
+      component: () => import('@/views/analytics/ReportsPage.vue'),
+    },
   ],
 })
 
@@ -85,10 +148,16 @@ const router = createRouter({
 router.beforeEach((to) => {
   const isPublic = to.meta.public === true
   const token = localStorage.getItem('ma_auth_token')
+  const role = localStorage.getItem('ma_auth_role')
+
   if (!isPublic && !token) {
     return { name: 'login' }
   }
   if (to.name === 'login' && token) {
+    return { name: 'overview' }
+  }
+  // Admin-only routes
+  if (to.meta.requiresAdmin && role !== 'admin') {
     return { name: 'overview' }
   }
 })
