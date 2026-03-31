@@ -1,0 +1,64 @@
+<script setup lang="ts">
+import { ref, onMounted, watch } from 'vue'
+import AnalyticsLayout from '@/components/AnalyticsLayout.vue'
+import MetricCard from '@/components/MetricCard.vue'
+import DonutChart from '@/components/DonutChart.vue'
+import { useAnalyticsStore } from '@/stores/analytics'
+import { fetchPayments } from '@/api/analytics'
+import type { PaymentsData } from '@/api/types'
+
+const analytics = useAnalyticsStore()
+const data = ref<PaymentsData | null>(null)
+const loading = ref(true)
+
+async function load() {
+  loading.value = true
+  try {
+    data.value = await fetchPayments(analytics.since, analytics.until)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(load)
+watch(() => analytics.queryParams, load)
+</script>
+
+<template>
+  <AnalyticsLayout title="Payments Intelligence" description="Payment methods, approval rates, and failure analysis">
+    <div v-if="loading" class="text-center py-12 text-gray-400">Loading...</div>
+    <div v-else-if="data" class="space-y-6">
+      <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <MetricCard title="Approval Rate" :value="data.approval_rate.toFixed(1) + '%'" color="green" />
+        <MetricCard title="Decline Rate" :value="data.decline_rate.toFixed(1) + '%'" color="red" />
+        <MetricCard title="Payment Methods" :value="data.methods.length" />
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl border border-gray-200 p-6">
+          <h3 class="text-sm font-semibold text-gray-900 mb-4">Payment Method Distribution</h3>
+          <DonutChart
+            v-if="data.methods.length"
+            :labels="data.methods.map((m) => m.method)"
+            :values="data.methods.map((m) => m.count)"
+          />
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-6">
+          <h3 class="text-sm font-semibold text-gray-900 mb-4">Failure Reasons</h3>
+          <table v-if="data.failure_reasons.length" class="w-full text-sm">
+            <thead><tr class="text-left text-gray-500 text-xs uppercase">
+              <th class="pb-2">Reason</th><th class="pb-2 text-right">Count</th>
+            </tr></thead>
+            <tbody>
+              <tr v-for="r in data.failure_reasons" :key="r.reason" class="border-t border-gray-100">
+                <td class="py-2 text-gray-900">{{ r.reason }}</td>
+                <td class="py-2 text-right text-red-600">{{ r.count.toLocaleString() }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p v-else class="text-sm text-gray-400">No failures recorded</p>
+        </div>
+      </div>
+    </div>
+  </AnalyticsLayout>
+</template>
