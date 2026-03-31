@@ -33,11 +33,13 @@ const router = createRouter({
       path: '/campaigns/new',
       name: 'campaign-new',
       component: () => import('@/views/CampaignEditorPage.vue'),
+      meta: { requiresWrite: true },
     },
     {
       path: '/campaigns/:id/edit',
       name: 'campaign-edit',
       component: () => import('@/views/CampaignEditorPage.vue'),
+      meta: { requiresWrite: true },
     },
     {
       path: '/templates',
@@ -48,11 +50,13 @@ const router = createRouter({
       path: '/templates/new',
       name: 'template-new',
       component: () => import('@/views/TemplateEditorPage.vue'),
+      meta: { requiresWrite: true },
     },
     {
       path: '/templates/:id/edit',
       name: 'template-edit',
       component: () => import('@/views/TemplateEditorPage.vue'),
+      meta: { requiresWrite: true },
     },
     {
       path: '/enrollments',
@@ -169,6 +173,10 @@ router.beforeEach((to) => {
   }
   // Admin-only routes
   if (to.meta.requiresAdmin && role !== 'admin') {
+    return { name: 'overview' }
+  }
+  // Write-access routes (admin or editor only)
+  if (to.meta.requiresWrite && role !== 'admin' && role !== 'editor') {
     return { name: 'overview' }
   }
 })

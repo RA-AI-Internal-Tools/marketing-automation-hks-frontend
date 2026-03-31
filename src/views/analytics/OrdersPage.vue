@@ -23,11 +23,15 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 const analytics = useAnalyticsStore()
 const data = ref<OrdersData | null>(null)
 const loading = ref(true)
+const error = ref('')
 
 async function load() {
   loading.value = true
+  error.value = ''
   try {
     data.value = await fetchOrders(analytics.since, analytics.until)
+  } catch (e: any) {
+    error.value = e.response?.data?.error || 'Failed to load order data'
   } finally {
     loading.value = false
   }

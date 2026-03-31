@@ -8,11 +8,15 @@ import type { ProductsData } from '@/api/types'
 const analytics = useAnalyticsStore()
 const data = ref<ProductsData | null>(null)
 const loading = ref(true)
+const error = ref('')
 
 async function load() {
   loading.value = true
+  error.value = ''
   try {
     data.value = await fetchProducts(analytics.since, analytics.until)
+  } catch (e: any) {
+    error.value = e.response?.data?.error || 'Failed to load product data'
   } finally {
     loading.value = false
   }

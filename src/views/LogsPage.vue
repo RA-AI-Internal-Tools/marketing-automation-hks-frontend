@@ -3,7 +3,10 @@ import { ref, onMounted, watch } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import { fetchLogs, exportLogs } from '@/api/dashboard'
+import { useAuthStore } from '@/stores/auth'
 import type { CampaignLog } from '@/api/types'
+
+const auth = useAuthStore()
 
 const logs = ref<CampaignLog[]>([])
 const total = ref(0)
@@ -45,6 +48,7 @@ function formatDate(d?: string): string {
     <div class="flex items-center justify-between mb-6">
       <PageHeader title="Campaign Logs" description="Audit trail for every campaign step execution" />
       <button
+        v-if="auth.canWrite"
         @click="exportLogs({ campaign: filterCampaign, status: filterStatus, channel: filterChannel })"
         class="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
       >

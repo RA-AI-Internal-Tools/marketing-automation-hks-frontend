@@ -23,11 +23,15 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 const analytics = useAnalyticsStore()
 const data = ref<ExecutiveOverview | null>(null)
 const loading = ref(true)
+const error = ref('')
 
 async function load() {
   loading.value = true
+  error.value = ''
   try {
     data.value = await fetchExecutiveOverview(analytics.since, analytics.until)
+  } catch (e: any) {
+    error.value = e.response?.data?.error || 'Failed to load executive data'
   } finally {
     loading.value = false
   }
@@ -46,6 +50,7 @@ function fmt(n: number): string {
 <template>
   <AnalyticsLayout title="Executive Overview" description="Key business metrics at a glance">
     <div v-if="loading" class="text-center py-12 text-gray-400">Loading...</div>
+    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm">{{ error }}</div>
     <div v-else-if="data" class="space-y-6">
       <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <MetricCard title="Revenue" :value="'$' + fmt(data.revenue)" :delta="data.revenue_delta" delta-label="vs prev" />

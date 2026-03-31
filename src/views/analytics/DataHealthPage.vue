@@ -6,10 +6,13 @@ import type { DataHealthData } from '@/api/types'
 
 const data = ref<DataHealthData | null>(null)
 const loading = ref(true)
+const error = ref('')
 
 onMounted(async () => {
   try {
     data.value = await fetchDataHealth()
+  } catch (e: any) {
+    error.value = e.response?.data?.error || 'Failed to load data health'
   } finally {
     loading.value = false
   }
@@ -21,6 +24,7 @@ onMounted(async () => {
     <PageHeader title="Data Health" description="System connectivity, event freshness, and data quality" />
 
     <div v-if="loading" class="text-center py-12 text-gray-400">Loading...</div>
+    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm">{{ error }}</div>
     <div v-else-if="data" class="space-y-6">
       <div class="bg-white rounded-xl border border-gray-200 p-6">
         <h3 class="text-sm font-semibold text-gray-900 mb-4">Service Status</h3>

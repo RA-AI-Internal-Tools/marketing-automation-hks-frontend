@@ -29,11 +29,11 @@ async function load() {
 }
 
 function prevPage() {
-  if (page.value > 1) { page.value--; load() }
+  if (page.value > 1 && !loading.value) { page.value--; load() }
 }
 
 function nextPage() {
-  if (page.value * perPage < total.value) { page.value++; load() }
+  if (page.value * perPage < total.value && !loading.value) { page.value++; load() }
 }
 
 function formatDetail(detail?: Record<string, any>): string {

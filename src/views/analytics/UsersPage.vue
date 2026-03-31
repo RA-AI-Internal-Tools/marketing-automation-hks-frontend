@@ -9,11 +9,15 @@ import type { UsersData } from '@/api/types'
 const analytics = useAnalyticsStore()
 const data = ref<UsersData | null>(null)
 const loading = ref(true)
+const error = ref('')
 
 async function load() {
   loading.value = true
+  error.value = ''
   try {
     data.value = await fetchUsers(analytics.since, analytics.until)
+  } catch (e: any) {
+    error.value = e.response?.data?.error || 'Failed to load user analytics'
   } finally {
     loading.value = false
   }

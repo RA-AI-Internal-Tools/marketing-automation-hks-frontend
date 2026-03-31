@@ -3,7 +3,10 @@ import { ref, onMounted, watch } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import { fetchEnrollments, exportEnrollments } from '@/api/dashboard'
+import { useAuthStore } from '@/stores/auth'
 import type { CampaignEnrollment } from '@/api/types'
+
+const auth = useAuthStore()
 
 const enrollments = ref<CampaignEnrollment[]>([])
 const total = ref(0)
@@ -45,6 +48,7 @@ function formatDate(d?: string): string {
     <div class="flex items-center justify-between mb-6">
       <PageHeader title="Enrollments" description="Client campaign enrollment tracking" />
       <button
+        v-if="auth.canWrite"
         @click="exportEnrollments({ status: filterStatus, campaign: filterCampaign, client_id: filterClient })"
         class="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
       >
