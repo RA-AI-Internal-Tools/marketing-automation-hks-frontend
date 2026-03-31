@@ -2,7 +2,7 @@
 import { ref, onMounted, watch } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
-import { fetchLogs } from '@/api/dashboard'
+import { fetchLogs, exportLogs } from '@/api/dashboard'
 import type { CampaignLog } from '@/api/types'
 
 const logs = ref<CampaignLog[]>([])
@@ -42,7 +42,15 @@ function formatDate(d?: string): string {
 
 <template>
   <div>
-    <PageHeader title="Campaign Logs" description="Audit trail for every campaign step execution" />
+    <div class="flex items-center justify-between mb-6">
+      <PageHeader title="Campaign Logs" description="Audit trail for every campaign step execution" />
+      <button
+        @click="exportLogs({ campaign: filterCampaign, status: filterStatus, channel: filterChannel })"
+        class="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+      >
+        Export CSV
+      </button>
+    </div>
 
     <!-- Filters -->
     <div class="flex flex-wrap gap-3 mb-6">

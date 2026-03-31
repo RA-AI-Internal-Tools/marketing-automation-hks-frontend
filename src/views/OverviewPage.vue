@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Line } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -20,9 +20,11 @@ import {
   fetchCampaignPerformance,
 } from '@/api/dashboard'
 import type { OverviewStats, DailyVolume, CampaignPerformance } from '@/api/types'
+import { useDashboardStore } from '@/stores/dashboard'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
 
+const dashboardStore = useDashboardStore()
 const stats = ref<OverviewStats | null>(null)
 const volume = ref<DailyVolume[]>([])
 const campaigns = ref<CampaignPerformance[]>([])
@@ -41,6 +43,11 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+  dashboardStore.startSSE()
+})
+
+onUnmounted(() => {
+  dashboardStore.stopSSE()
 })
 
 const chartData = computed(() => ({
@@ -77,7 +84,16 @@ const chartOptions = {
 
 <template>
   <div>
-    <PageHeader title="Overview" description="Campaign automation performance at a glance" />
+    <div class="flex items-center justify-between mb-2">
+      <PageHeader title="Overview" description="Campaign automation performance at a glance" />
+      <div class="flex items-center gap-2 text-xs text-gray-500">
+        <span
+          class="inline-block h-2 w-2 rounded-full"
+          :class="dashboardStore.sseConnected ? 'bg-green-500' : 'bg-gray-300'"
+        ></span>
+        {{ dashboardStore.sseConnected ? 'Live' : 'Connecting...' }}
+      </div>
+    </div>
 
     <div v-if="loading" class="text-center py-12 text-gray-400">Loading dashboard...</div>
 

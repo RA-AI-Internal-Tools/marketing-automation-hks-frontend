@@ -6,4 +6,26 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+// Inject Bearer token on every request
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('ma_auth_token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
+// On 401 responses, clear auth state and redirect to login
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401 && !error.config.url?.includes('/auth/login')) {
+      localStorage.removeItem('ma_auth_token')
+      localStorage.removeItem('ma_auth_email')
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
+  },
+)
+
 export default api

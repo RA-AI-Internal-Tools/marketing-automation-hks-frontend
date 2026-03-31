@@ -104,3 +104,36 @@ export interface PaginatedResponse<T> {
   data: T[]
   total: number
 }
+
+export interface MessageTemplate {
+  id: number
+  template_key: string
+  channel: string
+  name: string
+  subject?: string
+  body: string
+  variables?: string[]
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface TemplateRequest {
+  template_key: string
+  channel: string
+  name: string
+  subject?: string | null
+  body: string
+  variables?: string[]
+  is_active: boolean
+}
+
+export interface CampaignRequest {
+  name: string
+  slug?: string
+  trigger_event: string
+  steps: Step[]
+  segment_filter: string
+  cancellation_event?: string | null
+  is_active: boolean
+}

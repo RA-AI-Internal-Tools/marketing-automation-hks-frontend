@@ -2,7 +2,7 @@
 import { ref, onMounted, watch } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
-import { fetchEnrollments } from '@/api/dashboard'
+import { fetchEnrollments, exportEnrollments } from '@/api/dashboard'
 import type { CampaignEnrollment } from '@/api/types'
 
 const enrollments = ref<CampaignEnrollment[]>([])
@@ -42,7 +42,15 @@ function formatDate(d?: string): string {
 
 <template>
   <div>
-    <PageHeader title="Enrollments" description="Client campaign enrollment tracking" />
+    <div class="flex items-center justify-between mb-6">
+      <PageHeader title="Enrollments" description="Client campaign enrollment tracking" />
+      <button
+        @click="exportEnrollments({ status: filterStatus, campaign: filterCampaign, client_id: filterClient })"
+        class="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+      >
+        Export CSV
+      </button>
+    </div>
 
     <!-- Filters -->
     <div class="flex flex-wrap gap-3 mb-6">
