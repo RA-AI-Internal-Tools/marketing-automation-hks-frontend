@@ -122,6 +122,23 @@ function downloadBlob(blob: Blob, disposition: string) {
   URL.revokeObjectURL(url)
 }
 
+// Campaign funnel & variants
+export async function fetchCampaignFunnel(slug: string): Promise<import('./types').CampaignFunnelStats> {
+  const { data } = await api.get(`/api/campaigns/${slug}/funnel`)
+  return data
+}
+
+export async function fetchVariantPerformance(slug: string, step?: number): Promise<import('./types').VariantPerformance[]> {
+  const { data } = await api.get(`/api/campaigns/${slug}/variants`, { params: { step } })
+  return data
+}
+
+// Audit logs
+export async function fetchAuditLogs(params: Record<string, any> = {}): Promise<import('./types').PaginatedResponse<import('./types').AuditLog>> {
+  const { data } = await api.get('/api/audit-logs', { params })
+  return data
+}
+
 // Test send
 export async function testSend(req: { channel: string; template_key: string; client_id: number; params?: Record<string, any> }): Promise<any> {
   const { data } = await api.post('/api/test-send', req)

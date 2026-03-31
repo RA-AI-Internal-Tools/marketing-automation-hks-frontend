@@ -11,12 +11,20 @@ export interface CampaignDefinition {
   updated_at: string
 }
 
+export interface StepVariant {
+  id: string
+  template_key: string
+  channel?: string
+  weight: number
+}
+
 export interface Step {
   delay_minutes: number
   channel: string
   template_key: string
   condition: string
   condition_params?: Record<string, any>
+  variants?: StepVariant[]
 }
 
 export interface CampaignEnrollment {
@@ -265,6 +273,45 @@ export interface UserRequest {
   role: 'admin' | 'editor' | 'viewer'
   password?: string
   is_active: boolean
+}
+
+// Campaign Funnel & A/B Variant types
+
+export interface CampaignFunnelStats {
+  campaign_slug: string
+  enrolled: number
+  sent: number
+  delivered: number
+  opened: number
+  clicked: number
+  sent_rate: number
+  delivery_rate: number
+  open_rate: number
+  click_rate: number
+}
+
+export interface VariantPerformance {
+  variant_id: string
+  template_key: string
+  total_sent: number
+  delivered: number
+  opened: number
+  clicked: number
+  delivery_rate: number
+  open_rate: number
+  click_rate: number
+}
+
+export interface AuditLog {
+  id: number
+  user_id: number
+  user_email: string
+  action: string
+  resource: string
+  resource_id?: number
+  detail?: Record<string, any>
+  ip_address?: string
+  created_at: string
 }
 
 // Report types

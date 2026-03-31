@@ -3,9 +3,9 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import PageHeader from '@/components/PageHeader.vue'
 import { useCampaignsStore } from '@/stores/campaigns'
-import type { Step, CampaignRequest } from '@/api/types'
+import type { Step, StepVariant, CampaignRequest } from '@/api/types'
 import { useTemplatesStore } from '@/stores/templates'
-import { PlusIcon, TrashIcon, ArrowUpIcon, ArrowDownIcon } from '@heroicons/vue/24/outline'
+import { PlusIcon, TrashIcon, ArrowUpIcon, ArrowDownIcon, BeakerIcon } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
 const router = useRouter()
@@ -73,6 +73,25 @@ function moveStep(index: number, direction: number) {
   arr.splice(index, 1)
   arr.splice(newIndex, 0, item)
   steps.value = arr
+}
+
+function addVariant(stepIndex: number) {
+  if (!steps.value[stepIndex]!.variants) {
+    steps.value[stepIndex]!.variants = []
+  }
+  const count = steps.value[stepIndex]!.variants!.length
+  steps.value[stepIndex]!.variants!.push({
+    id: String.fromCharCode(65 + count), // A, B, C...
+    template_key: '',
+    weight: 50,
+  })
+}
+
+function removeVariant(stepIndex: number, variantIndex: number) {
+  steps.value[stepIndex]!.variants!.splice(variantIndex, 1)
+  if (steps.value[stepIndex]!.variants!.length === 0) {
+    steps.value[stepIndex]!.variants = undefined
+  }
 }
 
 async function handleSubmit() {
@@ -205,6 +224,46 @@ async function handleSubmit() {
               <select v-model="step.condition" class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm">
                 <option v-for="cond in conditions" :key="cond" :value="cond">{{ cond }}</option>
               </select>
+            </div>
+          </div>
+
+          <!-- A/B Variant Editor -->
+          <div class="mt-3 border-t border-gray-100 pt-3">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-medium text-gray-500 flex items-center gap-1">
+                <BeakerIcon class="h-3.5 w-3.5" /> A/B Variants
+              </span>
+              <button type="button" @click="addVariant(i)" class="text-xs text-indigo-600 hover:text-indigo-700">
+                + Add Variant
+              </button>
+            </div>
+            <div v-if="!step.variants || step.variants.length === 0" class="text-xs text-gray-400 italic">
+              No variants configured. Default template will be used.
+            </div>
+            <div v-else class="space-y-2">
+              <div v-for="(variant, vi) in step.variants" :key="vi" class="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
+                <span class="text-xs font-bold text-indigo-600 w-6">{{ variant.id }}</span>
+                <div class="flex-1">
+                  <select
+                    v-if="templatesForChannel(step.channel).length > 0"
+                    v-model="variant.template_key"
+                    class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                  >
+                    <option value="">Select template...</option>
+                    <option v-for="t in templatesForChannel(step.channel)" :key="t.id" :value="t.template_key">
+                      {{ t.name }} ({{ t.template_key }})
+                    </option>
+                  </select>
+                  <input v-else v-model="variant.template_key" class="w-full px-2 py-1 border border-gray-300 rounded text-xs" placeholder="template_key" />
+                </div>
+                <div class="w-20">
+                  <input v-model.number="variant.weight" type="number" min="1" max="100" class="w-full px-2 py-1 border border-gray-300 rounded text-xs text-center" />
+                </div>
+                <span class="text-[10px] text-gray-400 w-4">%</span>
+                <button type="button" @click="removeVariant(i, vi)" class="text-gray-400 hover:text-red-500">
+                  <TrashIcon class="h-3.5 w-3.5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>

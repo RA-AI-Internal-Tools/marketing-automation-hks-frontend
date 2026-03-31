@@ -90,6 +90,17 @@ const router = createRouter({
       component: () => import('@/views/UsersPage.vue'),
       meta: { requiresAdmin: true },
     },
+    {
+      path: '/campaign-funnel',
+      name: 'campaign-funnel',
+      component: () => import('@/views/CampaignFunnelPage.vue'),
+    },
+    {
+      path: '/audit-logs',
+      name: 'audit-logs',
+      component: () => import('@/views/AuditLogsPage.vue'),
+      meta: { requiresAdmin: true },
+    },
     // Analytics
     {
       path: '/analytics/executive',

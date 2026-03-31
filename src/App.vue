@@ -80,6 +80,7 @@ const allSections: NavSection[] = [
     defaultOpen: false,
     items: [
       { name: 'Automated Reports', to: '/analytics/reports', icon: DocumentChartBarIcon },
+      { name: 'Campaign Funnel', to: '/campaign-funnel', icon: FunnelIcon },
     ],
   },
   {
@@ -90,6 +91,7 @@ const allSections: NavSection[] = [
       { name: 'Consents', to: '/consents', icon: ShieldCheckIcon },
       { name: 'Health', to: '/health', icon: HeartIcon },
       { name: 'Settings', to: '/settings', icon: Cog6ToothIcon },
+      { name: 'Audit Logs', to: '/audit-logs', icon: ShieldCheckIcon, adminOnly: true },
       { name: 'Users', to: '/users', icon: UserPlusIcon, adminOnly: true },
     ],
   },
