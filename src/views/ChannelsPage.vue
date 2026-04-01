@@ -57,7 +57,7 @@ const chartOptions = {
 </script>
 
 <template>
-  <div>
+  <div class="page-enter page-enter">
     <PageHeader title="Channel Analytics" description="Message delivery performance per channel" />
 
     <div v-if="loading" class="text-center py-12 text-gray-400">Loading channels...</div>
@@ -71,8 +71,8 @@ const chartOptions = {
         <StatCard title="Success Rate" :value="`${successRate}%`" color="indigo" />
       </div>
 
-      <div class="bg-white rounded-xl border border-gray-200 p-6 mb-8">
-        <h2 class="text-lg font-semibold text-gray-900 mb-4">Channel Breakdown</h2>
+      <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6 mb-8">
+        <h2 class="text-lg font-semibold tracking-tight text-gray-900 mb-4">Channel Breakdown</h2>
         <div class="h-72">
           <Bar :data="chartData" :options="chartOptions" />
         </div>
@@ -80,7 +80,7 @@ const chartOptions = {
 
       <!-- Per-channel detail cards -->
       <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <div v-for="ch in channels" :key="ch.channel" class="bg-white rounded-xl border border-gray-200 p-5">
+        <div v-for="ch in channels" :key="ch.channel" class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-5">
           <h3 class="text-sm font-semibold text-gray-900 uppercase mb-3">{{ ch.channel }}</h3>
           <div class="space-y-2 text-sm">
             <div class="flex justify-between"><span class="text-gray-500">Sent</span><span class="font-medium text-green-700">{{ ch.sent }}</span></div>

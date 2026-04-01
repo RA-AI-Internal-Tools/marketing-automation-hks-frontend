@@ -5,7 +5,7 @@
       <p class="text-lg text-gray-600 mb-6">Page not found</p>
       <router-link
         to="/overview"
-        class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+        class="px-4 py-2 bg-[#020288] text-white text-sm font-medium rounded-lg hover:bg-[#0d35d7] transition-colors"
       >
         Go to Overview
       </router-link>

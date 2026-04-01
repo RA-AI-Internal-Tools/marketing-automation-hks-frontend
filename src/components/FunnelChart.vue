@@ -12,11 +12,11 @@ function widthPercent(index: number): number {
 }
 
 const colors = [
-  'bg-indigo-600',
-  'bg-indigo-500',
-  'bg-blue-500',
-  'bg-blue-400',
-  'bg-cyan-400',
+  'bg-[#020288]',
+  'bg-[#0d35d7]',
+  'bg-[#0099db]',
+  'bg-[#50C8ED]',
+  'bg-cyan-300',
 ]
 </script>
 
@@ -28,15 +28,15 @@ const colors = [
       </div>
       <div class="flex-1">
         <div
-          :class="[colors[i % colors.length], 'h-10 rounded-lg flex items-center px-3 transition-all duration-500']"
+          :class="[colors[i % colors.length], 'h-10 rounded-lg flex items-center px-3 transition-all duration-500 shadow-sm']"
           :style="{ width: widthPercent(i) + '%' }"
         >
-          <span class="text-white text-sm font-semibold whitespace-nowrap">
+          <span class="text-white text-sm font-semibold whitespace-nowrap drop-shadow-sm">
             {{ stage.count.toLocaleString() }}
           </span>
         </div>
       </div>
-      <div class="w-16 text-right text-sm text-gray-500 shrink-0">
+      <div class="w-16 text-right text-sm font-medium text-gray-500 shrink-0">
         {{ stage.conversion_rate.toFixed(1) }}%
       </div>
     </div>

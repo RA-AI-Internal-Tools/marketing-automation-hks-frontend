@@ -209,40 +209,45 @@ async function handleSubmit() {
       :description="isEdit ? 'Modify campaign configuration and steps' : 'Create a new campaign workflow'"
     />
 
-    <div v-if="loading" class="text-center py-12 text-gray-400">Loading...</div>
+    <div v-if="loading" class="space-y-6 max-w-3xl">
+      <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6 space-y-4">
+        <div class="skeleton h-4 w-32"></div>
+        <div class="grid grid-cols-2 gap-4"><div class="skeleton h-9 w-full"></div><div class="skeleton h-9 w-full"></div></div>
+      </div>
+    </div>
 
-    <form v-else @submit.prevent="handleSubmit" class="space-y-6 max-w-3xl">
+    <form v-else @submit.prevent="handleSubmit" class="space-y-6 max-w-3xl page-enter">
       <!-- Basic info -->
-      <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+      <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6 space-y-4">
         <h3 class="text-sm font-semibold text-gray-900">Campaign Details</h3>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-            <input v-model="name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <input v-model="name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0099db]/40 focus:border-[#0099db]" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Slug (auto-generated if empty)</label>
-            <input v-model="slug" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="auto-generated" />
+            <input v-model="slug" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0099db]/40 focus:border-[#0099db]" placeholder="auto-generated" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Trigger Event</label>
-            <input v-model="triggerEvent" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g. order_completed" />
+            <input v-model="triggerEvent" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0099db]/40 focus:border-[#0099db]" placeholder="e.g. order_completed" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Cancellation Event</label>
-            <input v-model="cancellationEvent" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Optional" />
+            <input v-model="cancellationEvent" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0099db]/40 focus:border-[#0099db]" placeholder="Optional" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Segment Filter</label>
-            <select v-model="segmentFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <select v-model="segmentFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0099db]/40 focus:border-[#0099db]">
               <option v-for="seg in segments" :key="seg" :value="seg">{{ seg }}</option>
             </select>
           </div>
           <div class="flex items-center gap-3 pt-6">
             <label class="relative inline-flex items-center cursor-pointer">
               <input v-model="isActive" type="checkbox" class="sr-only peer" />
-              <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-indigo-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
+              <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#0099db]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-[#020288] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
             </label>
             <span class="text-sm text-gray-700">Active</span>
           </div>
@@ -250,10 +255,10 @@ async function handleSubmit() {
       </div>
 
       <!-- Steps -->
-      <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+      <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6 space-y-4">
         <div class="flex items-center justify-between">
           <h3 class="text-sm font-semibold text-gray-900">Workflow Steps</h3>
-          <button type="button" @click="addStep" class="flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-700">
+          <button type="button" @click="addStep" class="flex items-center gap-1 text-sm text-[#020288] hover:text-[#0d35d7]">
             <PlusIcon class="h-4 w-4" /> Add Step
           </button>
         </div>
@@ -313,7 +318,7 @@ async function handleSubmit() {
               <span class="text-xs font-medium text-gray-500 flex items-center gap-1">
                 <BeakerIcon class="h-3.5 w-3.5" /> A/B Variants
               </span>
-              <button type="button" @click="addVariant(i)" class="text-xs text-indigo-600 hover:text-indigo-700">
+              <button type="button" @click="addVariant(i)" class="text-xs text-[#020288] hover:text-[#0d35d7]">
                 + Add Variant
               </button>
             </div>
@@ -322,7 +327,7 @@ async function handleSubmit() {
             </div>
             <div v-else class="space-y-2">
               <div v-for="(variant, vi) in step.variants" :key="vi" class="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
-                <span class="text-xs font-bold text-indigo-600 w-6">{{ variant.id }}</span>
+                <span class="text-xs font-bold text-[#020288] w-6">{{ variant.id }}</span>
                 <div class="flex-1">
                   <select
                     v-if="templatesForChannel(step.channel).length > 0"
@@ -358,7 +363,7 @@ async function handleSubmit() {
                   class="sr-only peer"
                   @change="toggleBranching(step, !isBranchingEnabled(step))"
                 />
-                <div class="w-8 h-4 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-indigo-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all"></div>
+                <div class="w-8 h-4 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#0099db]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-[#020288] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all"></div>
               </label>
             </div>
             <div v-if="isBranchingEnabled(step)" class="grid grid-cols-2 gap-3">
@@ -392,13 +397,13 @@ async function handleSubmit() {
       </div>
 
       <!-- Error + Submit -->
-      <div v-if="error" class="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-lg">{{ error }}</div>
+      <div v-if="error" class="text-sm text-red-600 bg-red-50 border border-red-100 px-4 py-3 rounded-xl">{{ error }}</div>
 
       <div class="flex items-center gap-3">
         <button
           type="submit"
           :disabled="saving"
-          class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+          class="px-6 py-2.5 bg-[#020288] text-white text-sm font-medium rounded-lg hover:bg-[#0d35d7] shadow-sm disabled:opacity-50 transition-all"
         >
           {{ saving ? 'Saving...' : isEdit ? 'Update Campaign' : 'Create Campaign' }}
         </button>

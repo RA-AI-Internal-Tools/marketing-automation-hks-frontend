@@ -128,7 +128,7 @@ async function handleDelete(id: number) {
       <button
         v-if="auth.canWrite"
         @click="openCreate"
-        class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
+        class="px-4 py-2 text-sm font-medium text-white bg-[#020288] rounded-lg hover:bg-[#0d35d7] transition-colors"
       >
         Create Report
       </button>
@@ -138,7 +138,7 @@ async function handleDelete(id: number) {
     <teleport to="body">
       <div v-if="showDialog" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 p-6 space-y-4">
-          <h2 class="text-lg font-semibold text-gray-900">{{ editingId ? 'Edit Report' : 'Create Report' }}</h2>
+          <h2 class="text-lg font-semibold tracking-tight text-gray-900">{{ editingId ? 'Edit Report' : 'Create Report' }}</h2>
 
           <div v-if="formError" class="bg-red-50 text-red-700 px-3 py-2 rounded-lg text-sm">{{ formError }}</div>
 
@@ -146,14 +146,14 @@ async function handleDelete(id: number) {
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
             <input v-model="form.name" type="text" placeholder="e.g. Weekly Campaign Summary"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40 focus:ring-[#0099db]/40" />
           </div>
 
           <!-- Schedule -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Schedule</label>
             <select v-model="form.schedule"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40 focus:ring-[#0099db]/40">
               <option v-for="opt in scheduleOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
             </select>
           </div>
@@ -162,7 +162,7 @@ async function handleDelete(id: number) {
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Format</label>
             <select v-model="form.format"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40 focus:ring-[#0099db]/40">
               <option v-for="opt in formatOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
             </select>
           </div>
@@ -177,8 +177,8 @@ async function handleDelete(id: number) {
                 :class="[
                   'px-3 py-1 text-xs font-medium rounded-full border transition-colors',
                   form.modules.includes(mod)
-                    ? 'bg-indigo-600 text-white border-indigo-600'
-                    : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50',
+                    ? 'bg-[#020288] text-white border-[#020288]'
+                    : 'bg-white text-gray-600 border-gray-300 hover:bg-slate-50/70 transition-colors',
                 ]"
               >
                 {{ mod }}
@@ -190,23 +190,23 @@ async function handleDelete(id: number) {
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Recipients (comma-separated emails)</label>
             <input v-model="form.recipients" type="text" placeholder="alice@example.com, bob@example.com"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40 focus:ring-[#0099db]/40" />
           </div>
 
           <!-- Active -->
           <label class="flex items-center gap-2 text-sm text-gray-700">
-            <input v-model="form.is_active" type="checkbox" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+            <input v-model="form.is_active" type="checkbox" class="rounded border-gray-300 text-[#020288] focus:ring-[#0099db]/40" />
             Active
           </label>
 
           <!-- Actions -->
           <div class="flex justify-end gap-3 pt-2">
             <button @click="showDialog = false" :disabled="formSaving"
-              class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">
+              class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-slate-50/70 transition-colors">
               Cancel
             </button>
             <button @click="handleSave" :disabled="formSaving"
-              class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+              class="px-4 py-2 text-sm font-medium text-white bg-[#020288] rounded-lg hover:bg-[#0d35d7] disabled:opacity-50">
               {{ formSaving ? 'Saving...' : (editingId ? 'Update' : 'Create') }}
             </button>
           </div>
@@ -220,7 +220,7 @@ async function handleDelete(id: number) {
         <p class="text-gray-400 mb-4">No report schedules configured</p>
       </div>
 
-      <div v-for="report in store.reports" :key="report.id" class="bg-white rounded-xl border border-gray-200 p-6">
+      <div v-for="report in store.reports" :key="report.id" class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
         <div class="flex items-center justify-between">
           <div>
             <h3 class="text-sm font-semibold text-gray-900">{{ report.name }}</h3>
@@ -232,7 +232,7 @@ async function handleDelete(id: number) {
               <span
                 v-for="m in report.modules"
                 :key="m"
-                class="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-xs rounded-full"
+                class="px-2 py-0.5 bg-blue-50 text-[#020288] text-xs rounded-full"
               >
                 {{ m }}
               </span>
@@ -243,14 +243,14 @@ async function handleDelete(id: number) {
             <button
               v-if="auth.canWrite"
               @click="openEdit(report)"
-              class="px-3 py-1.5 text-xs font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+              class="px-3 py-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-slate-50/70 transition-colors"
             >
               Edit
             </button>
             <button
               v-if="auth.canWrite"
               @click="handleRunNow(report.id)"
-              class="px-3 py-1.5 text-xs font-medium text-indigo-600 border border-indigo-300 rounded-lg hover:bg-indigo-50"
+              class="px-3 py-1.5 text-xs font-medium text-[#020288] border border-[#020288]/30 rounded-lg hover:bg-blue-50"
             >
               Run Now
             </button>

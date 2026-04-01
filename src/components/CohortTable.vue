@@ -10,11 +10,11 @@ const props = defineProps<{
 }>()
 
 function cellColor(value: number): string {
-  if (value >= 80) return 'bg-indigo-600 text-white'
-  if (value >= 60) return 'bg-indigo-500 text-white'
-  if (value >= 40) return 'bg-indigo-400 text-white'
-  if (value >= 20) return 'bg-indigo-200 text-indigo-900'
-  if (value > 0) return 'bg-indigo-100 text-indigo-700'
+  if (value >= 80) return 'bg-[#020288] text-white'
+  if (value >= 60) return 'bg-[#0d35d7] text-white'
+  if (value >= 40) return 'bg-[#0099db] text-white'
+  if (value >= 20) return 'bg-[#0099db]/20 text-[#020288]'
+  if (value > 0) return 'bg-[#0099db]/10 text-[#0d35d7]'
   return 'bg-gray-50 text-gray-400'
 }
 
@@ -26,25 +26,25 @@ const maxPeriods = computed(() => Math.max(...(props.cohorts.map((c) => c.period
     <table class="min-w-full text-xs">
       <thead>
         <tr>
-          <th class="px-3 py-2 text-left font-medium text-gray-500">Cohort</th>
-          <th class="px-3 py-2 text-right font-medium text-gray-500">Users</th>
+          <th class="px-3 py-2.5 text-left font-semibold text-gray-500 uppercase tracking-wide text-[10px]">Cohort</th>
+          <th class="px-3 py-2.5 text-right font-semibold text-gray-500 uppercase tracking-wide text-[10px]">Users</th>
           <th
             v-for="i in maxPeriods"
             :key="i"
-            class="px-3 py-2 text-center font-medium text-gray-500"
+            class="px-3 py-2.5 text-center font-semibold text-gray-500 uppercase tracking-wide text-[10px]"
           >
             M{{ i }}
           </th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="row in cohorts" :key="row.cohort">
+        <tr v-for="row in cohorts" :key="row.cohort" class="hover:bg-slate-50/50 transition-colors">
           <td class="px-3 py-2 font-medium text-gray-700">{{ row.cohort }}</td>
           <td class="px-3 py-2 text-right text-gray-600">{{ row.total.toLocaleString() }}</td>
           <td
             v-for="(val, i) in row.periods"
             :key="i"
-            :class="['px-3 py-2 text-center rounded', cellColor(val)]"
+            :class="['px-3 py-2 text-center rounded-md font-medium', cellColor(val)]"
           >
             {{ val.toFixed(0) }}%
           </td>

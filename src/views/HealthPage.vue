@@ -45,14 +45,14 @@ const services = [
 </script>
 
 <template>
-  <div>
+  <div class="page-enter page-enter">
     <PageHeader title="Health Monitor" description="Real-time infrastructure health status" />
 
     <div v-if="loading" class="text-center py-12 text-gray-400">Checking health...</div>
 
     <template v-else>
       <!-- Overall status -->
-      <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+      <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6 mb-6">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-4">
             <div
@@ -84,10 +84,10 @@ const services = [
         <div
           v-for="svc in services"
           :key="svc.key"
-          class="bg-white rounded-xl border border-gray-200 p-6"
+          class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6"
         >
           <div class="flex items-center justify-between mb-3">
-            <h3 class="text-lg font-semibold text-gray-900">{{ svc.name }}</h3>
+            <h3 class="text-lg font-semibold tracking-tight text-gray-900">{{ svc.name }}</h3>
             <StatusBadge :status="normalizeHealthStatus((health.checks as any)[svc.key])" />
           </div>
           <p class="text-sm text-gray-500">{{ svc.description }}</p>

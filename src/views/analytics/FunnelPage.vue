@@ -38,11 +38,11 @@ watch(() => analytics.queryParams, load)
         :value="data.overall_conversion.toFixed(2) + '%'"
         color="green"
       />
-      <div class="bg-white rounded-xl border border-gray-200 p-6">
+      <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
         <h3 class="text-sm font-semibold text-gray-900 mb-6">Conversion Funnel</h3>
         <FunnelChart :stages="data.stages" />
       </div>
-      <div class="bg-white rounded-xl border border-gray-200 p-6">
+      <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
         <h3 class="text-sm font-semibold text-gray-900 mb-4">Stage Details</h3>
         <table class="w-full text-sm">
           <thead><tr class="text-left text-gray-500 text-xs uppercase">

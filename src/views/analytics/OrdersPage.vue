@@ -56,7 +56,7 @@ function fmtCurrency(n: number): string {
         <MetricCard title="Total Orders" :value="data.total_orders.toLocaleString()" :delta="data.total_orders_delta" />
       </div>
 
-      <div class="bg-white rounded-xl border border-gray-200 p-6">
+      <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
         <h3 class="text-sm font-semibold text-gray-900 mb-4">Revenue Trend</h3>
         <Line
           v-if="data.revenue_trend.length"
@@ -75,7 +75,7 @@ function fmtCurrency(n: number): string {
         />
       </div>
 
-      <div class="bg-white rounded-xl border border-gray-200 p-6">
+      <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
         <h3 class="text-sm font-semibold text-gray-900 mb-4">Order Status</h3>
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div v-for="s in data.order_status" :key="s.status" class="text-center p-3 bg-gray-50 rounded-lg">

@@ -26,7 +26,7 @@ const funnelStages = computed(() => {
   const f = funnel.value
   return [
     { name: 'Enrolled', count: f.enrolled, rate: 100, color: 'bg-blue-500', icon: FunnelIcon },
-    { name: 'Sent', count: f.sent, rate: f.sent_rate, color: 'bg-indigo-500', icon: PaperAirplaneIcon },
+    { name: 'Sent', count: f.sent, rate: f.sent_rate, color: 'bg-[#0099db]', icon: PaperAirplaneIcon },
     { name: 'Delivered', count: f.delivered, rate: f.delivery_rate, color: 'bg-purple-500', icon: ArrowTrendingUpIcon },
     { name: 'Opened', count: f.opened, rate: f.open_rate, color: 'bg-amber-500', icon: EnvelopeOpenIcon },
     { name: 'Clicked', count: f.clicked, rate: f.click_rate, color: 'bg-green-500', icon: CursorArrowRaysIcon },
@@ -87,7 +87,7 @@ function onCampaignChange() {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="page-enter space-y-6">
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-2xl font-bold text-gray-900">Campaign Funnel</h1>
@@ -96,12 +96,12 @@ function onCampaignChange() {
     </div>
 
     <!-- Campaign Selector -->
-    <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
+    <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-4 flex items-center gap-4">
       <label class="text-sm font-medium text-gray-700">Campaign:</label>
       <select
         v-model="selectedSlug"
         @change="onCampaignChange"
-        class="rounded-lg border-gray-300 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+        class="rounded-lg border-gray-300 text-sm focus:ring-[#0099db]/40 focus:border-[#0099db]"
       >
         <option v-for="c in campaigns" :key="c.slug" :value="c.slug">
           {{ c.name }} ({{ c.slug }})
@@ -114,9 +114,9 @@ function onCampaignChange() {
 
     <template v-else-if="funnel">
       <!-- Funnel Visualization -->
-      <div class="bg-white rounded-xl border border-gray-200 p-6">
+      <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
         <h2 class="text-sm font-semibold text-gray-900 mb-6 flex items-center gap-2">
-          <ChartBarIcon class="w-5 h-5 text-indigo-500" />
+          <ChartBarIcon class="w-5 h-5 text-[#0099db]" />
           Conversion Funnel
         </h2>
         <div class="space-y-3">
@@ -147,26 +147,26 @@ function onCampaignChange() {
 
       <!-- Metric Cards -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-white rounded-xl border border-gray-200 p-4">
+        <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-4">
           <p class="text-xs text-gray-500 uppercase tracking-wide">Delivery Rate</p>
           <p class="text-2xl font-bold text-gray-900 mt-1">{{ funnel.delivery_rate.toFixed(1) }}%</p>
         </div>
-        <div class="bg-white rounded-xl border border-gray-200 p-4">
+        <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-4">
           <p class="text-xs text-gray-500 uppercase tracking-wide">Open Rate</p>
           <p class="text-2xl font-bold text-gray-900 mt-1">{{ funnel.open_rate.toFixed(1) }}%</p>
         </div>
-        <div class="bg-white rounded-xl border border-gray-200 p-4">
+        <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-4">
           <p class="text-xs text-gray-500 uppercase tracking-wide">Click Rate</p>
           <p class="text-2xl font-bold text-gray-900 mt-1">{{ funnel.click_rate.toFixed(1) }}%</p>
         </div>
-        <div class="bg-white rounded-xl border border-gray-200 p-4">
+        <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-4">
           <p class="text-xs text-gray-500 uppercase tracking-wide">Total Enrolled</p>
           <p class="text-2xl font-bold text-gray-900 mt-1">{{ funnel.enrolled.toLocaleString() }}</p>
         </div>
       </div>
 
       <!-- A/B Variant Performance -->
-      <div class="bg-white rounded-xl border border-gray-200 p-6">
+      <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-sm font-semibold text-gray-900">A/B Variant Performance</h2>
           <div class="flex items-center gap-2">
@@ -174,7 +174,7 @@ function onCampaignChange() {
             <select
               v-model.number="selectedStep"
               @change="loadVariants"
-              class="rounded-lg border-gray-300 text-xs focus:ring-indigo-500 focus:border-indigo-500"
+              class="rounded-lg border-gray-300 text-xs focus:ring-[#0099db]/40 focus:border-[#0099db]"
             >
               <option :value="0">All Steps</option>
               <option v-for="i in (campaigns.find(c => c.slug === selectedSlug)?.steps.length || 3)" :key="i" :value="i">

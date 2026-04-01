@@ -41,7 +41,7 @@ const channelColors: Record<string, string> = {
 </script>
 
 <template>
-  <div>
+  <div class="page-enter page-enter">
     <div class="flex items-center justify-between mb-6">
       <PageHeader title="Templates" description="Message templates for each channel" />
       <div class="flex items-center gap-2">
@@ -55,7 +55,7 @@ const channelColors: Record<string, string> = {
         <button
           v-if="auth.canWrite"
           @click="router.push('/templates/new')"
-          class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+          class="flex items-center gap-2 px-4 py-2 bg-[#020288] text-white text-sm font-medium rounded-lg hover:bg-[#0d35d7] transition-colors"
         >
           <PlusIcon class="h-4 w-4" /> New Template
         </button>
@@ -71,7 +71,7 @@ const channelColors: Record<string, string> = {
         :class="[
           'px-3 py-1.5 text-sm rounded-lg transition-colors',
           channelFilter === ch
-            ? 'bg-indigo-100 text-indigo-700 font-medium'
+            ? 'bg-blue-100 text-[#020288] font-medium'
             : 'text-gray-600 hover:bg-gray-100',
         ]"
       >
@@ -85,7 +85,7 @@ const channelColors: Record<string, string> = {
       No templates yet. Create your first template to get started.
     </div>
 
-    <div v-else class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div v-else class="bg-white rounded-xl border border-gray-200/80 shadow-sm overflow-hidden">
       <table class="w-full text-sm">
         <thead class="bg-gray-50 border-b border-gray-200">
           <tr>
@@ -97,7 +97,7 @@ const channelColors: Record<string, string> = {
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
-          <tr v-for="tmpl in store.templates" :key="tmpl.id" class="hover:bg-gray-50">
+          <tr v-for="tmpl in store.templates" :key="tmpl.id" class="hover:bg-slate-50/70 transition-colors">
             <td class="px-4 py-3 font-medium text-gray-900">{{ tmpl.name }}</td>
             <td class="px-4 py-3 text-gray-500">
               <code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs">{{ tmpl.template_key }}</code>
@@ -117,7 +117,7 @@ const channelColors: Record<string, string> = {
               <div v-if="auth.canWrite" class="flex items-center justify-end gap-2">
                 <button
                   @click="router.push(`/templates/${tmpl.id}/edit`)"
-                  class="p-1.5 text-gray-400 hover:text-indigo-600 transition-colors"
+                  class="p-1.5 text-gray-400 hover:text-[#020288] transition-colors"
                   title="Edit"
                 >
                   <PencilSquareIcon class="h-4 w-4" />
