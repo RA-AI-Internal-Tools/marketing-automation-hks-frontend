@@ -210,7 +210,7 @@ async function handleSubmit() {
     />
 
     <div v-if="loading" class="space-y-6 max-w-3xl">
-      <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6 space-y-4">
+      <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6 space-y-4">
         <div class="skeleton h-4 w-32"></div>
         <div class="grid grid-cols-2 gap-4"><div class="skeleton h-9 w-full"></div><div class="skeleton h-9 w-full"></div></div>
       </div>
@@ -218,62 +218,62 @@ async function handleSubmit() {
 
     <form v-else @submit.prevent="handleSubmit" class="space-y-6 max-w-3xl page-enter">
       <!-- Basic info -->
-      <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6 space-y-4">
-        <h3 class="text-sm font-semibold text-gray-900">Campaign Details</h3>
+      <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6 space-y-4">
+        <h3 class="text-sm font-semibold text-[var(--color-text-primary)]">Campaign Details</h3>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-            <input v-model="name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0099db]/40 focus:border-[#0099db]" />
+            <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Name</label>
+            <input v-model="name" required class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[#0099db]" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Slug (auto-generated if empty)</label>
-            <input v-model="slug" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0099db]/40 focus:border-[#0099db]" placeholder="auto-generated" />
+            <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Slug (auto-generated if empty)</label>
+            <input v-model="slug" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[#0099db]" placeholder="auto-generated" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Trigger Event</label>
-            <input v-model="triggerEvent" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0099db]/40 focus:border-[#0099db]" placeholder="e.g. order_completed" />
+            <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Trigger Event</label>
+            <input v-model="triggerEvent" required class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[#0099db]" placeholder="e.g. order_completed" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Cancellation Event</label>
-            <input v-model="cancellationEvent" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0099db]/40 focus:border-[#0099db]" placeholder="Optional" />
+            <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Cancellation Event</label>
+            <input v-model="cancellationEvent" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[#0099db]" placeholder="Optional" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Segment Filter</label>
-            <select v-model="segmentFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0099db]/40 focus:border-[#0099db]">
+            <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Segment Filter</label>
+            <select v-model="segmentFilter" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[#0099db]">
               <option v-for="seg in segments" :key="seg" :value="seg">{{ seg }}</option>
             </select>
           </div>
           <div class="flex items-center gap-3 pt-6">
             <label class="relative inline-flex items-center cursor-pointer">
               <input v-model="isActive" type="checkbox" class="sr-only peer" />
-              <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#0099db]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-[#020288] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
+              <div class="w-9 h-5 bg-[var(--color-border)] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[var(--color-accent)]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-[var(--color-primary)] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
             </label>
-            <span class="text-sm text-gray-700">Active</span>
+            <span class="text-sm text-[var(--color-text-secondary)]">Active</span>
           </div>
         </div>
       </div>
 
       <!-- Steps -->
-      <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6 space-y-4">
+      <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6 space-y-4">
         <div class="flex items-center justify-between">
-          <h3 class="text-sm font-semibold text-gray-900">Workflow Steps</h3>
+          <h3 class="text-sm font-semibold text-[var(--color-text-primary)]">Workflow Steps</h3>
           <button type="button" @click="addStep" class="flex items-center gap-1 text-sm text-[#020288] hover:text-[#0d35d7]">
             <PlusIcon class="h-4 w-4" /> Add Step
           </button>
         </div>
 
-        <div v-for="(step, i) in steps" :key="i" class="border border-gray-200 rounded-lg p-4 space-y-3">
+        <div v-for="(step, i) in steps" :key="i" class="border border-[var(--color-border)] rounded-lg p-4 space-y-3">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-medium text-gray-500">Step {{ i + 1 }}</span>
+            <span class="text-xs font-medium text-[var(--color-text-tertiary)]">Step {{ i + 1 }}</span>
             <div class="flex items-center gap-1">
-              <button type="button" @click="moveStep(i, -1)" :disabled="i === 0" class="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30">
+              <button type="button" @click="moveStep(i, -1)" :disabled="i === 0" class="p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] disabled:opacity-30">
                 <ArrowUpIcon class="h-4 w-4" />
               </button>
-              <button type="button" @click="moveStep(i, 1)" :disabled="i === steps.length - 1" class="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30">
+              <button type="button" @click="moveStep(i, 1)" :disabled="i === steps.length - 1" class="p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] disabled:opacity-30">
                 <ArrowDownIcon class="h-4 w-4" />
               </button>
-              <button type="button" @click="removeStep(i)" :disabled="steps.length <= 1" class="p-1 text-gray-400 hover:text-red-600 disabled:opacity-30">
+              <button type="button" @click="removeStep(i)" :disabled="steps.length <= 1" class="p-1 text-[var(--color-text-muted)] hover:text-red-600 disabled:opacity-30">
                 <TrashIcon class="h-4 w-4" />
               </button>
             </div>
@@ -281,71 +281,71 @@ async function handleSubmit() {
 
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div>
-              <label class="block text-xs text-gray-500 mb-1">Channel</label>
-              <select v-model="step.channel" class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm">
+              <label class="block text-xs text-[var(--color-text-tertiary)] mb-1">Channel</label>
+              <select v-model="step.channel" class="w-full px-2 py-1.5 border border-[var(--color-border)] rounded text-sm">
                 <option v-for="ch in channels" :key="ch" :value="ch">{{ ch }}</option>
               </select>
             </div>
             <div>
-              <label class="block text-xs text-gray-500 mb-1">Template Key</label>
+              <label class="block text-xs text-[var(--color-text-tertiary)] mb-1">Template Key</label>
               <select
                 v-if="templatesForChannel(step.channel).length > 0"
                 v-model="step.template_key"
-                class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                class="w-full px-2 py-1.5 border border-[var(--color-border)] rounded text-sm"
               >
                 <option value="">Select template...</option>
                 <option v-for="t in templatesForChannel(step.channel)" :key="t.id" :value="t.template_key">
                   {{ t.name }} ({{ t.template_key }})
                 </option>
               </select>
-              <input v-else v-model="step.template_key" class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" placeholder="template_key" />
+              <input v-else v-model="step.template_key" class="w-full px-2 py-1.5 border border-[var(--color-border)] rounded text-sm" placeholder="template_key" />
             </div>
             <div>
-              <label class="block text-xs text-gray-500 mb-1">Delay (minutes)</label>
-              <input v-model.number="step.delay_minutes" type="number" min="0" class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" />
+              <label class="block text-xs text-[var(--color-text-tertiary)] mb-1">Delay (minutes)</label>
+              <input v-model.number="step.delay_minutes" type="number" min="0" class="w-full px-2 py-1.5 border border-[var(--color-border)] rounded text-sm" />
             </div>
             <div>
-              <label class="block text-xs text-gray-500 mb-1">Condition</label>
-              <select v-model="step.condition" class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm">
+              <label class="block text-xs text-[var(--color-text-tertiary)] mb-1">Condition</label>
+              <select v-model="step.condition" class="w-full px-2 py-1.5 border border-[var(--color-border)] rounded text-sm">
                 <option v-for="cond in conditions" :key="cond" :value="cond">{{ cond }}</option>
               </select>
             </div>
           </div>
 
           <!-- A/B Variant Editor -->
-          <div class="mt-3 border-t border-gray-100 pt-3">
+          <div class="mt-3 border-t border-[var(--color-border-muted)] pt-3">
             <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-medium text-gray-500 flex items-center gap-1">
+              <span class="text-xs font-medium text-[var(--color-text-tertiary)] flex items-center gap-1">
                 <BeakerIcon class="h-3.5 w-3.5" /> A/B Variants
               </span>
               <button type="button" @click="addVariant(i)" class="text-xs text-[#020288] hover:text-[#0d35d7]">
                 + Add Variant
               </button>
             </div>
-            <div v-if="!step.variants || step.variants.length === 0" class="text-xs text-gray-400 italic">
+            <div v-if="!step.variants || step.variants.length === 0" class="text-xs text-[var(--color-text-muted)] italic">
               No variants configured. Default template will be used.
             </div>
             <div v-else class="space-y-2">
-              <div v-for="(variant, vi) in step.variants" :key="vi" class="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
+              <div v-for="(variant, vi) in step.variants" :key="vi" class="flex items-center gap-2 bg-[var(--color-bg-page)] rounded-lg px-3 py-2">
                 <span class="text-xs font-bold text-[#020288] w-6">{{ variant.id }}</span>
                 <div class="flex-1">
                   <select
                     v-if="templatesForChannel(step.channel).length > 0"
                     v-model="variant.template_key"
-                    class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                    class="w-full px-2 py-1 border border-[var(--color-border)] rounded text-xs"
                   >
                     <option value="">Select template...</option>
                     <option v-for="t in templatesForChannel(step.channel)" :key="t.id" :value="t.template_key">
                       {{ t.name }} ({{ t.template_key }})
                     </option>
                   </select>
-                  <input v-else v-model="variant.template_key" class="w-full px-2 py-1 border border-gray-300 rounded text-xs" placeholder="template_key" />
+                  <input v-else v-model="variant.template_key" class="w-full px-2 py-1 border border-[var(--color-border)] rounded text-xs" placeholder="template_key" />
                 </div>
                 <div class="w-20">
-                  <input v-model.number="variant.weight" type="number" min="1" max="100" class="w-full px-2 py-1 border border-gray-300 rounded text-xs text-center" />
+                  <input v-model.number="variant.weight" type="number" min="1" max="100" class="w-full px-2 py-1 border border-[var(--color-border)] rounded text-xs text-center" />
                 </div>
-                <span class="text-[10px] text-gray-400 w-4">%</span>
-                <button type="button" @click="removeVariant(i, vi)" class="text-gray-400 hover:text-red-500">
+                <span class="text-[10px] text-[var(--color-text-muted)] w-4">%</span>
+                <button type="button" @click="removeVariant(i, vi)" class="text-[var(--color-text-muted)] hover:text-red-500">
                   <TrashIcon class="h-3.5 w-3.5" />
                 </button>
               </div>
@@ -353,9 +353,9 @@ async function handleSubmit() {
           </div>
 
           <!-- If/Else Branching -->
-          <div v-if="hasBranchableCondition(step)" class="mt-3 border-t border-gray-100 pt-3">
+          <div v-if="hasBranchableCondition(step)" class="mt-3 border-t border-[var(--color-border-muted)] pt-3">
             <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-medium text-gray-500">If/Else Branching</span>
+              <span class="text-xs font-medium text-[var(--color-text-tertiary)]">If/Else Branching</span>
               <label class="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
@@ -363,15 +363,15 @@ async function handleSubmit() {
                   class="sr-only peer"
                   @change="toggleBranching(step, !isBranchingEnabled(step))"
                 />
-                <div class="w-8 h-4 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#0099db]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-[#020288] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all"></div>
+                <div class="w-8 h-4 bg-[var(--color-border)] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[var(--color-accent)]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-[var(--color-primary)] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all"></div>
               </label>
             </div>
             <div v-if="isBranchingEnabled(step)" class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block text-xs text-gray-500 mb-1">If TRUE &rarr; go to</label>
+                <label class="block text-xs text-[var(--color-text-tertiary)] mb-1">If TRUE &rarr; go to</label>
                 <select
                   :value="step.true_next === null || step.true_next === undefined ? '' : String(step.true_next)"
-                  class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                  class="w-full px-2 py-1.5 border border-[var(--color-border)] rounded text-sm"
                   @change="setBranchTarget(step, 'true_next', ($event.target as HTMLSelectElement).value)"
                 >
                   <option v-for="opt in stepTargetOptions(steps, i)" :key="String(opt.value)" :value="opt.value === null ? '' : String(opt.value)">
@@ -380,10 +380,10 @@ async function handleSubmit() {
                 </select>
               </div>
               <div>
-                <label class="block text-xs text-gray-500 mb-1">If FALSE &rarr; go to</label>
+                <label class="block text-xs text-[var(--color-text-tertiary)] mb-1">If FALSE &rarr; go to</label>
                 <select
                   :value="step.false_next === null || step.false_next === undefined ? '' : String(step.false_next)"
-                  class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                  class="w-full px-2 py-1.5 border border-[var(--color-border)] rounded text-sm"
                   @change="setBranchTarget(step, 'false_next', ($event.target as HTMLSelectElement).value)"
                 >
                   <option v-for="opt in stepTargetOptions(steps, i)" :key="String(opt.value)" :value="opt.value === null ? '' : String(opt.value)">
@@ -397,20 +397,20 @@ async function handleSubmit() {
       </div>
 
       <!-- Error + Submit -->
-      <div v-if="error" class="text-sm text-red-600 bg-red-50 border border-red-100 px-4 py-3 rounded-xl">{{ error }}</div>
+      <div v-if="error" class="text-sm text-[var(--color-error-text)] bg-[var(--color-error-bg)] border border-[var(--color-error-border)] px-4 py-3 rounded-xl">{{ error }}</div>
 
       <div class="flex items-center gap-3">
         <button
           type="submit"
           :disabled="saving"
-          class="px-6 py-2.5 bg-[#020288] text-white text-sm font-medium rounded-lg hover:bg-[#0d35d7] shadow-sm disabled:opacity-50 transition-all"
+          class="px-6 py-2.5 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] shadow-sm disabled:opacity-50 transition-all"
         >
           {{ saving ? 'Saving...' : isEdit ? 'Update Campaign' : 'Create Campaign' }}
         </button>
         <button
           type="button"
           @click="router.push('/campaigns')"
-          class="px-6 py-2.5 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+          class="px-6 py-2.5 bg-[var(--color-bg-card)] text-[var(--color-text-secondary)] text-sm font-medium rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-page)] transition-colors"
         >
           Cancel
         </button>

@@ -62,7 +62,7 @@ function formatDate(d?: string): string {
       <button
         v-if="auth.canWrite"
         @click="exportEnrollments({ status: filterStatus, campaign: filterCampaign, client_id: filterClient })"
-        class="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+        class="px-4 py-2 bg-[var(--color-bg-card)] text-[var(--color-text-secondary)] text-sm font-medium rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-hover)] transition-colors"
       >
         Export CSV
       </button>
@@ -70,7 +70,7 @@ function formatDate(d?: string): string {
 
     <!-- Filters -->
     <div class="flex flex-wrap gap-3 mb-6">
-      <select v-model="filterStatus" class="rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white">
+      <select v-model="filterStatus" class="rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm bg-[var(--color-bg-card)]">
         <option value="">All statuses</option>
         <option value="active">Active</option>
         <option value="completed">Completed</option>
@@ -81,69 +81,69 @@ function formatDate(d?: string): string {
         v-model="filterCampaign"
         type="text"
         placeholder="Campaign slug..."
-        class="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+        class="rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm"
       />
       <input
         v-model="filterClient"
         type="text"
         placeholder="Client ID..."
-        class="rounded-lg border border-gray-300 px-3 py-2 text-sm w-32"
+        class="rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm w-32"
       />
     </div>
 
     <!-- Error -->
-    <div v-if="error" class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{{ error }}</div>
+    <div v-if="error" class="mb-4 bg-[var(--color-error-bg)] border border-[var(--color-error-border)] text-[var(--color-error-text)] px-4 py-3 rounded-lg text-sm">{{ error }}</div>
 
     <!-- Table -->
-    <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm overflow-hidden">
+    <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden">
       <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+        <table class="min-w-full divide-y divide-[var(--color-border)]">
+          <thead class="bg-[var(--color-bg-page)]">
             <tr>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">ID</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Campaign</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Client</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Step</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Next Step At</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Enrolled</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">ID</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Campaign</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Client</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Step</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Status</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Next Step At</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Enrolled</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100">
+          <tbody class="divide-y divide-[var(--color-border-muted)]">
             <tr v-if="loading">
-              <td colspan="7" class="px-4 py-8 text-center text-gray-400">Loading...</td>
+              <td colspan="7" class="px-4 py-8 text-center text-[var(--color-text-muted)]">Loading...</td>
             </tr>
             <tr v-else-if="enrollments.length === 0">
-              <td colspan="7" class="px-4 py-8 text-center text-gray-400">No enrollments found</td>
+              <td colspan="7" class="px-4 py-8 text-center text-[var(--color-text-muted)]">No enrollments found</td>
             </tr>
-            <tr v-for="e in enrollments" :key="e.id" class="hover:bg-slate-50/70 transition-colors">
-              <td class="px-4 py-3 text-sm text-gray-500">#{{ e.id }}</td>
-              <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ e.definition?.slug ?? e.campaign_definition_id }}</td>
-              <td class="px-4 py-3 text-sm text-gray-700">{{ e.client_id }}</td>
-              <td class="px-4 py-3 text-sm text-gray-700">{{ e.current_step }}</td>
+            <tr v-for="e in enrollments" :key="e.id" class="hover:bg-[var(--color-bg-hover)] transition-colors">
+              <td class="px-4 py-3 text-sm text-[var(--color-text-tertiary)]">#{{ e.id }}</td>
+              <td class="px-4 py-3 text-sm font-medium text-[var(--color-text-primary)]">{{ e.definition?.slug ?? e.campaign_definition_id }}</td>
+              <td class="px-4 py-3 text-sm text-[var(--color-text-secondary)]">{{ e.client_id }}</td>
+              <td class="px-4 py-3 text-sm text-[var(--color-text-secondary)]">{{ e.current_step }}</td>
               <td class="px-4 py-3"><StatusBadge :status="e.status" /></td>
-              <td class="px-4 py-3 text-sm text-gray-500">{{ formatDate(e.next_step_at) }}</td>
-              <td class="px-4 py-3 text-sm text-gray-500">{{ formatDate(e.enrolled_at) }}</td>
+              <td class="px-4 py-3 text-sm text-[var(--color-text-tertiary)]">{{ formatDate(e.next_step_at) }}</td>
+              <td class="px-4 py-3 text-sm text-[var(--color-text-tertiary)]">{{ formatDate(e.enrolled_at) }}</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       <!-- Pagination -->
-      <div class="px-4 py-3 border-t border-gray-200 flex items-center justify-between text-sm text-gray-500">
+      <div class="px-4 py-3 border-t border-[var(--color-border)] flex items-center justify-between text-sm text-[var(--color-text-tertiary)]">
         <span>{{ total }} total</span>
         <div class="flex gap-2">
           <button
             :disabled="page === 0"
             @click="page--; load()"
-            class="px-3 py-1 rounded border border-gray-300 disabled:opacity-50 hover:bg-slate-50/70 transition-colors"
+            class="px-3 py-1 rounded border border-[var(--color-border)] disabled:opacity-50 hover:bg-[var(--color-bg-hover)] transition-colors"
           >
             Prev
           </button>
           <button
             :disabled="(page + 1) * limit >= total"
             @click="page++; load()"
-            class="px-3 py-1 rounded border border-gray-300 disabled:opacity-50 hover:bg-slate-50/70 transition-colors"
+            class="px-3 py-1 rounded border border-[var(--color-border)] disabled:opacity-50 hover:bg-[var(--color-bg-hover)] transition-colors"
           >
             Next
           </button>

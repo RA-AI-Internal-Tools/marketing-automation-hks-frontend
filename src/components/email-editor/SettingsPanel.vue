@@ -66,13 +66,13 @@ function onKeyManualEdit() {
   autoKey.value = false
 }
 
-const inputClass = 'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0099db]/40 focus:border-[#0099db] transition-shadow'
-const labelClass = 'block text-xs font-medium text-gray-600 mb-1'
+const inputClass = 'w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm bg-[var(--color-bg-input)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)] transition-shadow placeholder:text-[var(--color-text-muted)]'
+const labelClass = 'block text-xs font-medium text-[var(--color-text-secondary)] mb-1'
 </script>
 
 <template>
   <div class="p-5 space-y-5">
-    <h3 class="text-sm font-semibold text-gray-900">Template Settings</h3>
+    <h3 class="text-sm font-semibold text-[var(--color-text-primary)]">Template Settings</h3>
 
     <!-- Name & Key -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -113,7 +113,7 @@ const labelClass = 'block text-xs font-medium text-gray-600 mb-1'
         :class="inputClass"
         placeholder="Email subject line — use {{first_name}} for personalization"
       />
-      <p class="text-[11px] mt-1" :class="subject.length > 78 ? 'text-amber-500' : 'text-gray-400'">
+      <p class="text-[11px] mt-1" :class="subject.length > 78 ? 'text-amber-500' : 'text-[var(--color-text-muted)]'">
         {{ subject.length }} / 78 characters recommended
       </p>
     </div>
@@ -127,15 +127,15 @@ const labelClass = 'block text-xs font-medium text-gray-600 mb-1'
         :class="inputClass"
         placeholder="Preview text shown after subject in inbox"
       />
-      <p class="text-[11px] mt-1" :class="preheader.length > 0 && (preheader.length < 40 || preheader.length > 130) ? 'text-amber-500' : 'text-gray-400'">
+      <p class="text-[11px] mt-1" :class="preheader.length > 0 && (preheader.length < 40 || preheader.length > 130) ? 'text-amber-500' : 'text-[var(--color-text-muted)]'">
         {{ preheader.length > 0 ? `${preheader.length} / 40–130 characters recommended` : 'Recommended: 40–130 characters' }}
       </p>
     </div>
 
-    <hr class="border-gray-100" />
+    <hr class="border-[var(--color-border-muted)]" />
 
     <!-- Sender Identity -->
-    <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Sender Identity</h4>
+    <h4 class="text-xs font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">Sender Identity</h4>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div>
         <label :class="labelClass">From Name</label>
@@ -168,10 +168,10 @@ const labelClass = 'block text-xs font-medium text-gray-600 mb-1'
       />
     </div>
 
-    <hr class="border-gray-100" />
+    <hr class="border-[var(--color-border-muted)]" />
 
     <!-- Classification -->
-    <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Classification</h4>
+    <h4 class="text-xs font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">Classification</h4>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div>
         <label :class="labelClass">Category</label>
@@ -200,20 +200,20 @@ const labelClass = 'block text-xs font-medium text-gray-600 mb-1'
     <!-- Tags -->
     <div>
       <label :class="labelClass">Tags</label>
-      <div class="flex flex-wrap items-center gap-1.5 p-2 border border-gray-200 rounded-lg bg-white min-h-[38px] focus-within:ring-2 focus-within:ring-[#0099db]/40 focus-within:border-[#0099db]">
+      <div class="flex flex-wrap items-center gap-1.5 p-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-input)] min-h-[38px] focus-within:ring-2 focus-within:ring-[var(--color-accent)]/40 focus-within:border-[var(--color-accent)]">
         <span
           v-for="tag in tags"
           :key="tag"
-          class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-blue-50 text-[#020288] rounded-md"
+          class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-[var(--color-info-bg)] text-[var(--color-primary)] rounded-md"
         >
           {{ tag }}
-          <button @click="removeTag(tag)" class="text-blue-300 hover:text-red-500 ml-0.5">&times;</button>
+          <button @click="removeTag(tag)" class="text-[var(--color-primary-border)] hover:text-red-500 ml-0.5">&times;</button>
         </span>
         <input
           v-model="tagInput"
           @keydown="handleTagKeydown"
           @blur="addTag()"
-          class="flex-1 min-w-[80px] text-sm outline-none bg-transparent"
+          class="flex-1 min-w-[80px] text-sm outline-none bg-transparent text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
           placeholder="Add tag..."
         />
       </div>
@@ -222,8 +222,8 @@ const labelClass = 'block text-xs font-medium text-gray-600 mb-1'
     <!-- Active Toggle -->
     <div class="flex items-center justify-between py-2">
       <div>
-        <p class="text-sm font-medium text-gray-700">Active</p>
-        <p class="text-xs text-gray-400">Template is available for sending</p>
+        <p class="text-sm font-medium text-[var(--color-text-secondary)]">Active</p>
+        <p class="text-xs text-[var(--color-text-muted)]">Template is available for sending</p>
       </div>
       <label class="relative inline-flex items-center cursor-pointer">
         <input
@@ -232,7 +232,7 @@ const labelClass = 'block text-xs font-medium text-gray-600 mb-1'
           type="checkbox"
           class="sr-only peer"
         />
-        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#0099db]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-[#020288] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
+        <div class="w-9 h-5 bg-[var(--color-bg-muted)] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[var(--color-accent)]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-[var(--color-primary)] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
       </label>
     </div>
   </div>

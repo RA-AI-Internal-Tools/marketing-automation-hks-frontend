@@ -47,8 +47,8 @@ function fmtCurrency(n: number): string {
 
 <template>
   <AnalyticsLayout title="Orders & Revenue" description="Order metrics, AOV, and revenue trends">
-    <div v-if="loading" class="text-center py-12 text-gray-400">Loading...</div>
-    <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{{ error }}</div>
+    <div v-if="loading" class="text-center py-12 text-[var(--color-text-muted)]">Loading...</div>
+    <div v-else-if="error" class="bg-[var(--color-error-bg)] border border-[var(--color-error-border)] text-[var(--color-error-text)] px-4 py-3 rounded-lg text-sm">{{ error }}</div>
     <div v-else-if="data" class="space-y-6">
       <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <MetricCard title="Total Revenue" :value="fmtCurrency(data.total_revenue)" :delta="data.total_revenue_delta" />
@@ -56,8 +56,8 @@ function fmtCurrency(n: number): string {
         <MetricCard title="Total Orders" :value="data.total_orders.toLocaleString()" :delta="data.total_orders_delta" />
       </div>
 
-      <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
-        <h3 class="text-sm font-semibold text-gray-900 mb-4">Revenue Trend</h3>
+      <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+        <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Revenue Trend</h3>
         <Line
           v-if="data.revenue_trend.length"
           :data="{
@@ -75,12 +75,12 @@ function fmtCurrency(n: number): string {
         />
       </div>
 
-      <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
-        <h3 class="text-sm font-semibold text-gray-900 mb-4">Order Status</h3>
+      <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+        <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Order Status</h3>
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div v-for="s in data.order_status" :key="s.status" class="text-center p-3 bg-gray-50 rounded-lg">
-            <p class="text-2xl font-bold text-gray-900">{{ s.count.toLocaleString() }}</p>
-            <p class="text-xs text-gray-500 mt-1 capitalize">{{ s.status }}</p>
+          <div v-for="s in data.order_status" :key="s.status" class="text-center p-3 bg-[var(--color-bg-page)] rounded-lg">
+            <p class="text-2xl font-bold text-[var(--color-text-primary)]">{{ s.count.toLocaleString() }}</p>
+            <p class="text-xs text-[var(--color-text-tertiary)] mt-1 capitalize">{{ s.status }}</p>
           </div>
         </div>
       </div>

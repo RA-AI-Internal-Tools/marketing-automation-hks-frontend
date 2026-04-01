@@ -53,13 +53,13 @@ function handleIframeLoad(e: Event) {
 <template>
   <div class="flex flex-col h-full">
     <!-- Preview Controls -->
-    <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50/80">
+    <div class="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-bg-subtle)]">
       <div class="flex items-center gap-1">
         <button
           @click="viewMode = 'desktop'"
           :class="[
             'p-2 rounded-lg transition-colors',
-            viewMode === 'desktop' ? 'bg-[#020288] text-white' : 'text-gray-500 hover:bg-gray-200',
+            viewMode === 'desktop' ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-text-tertiary)] hover:bg-[var(--color-bg-muted)]',
           ]"
           title="Desktop preview"
         >
@@ -69,31 +69,31 @@ function handleIframeLoad(e: Event) {
           @click="viewMode = 'mobile'"
           :class="[
             'p-2 rounded-lg transition-colors',
-            viewMode === 'mobile' ? 'bg-[#020288] text-white' : 'text-gray-500 hover:bg-gray-200',
+            viewMode === 'mobile' ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-text-tertiary)] hover:bg-[var(--color-bg-muted)]',
           ]"
           title="Mobile preview"
         >
           <DevicePhoneMobileIcon class="h-[18px] w-[18px]" />
         </button>
-        <div class="w-px h-5 bg-gray-300 mx-1.5"></div>
+        <div class="w-px h-5 bg-[var(--color-border)] mx-1.5"></div>
         <button
           @click="darkBg = !darkBg"
-          class="p-2 rounded-lg text-gray-500 hover:bg-gray-200 transition-colors"
+          class="p-2 rounded-lg text-[var(--color-text-tertiary)] hover:bg-[var(--color-bg-muted)] transition-colors"
           :title="darkBg ? 'Light background' : 'Dark background'"
         >
           <MoonIcon v-if="!darkBg" class="h-[18px] w-[18px]" />
           <SunIcon v-else class="h-[18px] w-[18px]" />
         </button>
       </div>
-      <span class="text-xs text-gray-400">{{ viewMode === 'mobile' ? '375px' : 'Full width' }}</span>
+      <span class="text-xs text-[var(--color-text-muted)]">{{ viewMode === 'mobile' ? '375px' : 'Full width' }}</span>
     </div>
 
     <!-- Subject & Preheader Preview -->
-    <div v-if="subject || preheader" class="px-4 py-3 border-b border-gray-200 bg-white">
-      <div v-if="renderedSubject" class="text-sm font-semibold text-gray-900 truncate">
+    <div v-if="subject || preheader" class="px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-bg-card)]">
+      <div v-if="renderedSubject" class="text-sm font-semibold text-[var(--color-text-primary)] truncate">
         {{ renderedSubject }}
       </div>
-      <div v-if="renderedPreheader" class="text-xs text-gray-500 mt-0.5 truncate">
+      <div v-if="renderedPreheader" class="text-xs text-[var(--color-text-tertiary)] mt-0.5 truncate">
         {{ renderedPreheader }}
       </div>
     </div>
@@ -101,10 +101,10 @@ function handleIframeLoad(e: Event) {
     <!-- Iframe Preview -->
     <div
       class="flex-1 overflow-auto flex justify-center p-4"
-      :class="darkBg ? 'bg-gray-900' : 'bg-gray-100'"
+      :class="darkBg ? 'bg-gray-900' : 'bg-[var(--color-bg-subtle)]'"
     >
       <div v-if="!html.trim()" class="flex items-center justify-center w-full min-h-[300px]">
-        <div class="text-center text-gray-400">
+        <div class="text-center text-[var(--color-text-muted)]">
           <svg class="mx-auto h-12 w-12 mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
           </svg>

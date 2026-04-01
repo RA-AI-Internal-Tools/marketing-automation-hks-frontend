@@ -60,19 +60,19 @@ const chartOptions = {
   <div class="page-enter">
     <PageHeader title="Channel Analytics" description="Message delivery performance per channel" />
 
-    <div v-if="loading" class="text-center py-12 text-gray-400">Loading channels...</div>
+    <div v-if="loading" class="text-center py-12 text-[var(--color-text-muted)]">Loading channels...</div>
 
-    <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{{ error }}</div>
+    <div v-else-if="error" class="bg-[var(--color-error-bg)] border border-[var(--color-error-border)] text-[var(--color-error-text)] px-4 py-3 rounded-lg text-sm">{{ error }}</div>
 
     <template v-else>
-      <div class="grid grid-cols-3 gap-4 mb-8">
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
         <StatCard title="Total Sent" :value="totalSent" color="green" />
         <StatCard title="Total Failed" :value="totalFailed" color="red" />
         <StatCard title="Success Rate" :value="`${successRate}%`" color="indigo" />
       </div>
 
-      <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6 mb-8">
-        <h2 class="text-lg font-semibold tracking-tight text-gray-900 mb-4">Channel Breakdown</h2>
+      <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6 mb-8">
+        <h2 class="text-lg font-semibold tracking-tight text-[var(--color-text-primary)] mb-4">Channel Breakdown</h2>
         <div class="h-72">
           <Bar :data="chartData" :options="chartOptions" />
         </div>
@@ -80,14 +80,14 @@ const chartOptions = {
 
       <!-- Per-channel detail cards -->
       <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <div v-for="ch in channels" :key="ch.channel" class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-5">
-          <h3 class="text-sm font-semibold text-gray-900 uppercase mb-3">{{ ch.channel }}</h3>
+        <div v-for="ch in channels" :key="ch.channel" class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-5">
+          <h3 class="text-sm font-semibold text-[var(--color-text-primary)] uppercase mb-3">{{ ch.channel }}</h3>
           <div class="space-y-2 text-sm">
-            <div class="flex justify-between"><span class="text-gray-500">Sent</span><span class="font-medium text-green-700">{{ ch.sent }}</span></div>
-            <div class="flex justify-between"><span class="text-gray-500">Failed</span><span class="font-medium text-red-600">{{ ch.failed }}</span></div>
-            <div class="flex justify-between"><span class="text-gray-500">Skipped</span><span class="font-medium text-gray-600">{{ ch.skipped }}</span></div>
-            <div class="flex justify-between"><span class="text-gray-500">Freq Capped</span><span class="font-medium text-yellow-700">{{ ch.frequency_capped }}</span></div>
-            <div class="flex justify-between"><span class="text-gray-500">No Consent</span><span class="font-medium text-orange-700">{{ ch.no_consent }}</span></div>
+            <div class="flex justify-between"><span class="text-[var(--color-text-tertiary)]">Sent</span><span class="font-medium text-green-700">{{ ch.sent }}</span></div>
+            <div class="flex justify-between"><span class="text-[var(--color-text-tertiary)]">Failed</span><span class="font-medium text-red-600">{{ ch.failed }}</span></div>
+            <div class="flex justify-between"><span class="text-[var(--color-text-tertiary)]">Skipped</span><span class="font-medium text-[var(--color-text-secondary)]">{{ ch.skipped }}</span></div>
+            <div class="flex justify-between"><span class="text-[var(--color-text-tertiary)]">Freq Capped</span><span class="font-medium text-yellow-700">{{ ch.frequency_capped }}</span></div>
+            <div class="flex justify-between"><span class="text-[var(--color-text-tertiary)]">No Consent</span><span class="font-medium text-orange-700">{{ ch.no_consent }}</span></div>
           </div>
         </div>
       </div>

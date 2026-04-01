@@ -1,0 +1,250 @@
+/* ============================================================
+   DESIGN SYSTEM — Marketing Automation (HKS Global)
+   ============================================================
+   Single source of truth for colors, spacing, typography,
+   and shared component styles across the application.
+   ============================================================ */
+
+/* ----------------------------------------------------------
+   1. DESIGN TOKENS (CSS Custom Properties)
+   ---------------------------------------------------------- */
+:root {
+  /* ---- Brand Palette (HKS Global) ---- */
+  --hks-deep-blue: #020288;
+  --hks-royal-blue: #0d35d7;
+  --hks-cyan: #0099db;
+  --hks-cyan-light: #50C8ED;
+  --hks-dark: #0a0a1a;
+  --hks-dark-surface: #111127;
+
+  /* ---- Primary ---- */
+  --color-primary: #020288;
+  --color-primary-hover: #0d35d7;
+  --color-primary-light: #eef1fb;
+  --color-primary-border: #7b8fd4;
+  --color-primary-text: #020288;
+  --color-primary-soft: rgba(2, 2, 136, 0.06);
+  --color-primary-muted: rgba(2, 2, 136, 0.15);
+
+  /* ---- Accent ---- */
+  --color-accent: #0099db;
+  --color-accent-hover: #0080b8;
+  --color-accent-light: rgba(0, 153, 219, 0.1);
+
+  /* ---- Neutrals (Slate scale) ---- */
+  --color-bg-page: #f8fafc;
+  --color-bg-card: #ffffff;
+  --color-bg-subtle: #f1f5f9;
+  --color-bg-muted: #e2e8f0;
+  --color-bg-hover: #f1f5f9;
+  --color-bg-table-header: #f8fafc;
+  --color-bg-input: #ffffff;
+
+  --color-border: #e2e8f0;
+  --color-border-strong: #cbd5e1;
+  --color-border-muted: #f1f5f9;
+
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #334155;
+  --color-text-tertiary: #64748b;
+  --color-text-muted: #94a3b8;
+  --color-text-inverse: #ffffff;
+
+  /* ---- Semantic: Success ---- */
+  --color-success: #22c55e;
+  --color-success-bg: #ecfdf5;
+  --color-success-border: #a7f3d0;
+  --color-success-text: #166534;
+
+  /* ---- Semantic: Error ---- */
+  --color-error: #ef4444;
+  --color-error-bg: #fef2f2;
+  --color-error-border: #fecaca;
+  --color-error-text: #991b1b;
+
+  /* ---- Semantic: Warning ---- */
+  --color-warning: #f59e0b;
+  --color-warning-bg: #fffbeb;
+  --color-warning-border: #fde68a;
+  --color-warning-text: #92400e;
+
+  /* ---- Semantic: Info ---- */
+  --color-info: #3b82f6;
+  --color-info-bg: #eff6ff;
+  --color-info-border: #bfdbfe;
+  --color-info-text: #1e40af;
+
+  /* ---- Environment Colors ---- */
+  --env-sandbox-bg: #fffbeb;
+  --env-sandbox-border: #fde68a;
+  --env-sandbox-text: #92400e;
+  --env-sandbox-badge-bg: #fef3c7;
+  --env-sandbox-badge-text: #92400e;
+  --env-sandbox-accent: #f59e0b;
+
+  --env-production-bg: #fef2f2;
+  --env-production-border: #fecaca;
+  --env-production-text: #991b1b;
+  --env-production-badge-bg: #fee2e2;
+  --env-production-badge-text: #991b1b;
+  --env-production-accent: #ef4444;
+
+  /* ---- Sidebar ---- */
+  --sidebar-bg: #0a0a1a;
+  --sidebar-surface: #111127;
+  --sidebar-hover: rgba(255, 255, 255, 0.04);
+  --sidebar-active: rgba(255, 255, 255, 0.08);
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-text: #94a3b8;
+  --sidebar-text-active: #ffffff;
+  --sidebar-text-hover: #e2e8f0;
+  --sidebar-label: #475569;
+  --sidebar-width: 272px;
+  --sidebar-collapsed-width: 64px;
+
+  /* ---- Typography ---- */
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Fira Code', Menlo, monospace;
+
+  --text-xs: 0.6875rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.875rem;
+  --text-md: 0.9375rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ---- Spacing ---- */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+  --space-9: 48px;
+  --space-10: 56px;
+
+  /* ---- Radii ---- */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-full: 9999px;
+
+  /* ---- Shadows ---- */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  /* ---- Transitions ---- */
+  --transition-fast: 0.12s ease;
+  --transition-normal: 0.2s ease;
+  --transition-slow: 0.3s ease;
+
+  /* ---- Z-index ---- */
+  --z-dropdown: 10;
+  --z-sticky: 20;
+  --z-header: 30;
+  --z-overlay: 40;
+  --z-sidebar: 50;
+  --z-modal: 60;
+  --z-toast: 100;
+}
+
+
+/* ----------------------------------------------------------
+   1b. DARK THEME TOKENS
+   ---------------------------------------------------------- */
+[data-theme="dark"] {
+  --color-primary: #6b85f9;
+  --color-primary-hover: #8da0fb;
+  --color-primary-light: rgba(107, 133, 249, 0.12);
+  --color-primary-border: #6b85f9;
+  --color-primary-text: #93aafb;
+  --color-primary-soft: rgba(107, 133, 249, 0.08);
+  --color-primary-muted: rgba(107, 133, 249, 0.18);
+
+  --color-accent: #50C8ED;
+  --color-accent-hover: #7dd8f2;
+  --color-accent-light: rgba(80, 200, 237, 0.12);
+
+  --color-bg-page: #0f1219;
+  --color-bg-card: #181d28;
+  --color-bg-subtle: #1e2433;
+  --color-bg-muted: #252d3f;
+  --color-bg-hover: #252d3f;
+  --color-bg-table-header: #1a2030;
+  --color-bg-input: #1e2433;
+
+  --color-border: #2a3348;
+  --color-border-strong: #374766;
+  --color-border-muted: #1e2433;
+
+  --color-text-primary: #e2e8f0;
+  --color-text-secondary: #cbd5e1;
+  --color-text-tertiary: #94a3b8;
+  --color-text-muted: #64748b;
+  --color-text-inverse: #0f172a;
+
+  --color-success: #34d399;
+  --color-success-bg: rgba(52, 211, 153, 0.1);
+  --color-success-border: rgba(52, 211, 153, 0.25);
+  --color-success-text: #6ee7b7;
+
+  --color-error: #f87171;
+  --color-error-bg: rgba(248, 113, 113, 0.1);
+  --color-error-border: rgba(248, 113, 113, 0.25);
+  --color-error-text: #fca5a5;
+
+  --color-warning: #fbbf24;
+  --color-warning-bg: rgba(251, 191, 36, 0.1);
+  --color-warning-border: rgba(251, 191, 36, 0.25);
+  --color-warning-text: #fde68a;
+
+  --color-info: #60a5fa;
+  --color-info-bg: rgba(96, 165, 250, 0.1);
+  --color-info-border: rgba(96, 165, 250, 0.25);
+  --color-info-text: #93c5fd;
+
+  --env-sandbox-bg: rgba(251, 191, 36, 0.1);
+  --env-sandbox-border: rgba(251, 191, 36, 0.25);
+  --env-sandbox-text: #fde68a;
+  --env-sandbox-badge-bg: rgba(251, 191, 36, 0.15);
+  --env-sandbox-badge-text: #fde68a;
+  --env-sandbox-accent: #fbbf24;
+
+  --env-production-bg: rgba(248, 113, 113, 0.1);
+  --env-production-border: rgba(248, 113, 113, 0.25);
+  --env-production-text: #fca5a5;
+  --env-production-badge-bg: rgba(248, 113, 113, 0.15);
+  --env-production-badge-text: #fca5a5;
+  --env-production-accent: #f87171;
+
+  --sidebar-bg: #0a0e17;
+  --sidebar-surface: #111827;
+  --sidebar-hover: rgba(255, 255, 255, 0.06);
+  --sidebar-active: rgba(255, 255, 255, 0.1);
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.35), 0 2px 4px -2px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.25);
+  --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}

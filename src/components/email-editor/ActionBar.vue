@@ -44,12 +44,12 @@ function handleFileChange(e: Event) {
 </script>
 
 <template>
-  <div class="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 shadow-[0_-2px_8px_rgba(0,0,0,0.04)]">
+  <div class="flex items-center justify-between px-4 py-3 bg-[var(--color-bg-card)] border-t border-[var(--color-border)] shadow-[0_-2px_8px_rgba(0,0,0,0.04)]">
     <div class="flex items-center gap-2">
       <!-- Cancel / Back -->
       <button
         @click="emit('cancel')"
-        class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+        class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-[var(--color-text-secondary)] bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-bg-subtle)] transition-colors"
       >
         <ArrowLeftIcon class="h-3.5 w-3.5" />
         <span class="hidden sm:inline">Cancel</span>
@@ -60,7 +60,7 @@ function handleFileChange(e: Event) {
         @click="emit('save')"
         :disabled="props.saving || props.hasErrors"
         :title="props.hasErrors ? 'Fix validation errors before saving' : undefined"
-        class="px-5 py-2 bg-[#020288] text-white text-sm font-medium rounded-lg hover:bg-[#0d35d7] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+        class="px-5 py-2 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
       >
         {{ props.saving ? 'Saving...' : props.isEdit ? 'Update Template' : 'Create Template' }}
       </button>
@@ -76,7 +76,7 @@ function handleFileChange(e: Event) {
       <!-- Export HTML -->
       <button
         @click="emit('exportHtml')"
-        class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+        class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-[var(--color-text-secondary)] bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-bg-subtle)] transition-colors"
         title="Export HTML file"
       >
         <ArrowDownTrayIcon class="h-3.5 w-3.5" />
@@ -86,7 +86,7 @@ function handleFileChange(e: Event) {
       <!-- Import HTML -->
       <button
         @click="triggerImport"
-        class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+        class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-[var(--color-text-secondary)] bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-bg-subtle)] transition-colors"
         title="Import HTML file"
       >
         <ArrowUpTrayIcon class="h-3.5 w-3.5" />
@@ -104,7 +104,7 @@ function handleFileChange(e: Event) {
       <button
         v-if="props.isEdit"
         @click="emit('duplicate')"
-        class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+        class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-[var(--color-text-secondary)] bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-bg-subtle)] transition-colors"
         title="Duplicate template"
       >
         <DocumentDuplicateIcon class="h-3.5 w-3.5" />

@@ -29,51 +29,51 @@ watch(() => analytics.queryParams, load)
 
 <template>
   <AnalyticsLayout title="Retention & CRM" description="Cohort analysis, campaign effectiveness, and consent stats">
-    <div v-if="loading" class="text-center py-12 text-gray-400">Loading...</div>
-    <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{{ error }}</div>
+    <div v-if="loading" class="text-center py-12 text-[var(--color-text-muted)]">Loading...</div>
+    <div v-else-if="error" class="bg-[var(--color-error-bg)] border border-[var(--color-error-border)] text-[var(--color-error-text)] px-4 py-3 rounded-lg text-sm">{{ error }}</div>
     <div v-else-if="data" class="space-y-6">
-      <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
-        <h3 class="text-sm font-semibold text-gray-900 mb-4">Cohort Retention</h3>
+      <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+        <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Cohort Retention</h3>
         <CohortTable v-if="data.cohorts.length" :cohorts="data.cohorts" />
-        <p v-else class="text-sm text-gray-400">No cohort data available</p>
+        <p v-else class="text-sm text-[var(--color-text-muted)]">No cohort data available</p>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
-          <h3 class="text-sm font-semibold text-gray-900 mb-4">Campaign Conversions</h3>
+        <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+          <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Campaign Conversions</h3>
           <table v-if="data.campaign_conversions.length" class="w-full text-sm">
-            <thead><tr class="text-left text-gray-500 text-xs uppercase">
+            <thead><tr class="text-left text-[var(--color-text-tertiary)] text-xs uppercase">
               <th class="pb-2">Campaign</th><th class="pb-2 text-right">Enrolled</th>
               <th class="pb-2 text-right">Converted</th><th class="pb-2 text-right">Rate</th>
             </tr></thead>
             <tbody>
-              <tr v-for="c in data.campaign_conversions" :key="c.campaign_slug" class="border-t border-gray-100">
-                <td class="py-2 text-gray-900 font-mono text-xs">{{ c.campaign_slug }}</td>
-                <td class="py-2 text-right text-gray-600">{{ c.enrollments.toLocaleString() }}</td>
-                <td class="py-2 text-right text-gray-600">{{ c.conversions.toLocaleString() }}</td>
+              <tr v-for="c in data.campaign_conversions" :key="c.campaign_slug" class="border-t border-[var(--color-border-muted)]">
+                <td class="py-2 text-[var(--color-text-primary)] font-mono text-xs">{{ c.campaign_slug }}</td>
+                <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ c.enrollments.toLocaleString() }}</td>
+                <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ c.conversions.toLocaleString() }}</td>
                 <td class="py-2 text-right text-green-600">{{ c.conversion_rate.toFixed(1) }}%</td>
               </tr>
             </tbody>
           </table>
-          <p v-else class="text-sm text-gray-400">No data</p>
+          <p v-else class="text-sm text-[var(--color-text-muted)]">No data</p>
         </div>
-        <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
-          <h3 class="text-sm font-semibold text-gray-900 mb-4">Consent Stats</h3>
+        <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+          <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Consent Stats</h3>
           <table v-if="data.consent_stats.length" class="w-full text-sm">
-            <thead><tr class="text-left text-gray-500 text-xs uppercase">
+            <thead><tr class="text-left text-[var(--color-text-tertiary)] text-xs uppercase">
               <th class="pb-2">Channel</th><th class="pb-2 text-right">Opted In</th>
               <th class="pb-2 text-right">Opted Out</th><th class="pb-2 text-right">Rate</th>
             </tr></thead>
             <tbody>
-              <tr v-for="s in data.consent_stats" :key="s.channel" class="border-t border-gray-100">
-                <td class="py-2 text-gray-900 capitalize">{{ s.channel }}</td>
+              <tr v-for="s in data.consent_stats" :key="s.channel" class="border-t border-[var(--color-border-muted)]">
+                <td class="py-2 text-[var(--color-text-primary)] capitalize">{{ s.channel }}</td>
                 <td class="py-2 text-right text-green-600">{{ s.opted_in.toLocaleString() }}</td>
                 <td class="py-2 text-right text-red-500">{{ s.opted_out.toLocaleString() }}</td>
-                <td class="py-2 text-right text-gray-600">{{ s.rate.toFixed(1) }}%</td>
+                <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ s.rate.toFixed(1) }}%</td>
               </tr>
             </tbody>
           </table>
-          <p v-else class="text-sm text-gray-400">No data</p>
+          <p v-else class="text-sm text-[var(--color-text-muted)]">No data</p>
         </div>
       </div>
     </div>

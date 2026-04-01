@@ -65,11 +65,11 @@ async function handleSend() {
     >
       <div v-if="open" class="fixed inset-0 z-50 flex items-center justify-center">
         <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" @click="emit('close')" />
-        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+        <div class="relative bg-[var(--color-bg-card)] rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
           <!-- Header -->
-          <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-            <h3 class="text-lg font-semibold tracking-tight text-gray-900">Test Send</h3>
-            <button @click="emit('close')" class="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-lg">
+          <div class="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border-muted)]">
+            <h3 class="text-lg font-semibold tracking-tight text-[var(--color-text-primary)]">Test Send</h3>
+            <button @click="emit('close')" class="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors p-1 hover:bg-[var(--color-bg-subtle)] rounded-lg">
               <XMarkIcon class="h-5 w-5" />
             </button>
           </div>
@@ -77,36 +77,36 @@ async function handleSend() {
           <!-- Body -->
           <div class="p-6 space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1.5">Channel</label>
-              <select v-model="channel" class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0099db]/40 focus:border-[#0099db] transition-shadow">
+              <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">Channel</label>
+              <select v-model="channel" class="w-full px-3 py-2.5 border border-[var(--color-border)] rounded-lg text-sm bg-[var(--color-bg-card)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[#0099db] transition-shadow">
                 <option v-for="ch in channels" :key="ch" :value="ch">{{ ch }}</option>
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1.5">Template Key</label>
-              <input v-model="templateKey" class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0099db]/40 focus:border-[#0099db] transition-shadow" placeholder="e.g. welcome_email" />
+              <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">Template Key</label>
+              <input v-model="templateKey" class="w-full px-3 py-2.5 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[#0099db] transition-shadow" placeholder="e.g. welcome_email" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1.5">Client ID</label>
-              <input v-model.number="clientId" type="number" class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0099db]/40 focus:border-[#0099db] transition-shadow" placeholder="123" />
+              <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">Client ID</label>
+              <input v-model.number="clientId" type="number" class="w-full px-3 py-2.5 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[#0099db] transition-shadow" placeholder="123" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1.5">Params (JSON)</label>
-              <textarea v-model="paramsJson" rows="3" class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#0099db]/40 focus:border-[#0099db] transition-shadow" placeholder='{"first_name": "John"}'></textarea>
+              <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">Params (JSON)</label>
+              <textarea v-model="paramsJson" rows="3" class="w-full px-3 py-2.5 border border-[var(--color-border)] rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[#0099db] transition-shadow" placeholder='{"first_name": "John"}'></textarea>
             </div>
 
-            <div v-if="error" class="text-sm text-red-600 bg-red-50 border border-red-100 px-4 py-3 rounded-lg">{{ error }}</div>
+            <div v-if="error" class="text-sm text-[var(--color-error-text)] bg-[var(--color-error-bg)] border border-[var(--color-error-border)] px-4 py-3 rounded-lg">{{ error }}</div>
             <div v-if="result" class="text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 px-4 py-3 rounded-lg">
               <pre class="whitespace-pre-wrap font-mono text-xs">{{ result }}</pre>
             </div>
           </div>
 
           <!-- Footer -->
-          <div class="px-6 py-4 bg-gray-50/80 border-t border-gray-100">
+          <div class="px-6 py-4 bg-[var(--color-bg-subtle)] border-t border-[var(--color-border-muted)]">
             <button
               @click="handleSend"
               :disabled="sending"
-              class="w-full py-2.5 px-4 bg-[#020288] text-white text-sm font-medium rounded-lg hover:bg-[#0d35d7] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              class="w-full py-2.5 px-4 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               {{ sending ? 'Sending...' : 'Send Test Message' }}
             </button>

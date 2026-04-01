@@ -59,21 +59,21 @@ async function createOptOut(channel: string) {
     <PageHeader title="Consent Management" description="Manage client opt-in/opt-out preferences per channel" />
 
     <!-- Lookup form -->
-    <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6 mb-6">
+    <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6 mb-6">
       <div class="flex gap-3 items-end">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Client ID</label>
+          <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Client ID</label>
           <input
             v-model="clientId"
             type="text"
             placeholder="Enter client ID..."
-            class="rounded-lg border border-gray-300 px-3 py-2 text-sm w-48"
+            class="rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm w-48"
             @keyup.enter="lookupConsents"
           />
         </div>
         <button
           @click="lookupConsents"
-          class="px-4 py-2 bg-[#020288] text-white text-sm font-medium rounded-lg hover:bg-[#0d35d7]"
+          class="px-4 py-2 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)]"
         >
           Lookup
         </button>
@@ -82,29 +82,29 @@ async function createOptOut(channel: string) {
     </div>
 
     <!-- Results -->
-    <div v-if="loading" class="text-center py-12 text-gray-400">Loading...</div>
+    <div v-if="loading" class="text-center py-12 text-[var(--color-text-muted)]">Loading...</div>
 
-    <div v-else-if="consents.length > 0 || clientId" class="bg-white rounded-xl border border-gray-200/80 shadow-sm overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-lg font-semibold tracking-tight text-gray-900">Consents for Client #{{ clientId }}</h2>
+    <div v-else-if="consents.length > 0 || clientId" class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-[var(--color-border)]">
+        <h2 class="text-lg font-semibold tracking-tight text-[var(--color-text-primary)]">Consents for Client #{{ clientId }}</h2>
       </div>
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
+      <table class="min-w-full divide-y divide-[var(--color-border)]">
+        <thead class="bg-[var(--color-bg-page)]">
           <tr>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Channel</th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Updated</th>
-            <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Action</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Channel</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Status</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Updated</th>
+            <th class="px-4 py-3 text-right text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Action</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100">
-          <tr v-for="c in consents" :key="c.id" class="hover:bg-slate-50/70 transition-colors">
-            <td class="px-4 py-3 text-sm font-medium text-gray-900 uppercase">{{ c.channel }}</td>
+        <tbody class="divide-y divide-[var(--color-border-muted)]">
+          <tr v-for="c in consents" :key="c.id" class="hover:bg-[var(--color-bg-hover)] transition-colors">
+            <td class="px-4 py-3 text-sm font-medium text-[var(--color-text-primary)] uppercase">{{ c.channel }}</td>
             <td class="px-4 py-3">
               <StatusBadge :status="c.opted_in ? 'active' : 'inactive'" />
-              <span class="ml-2 text-sm text-gray-500">{{ c.opted_in ? 'Opted In' : 'Opted Out' }}</span>
+              <span class="ml-2 text-sm text-[var(--color-text-tertiary)]">{{ c.opted_in ? 'Opted In' : 'Opted Out' }}</span>
             </td>
-            <td class="px-4 py-3 text-sm text-gray-500">{{ new Date(c.updated_at).toLocaleString() }}</td>
+            <td class="px-4 py-3 text-sm text-[var(--color-text-tertiary)]">{{ new Date(c.updated_at).toLocaleString() }}</td>
             <td class="px-4 py-3 text-right">
               <button
                 v-if="auth.canWrite"
@@ -117,7 +117,7 @@ async function createOptOut(channel: string) {
             </td>
           </tr>
           <tr v-if="consents.length === 0">
-            <td colspan="4" class="px-4 py-6 text-center text-gray-400">
+            <td colspan="4" class="px-4 py-6 text-center text-[var(--color-text-muted)]">
               No explicit consents found (all channels are implicitly opted-in)
             </td>
           </tr>
@@ -125,14 +125,14 @@ async function createOptOut(channel: string) {
       </table>
 
       <!-- Quick opt-out for channels not yet in the table -->
-      <div v-if="consents.length < allChannels.length" class="px-6 py-4 border-t border-gray-200 bg-gray-50">
-        <p class="text-xs text-gray-500 mb-2">Quick opt-out (implicit opt-in channels):</p>
+      <div v-if="consents.length < allChannels.length" class="px-6 py-4 border-t border-[var(--color-border)] bg-[var(--color-bg-page)]">
+        <p class="text-xs text-[var(--color-text-tertiary)] mb-2">Quick opt-out (implicit opt-in channels):</p>
         <div v-if="auth.canWrite" class="flex gap-2">
           <button
             v-for="ch in allChannels.filter(c => !consents.find(x => x.channel === c))"
             :key="ch"
             @click="createOptOut(ch)"
-            class="px-3 py-1 text-xs border border-gray-200 rounded-lg hover:bg-gray-100"
+            class="px-3 py-1 text-xs border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-bg-subtle)]"
           >
             Opt out {{ ch }}
           </button>

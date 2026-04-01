@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, shallowRef } from 'vue'
+import { ref, shallowRef, computed } from 'vue'
 import { Codemirror } from 'vue-codemirror'
 import { html } from '@codemirror/lang-html'
 import { oneDark } from '@codemirror/theme-one-dark'
 import type { EditorView } from '@codemirror/view'
+import { useTheme } from '@/composables/useTheme'
 
 const props = defineProps<{
   modelValue: string
@@ -15,8 +16,13 @@ const emit = defineEmits<{
   'update:modelValue': [value: string]
 }>()
 
+const { isDark } = useTheme()
+
 const view = shallowRef<EditorView>()
-const extensions = [html(), oneDark]
+const extensions = computed(() => {
+  if (isDark.value) return [html(), oneDark]
+  return [html()]
+})
 const editorRef = ref<InstanceType<typeof Codemirror>>()
 
 function handleReady(payload: { view: EditorView }) {
@@ -42,7 +48,7 @@ defineExpose({ insertAtCursor })
 </script>
 
 <template>
-  <div class="code-editor-wrapper rounded-lg overflow-hidden border border-gray-700">
+  <div class="code-editor-wrapper rounded-lg overflow-hidden border border-[var(--color-border-strong)]">
     <Codemirror
       ref="editorRef"
       :model-value="props.modelValue"

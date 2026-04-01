@@ -37,43 +37,43 @@ async function handleSubmit() {
         <!-- Brand -->
         <div class="text-center mb-8">
           <img :src="hksLogo" alt="HKS Global" class="h-10 mx-auto mb-4 invert" />
-          <h1 class="text-xl font-bold tracking-tight text-gray-900">Marketing Automation</h1>
+          <h1 class="text-xl font-bold tracking-tight text-[var(--color-text-primary)]">Marketing Automation</h1>
           <p class="text-sm text-[#0099db] font-medium mt-1">HKS Global Growth Engine</p>
         </div>
 
         <form @submit.prevent="handleSubmit" class="space-y-4">
           <div>
-            <label for="email" class="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+            <label for="email" class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">Email</label>
             <input
               id="email"
               v-model="email"
               type="email"
               required
-              class="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0099db]/40 focus:border-[#0099db] transition-shadow shadow-sm"
+              class="w-full px-3.5 py-2.5 border border-[var(--color-border)] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[#0099db] transition-shadow shadow-sm"
               placeholder="admin@duegate.com"
             />
           </div>
 
           <div>
-            <label for="password" class="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+            <label for="password" class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">Password</label>
             <input
               id="password"
               v-model="password"
               type="password"
               required
-              class="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0099db]/40 focus:border-[#0099db] transition-shadow shadow-sm"
+              class="w-full px-3.5 py-2.5 border border-[var(--color-border)] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[#0099db] transition-shadow shadow-sm"
               placeholder="Enter your password"
             />
           </div>
 
-          <div v-if="error" class="text-sm text-red-600 bg-red-50 border border-red-100 px-4 py-3 rounded-xl">
+          <div v-if="error" class="text-sm text-[var(--color-error-text)] bg-[var(--color-error-bg)] border border-[var(--color-error-border)] px-4 py-3 rounded-xl">
             {{ error }}
           </div>
 
           <button
             type="submit"
             :disabled="loading"
-            class="w-full py-2.5 px-4 bg-gradient-to-r from-[#020288] to-[#0d35d7] text-white text-sm font-semibold rounded-xl hover:from-[#0d35d7] hover:to-[#020288] focus:outline-none focus:ring-2 focus:ring-[#0099db]/40 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-[#020288]/25"
+            class="w-full py-2.5 px-4 bg-gradient-to-r from-[#020288] to-[#0d35d7] text-white text-sm font-semibold rounded-xl hover:from-[#0d35d7] hover:to-[#020288] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-[#020288]/25"
           >
             {{ loading ? 'Signing in...' : 'Sign in' }}
           </button>
