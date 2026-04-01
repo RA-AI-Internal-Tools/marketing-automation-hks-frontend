@@ -10,6 +10,13 @@ const page = ref(1)
 const perPage = 50
 const loading = ref(true)
 
+// Filters
+const filterAction = ref('')
+const filterDateFrom = ref('')
+const filterDateTo = ref('')
+
+const actionOptions = ['create', 'update', 'delete', 'toggle']
+
 const actionColors: Record<string, string> = {
   create: 'bg-green-100 text-green-700',
   update: 'bg-blue-100 text-blue-700',
@@ -20,12 +27,29 @@ const actionColors: Record<string, string> = {
 async function load() {
   loading.value = true
   try {
-    const res = await fetchAuditLogs({ page: page.value, per_page: perPage })
+    const params: Record<string, any> = { page: page.value, per_page: perPage }
+    if (filterAction.value) params.action = filterAction.value
+    if (filterDateFrom.value) params.since = new Date(filterDateFrom.value).toISOString()
+    if (filterDateTo.value) params.until = new Date(filterDateTo.value + 'T23:59:59').toISOString()
+    const res = await fetchAuditLogs(params)
     logs.value = res.data
     total.value = res.total
   } finally {
     loading.value = false
   }
+}
+
+function applyFilters() {
+  page.value = 1
+  load()
+}
+
+function clearFilters() {
+  filterAction.value = ''
+  filterDateFrom.value = ''
+  filterDateTo.value = ''
+  page.value = 1
+  load()
 }
 
 function prevPage() {
@@ -52,6 +76,36 @@ onMounted(load)
         <h1 class="text-2xl font-bold text-gray-900">Audit Logs</h1>
         <p class="text-sm text-gray-500">Track all administrative actions across the platform</p>
       </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="flex flex-wrap items-end gap-3 bg-white rounded-xl border border-gray-200 p-4">
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">Action Type</label>
+        <select v-model="filterAction"
+          class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="">All actions</option>
+          <option v-for="a in actionOptions" :key="a" :value="a">{{ a }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">From</label>
+        <input v-model="filterDateFrom" type="date"
+          class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1">To</label>
+        <input v-model="filterDateTo" type="date"
+          class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+      <button @click="applyFilters"
+        class="px-4 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors">
+        Apply
+      </button>
+      <button @click="clearFilters"
+        class="px-4 py-1.5 text-sm font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+        Clear
+      </button>
     </div>
 
     <div v-if="loading" class="text-center py-12 text-gray-400">Loading audit logs...</div>

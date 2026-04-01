@@ -6,10 +6,12 @@ import api from '@/api/client'
 const route = useRoute()
 
 const clientId = ref(0)
+const token = ref('')
 const loading = ref(true)
 const saving = ref<string | null>(null)
 const error = ref('')
 const success = ref('')
+const tokenInvalid = ref(false)
 
 interface ChannelPreference {
   channel: string
@@ -25,31 +27,46 @@ const channels = ref<ChannelPreference[]>([
   { channel: 'push', label: 'Push Notifications', description: 'Browser and mobile push notifications', opted_in: true },
 ])
 
+/** Build axios config that passes the signed token instead of the session Bearer token */
+function publicConfig() {
+  return {
+    headers: { 'X-Preference-Token': token.value },
+    _publicRequest: true,
+  } as any
+}
+
 async function loadPreferences() {
   const cid = Number(route.query.client_id || route.params.clientId)
-  if (!cid) {
-    error.value = 'Missing client identifier. Please use the link from your email.'
+  const tkn = (route.query.token as string) || ''
+
+  if (!cid || !tkn) {
+    error.value = 'Invalid or missing link. Please use the link from your email.'
+    tokenInvalid.value = true
     loading.value = false
     return
   }
+
   clientId.value = cid
+  token.value = tkn
 
   try {
-    // This endpoint may require a signed token in production
-    const { data } = await api.get(`/api/consents/${cid}`)
+    const { data } = await api.get(`/api/consents/${cid}`, publicConfig())
     const consentMap = new Map<string, boolean>()
     for (const c of data) {
       consentMap.set(c.channel, c.opted_in)
     }
-    // Update channels with actual consent data (default = opted in if no record)
     for (const ch of channels.value) {
       if (consentMap.has(ch.channel)) {
         ch.opted_in = consentMap.get(ch.channel)!
       }
     }
   } catch (e: any) {
-    // If 401, this might be a public page that needs different auth
-    error.value = 'Unable to load your preferences. Please try again later.'
+    if (e.response?.status === 401 || e.response?.status === 403) {
+      error.value = 'This link has expired or is invalid. Please request a new preferences link.'
+      tokenInvalid.value = true
+    } else {
+      error.value = 'Unable to load your preferences. Please try again later.'
+    }
   } finally {
     loading.value = false
   }
@@ -62,9 +79,9 @@ async function toggleChannel(channel: ChannelPreference) {
   try {
     const newState = !channel.opted_in
     if (newState) {
-      await api.post('/api/consents/opt-in', { client_id: clientId.value, channel: channel.channel })
+      await api.post('/api/consents/opt-in', { client_id: clientId.value, channel: channel.channel }, publicConfig())
     } else {
-      await api.post('/api/consents/opt-out', { client_id: clientId.value, channel: channel.channel })
+      await api.post('/api/consents/opt-out', { client_id: clientId.value, channel: channel.channel }, publicConfig())
     }
     channel.opted_in = newState
     success.value = `${channel.label} notifications ${newState ? 'enabled' : 'disabled'}`
@@ -82,7 +99,7 @@ async function optOutAll() {
   try {
     for (const ch of channels.value) {
       if (ch.opted_in) {
-        await api.post('/api/consents/opt-out', { client_id: clientId.value, channel: ch.channel })
+        await api.post('/api/consents/opt-out', { client_id: clientId.value, channel: ch.channel }, publicConfig())
         ch.opted_in = false
       }
     }
@@ -121,7 +138,7 @@ onMounted(loadPreferences)
       <div v-if="loading" class="text-center py-12 text-gray-500">Loading your preferences...</div>
 
       <!-- Channel list -->
-      <div v-else-if="clientId" class="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+      <div v-else-if="clientId && !tokenInvalid" class="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
         <div
           v-for="channel in channels"
           :key="channel.channel"

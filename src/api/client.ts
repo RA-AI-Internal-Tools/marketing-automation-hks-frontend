@@ -16,10 +16,17 @@ api.interceptors.request.use((config) => {
 })
 
 // On 401 responses, clear auth state and redirect to login
+// Skip redirect for public routes (e.g. /preferences) that use token-based auth
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 && !error.config.url?.includes('/auth/login')) {
+    const isPublicRoute = window.location.pathname === '/preferences'
+    if (
+      error.response?.status === 401 &&
+      !error.config.url?.includes('/auth/login') &&
+      !error.config._publicRequest &&
+      !isPublicRoute
+    ) {
       localStorage.removeItem('ma_auth_token')
       localStorage.removeItem('ma_auth_email')
       localStorage.removeItem('ma_auth_role')

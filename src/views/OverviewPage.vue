@@ -121,6 +121,47 @@ const chartOptions = {
         </div>
       </div>
 
+      <!-- Live SSE Feed -->
+      <div v-if="dashboardStore.recentLogs.length || dashboardStore.recentEnrollments.length"
+           class="bg-white rounded-xl border border-gray-200 p-6 mb-8">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="relative flex h-2.5 w-2.5">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+          </span>
+          <h2 class="text-lg font-semibold text-gray-900">Live Activity</h2>
+        </div>
+        <div class="space-y-2 max-h-64 overflow-y-auto">
+          <!-- Recent logs -->
+          <div v-for="log in dashboardStore.recentLogs.slice(0, 15)" :key="'log-' + log.id"
+            class="flex items-center justify-between text-sm px-3 py-2 rounded-lg bg-gray-50">
+            <div class="flex items-center gap-3">
+              <span
+                class="px-2 py-0.5 rounded-full text-xs font-medium"
+                :class="log.status === 'sent' ? 'bg-green-100 text-green-700' :
+                         log.status === 'failed' ? 'bg-red-100 text-red-700' :
+                         'bg-gray-100 text-gray-600'"
+              >{{ log.status }}</span>
+              <span class="text-gray-700 font-medium">{{ log.campaign_slug }}</span>
+              <span class="text-gray-400">step {{ log.step_index }} via {{ log.channel }}</span>
+            </div>
+            <span class="text-xs text-gray-400 whitespace-nowrap">{{ new Date(log.created_at).toLocaleTimeString() }}</span>
+          </div>
+          <!-- Recent enrollments -->
+          <div v-for="enr in dashboardStore.recentEnrollments.slice(0, 10)" :key="'enr-' + enr.id"
+            class="flex items-center justify-between text-sm px-3 py-2 rounded-lg bg-indigo-50">
+            <div class="flex items-center gap-3">
+              <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">enrollment</span>
+              <span class="text-gray-700 font-medium">Client #{{ enr.client_id }}</span>
+              <span class="text-gray-400">{{ enr.status }} &middot; step {{ enr.current_step }}</span>
+            </div>
+            <span class="text-xs text-gray-400 whitespace-nowrap">{{ new Date(enr.created_at).toLocaleTimeString() }}</span>
+          </div>
+          <p v-if="!dashboardStore.recentLogs.length && !dashboardStore.recentEnrollments.length"
+             class="text-gray-400 text-sm text-center py-4">Waiting for live events...</p>
+        </div>
+      </div>
+
       <!-- Campaign performance table -->
       <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200">
