@@ -111,7 +111,7 @@ const channelColors: Record<string, string> = {
               </span>
             </td>
             <td class="px-4 py-3">
-              <StatusBadge :status="tmpl.is_active ? 'active' : 'expired'" />
+              <StatusBadge :status="tmpl.is_active ? 'active' : 'inactive'" />
             </td>
             <td class="px-4 py-3 text-right">
               <div v-if="auth.canWrite" class="flex items-center justify-end gap-2">

@@ -19,10 +19,13 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 const channels = ref<ChannelStats[]>([])
 const loading = ref(true)
+const error = ref('')
 
 onMounted(async () => {
   try {
     channels.value = await fetchChannelStats()
+  } catch (e: any) {
+    error.value = e.response?.data?.error || 'Failed to load channel stats'
   } finally {
     loading.value = false
   }
@@ -58,6 +61,8 @@ const chartOptions = {
     <PageHeader title="Channel Analytics" description="Message delivery performance per channel" />
 
     <div v-if="loading" class="text-center py-12 text-gray-400">Loading channels...</div>
+
+    <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{{ error }}</div>
 
     <template v-else>
       <div class="grid grid-cols-3 gap-4 mb-8">

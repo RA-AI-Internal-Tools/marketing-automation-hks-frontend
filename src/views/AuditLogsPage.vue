@@ -9,6 +9,7 @@ const total = ref(0)
 const page = ref(1)
 const perPage = 50
 const loading = ref(true)
+const error = ref('')
 
 // Filters
 const filterAction = ref('')
@@ -26,14 +27,17 @@ const actionColors: Record<string, string> = {
 
 async function load() {
   loading.value = true
+  error.value = ''
   try {
-    const params: Record<string, any> = { page: page.value, per_page: perPage }
+    const params: Record<string, any> = { limit: perPage, offset: (page.value - 1) * perPage }
     if (filterAction.value) params.action = filterAction.value
     if (filterDateFrom.value) params.since = new Date(filterDateFrom.value).toISOString()
     if (filterDateTo.value) params.until = new Date(filterDateTo.value + 'T23:59:59').toISOString()
     const res = await fetchAuditLogs(params)
     logs.value = res.data
     total.value = res.total
+  } catch (e: any) {
+    error.value = e.response?.data?.error || 'Failed to load audit logs'
   } finally {
     loading.value = false
   }
@@ -109,6 +113,8 @@ onMounted(load)
     </div>
 
     <div v-if="loading" class="text-center py-12 text-gray-400">Loading audit logs...</div>
+
+    <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{{ error }}</div>
 
     <div v-else class="bg-white rounded-xl border border-gray-200 overflow-hidden">
       <table class="w-full text-sm">

@@ -87,7 +87,7 @@ async function handleDelete(id: number, name: string) {
               />
               <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-indigo-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
             </label>
-            <StatusBadge :status="campaign.is_active ? 'active' : 'expired'" />
+            <StatusBadge :status="campaign.is_active ? 'active' : 'inactive'" />
             <button
               v-if="auth.canWrite"
               @click="router.push(`/campaigns/${campaign.id}/edit`)"

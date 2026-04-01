@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useAuthStore } from '@/stores/auth'
 import { fetchUsers, createUser, updateUser, deleteUser } from '@/api/users'
 import type { User, UserRequest } from '@/api/types'
 import PageHeader from '@/components/PageHeader.vue'
@@ -10,6 +11,8 @@ import {
   TrashIcon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline'
+
+const auth = useAuthStore()
 
 const users = ref<User[]>([])
 const loading = ref(true)
@@ -187,7 +190,7 @@ onMounted(load)
             </td>
             <td class="px-6 py-4 text-sm text-gray-500">{{ formatDate(user.last_login_at) }}</td>
             <td class="px-6 py-4 text-right">
-              <div class="flex items-center justify-end gap-2">
+              <div v-if="auth.isAdmin" class="flex items-center justify-end gap-2">
                 <button @click="openEdit(user)" class="text-gray-400 hover:text-indigo-600 transition-colors" title="Edit">
                   <PencilSquareIcon class="h-4 w-4" />
                 </button>

@@ -32,6 +32,11 @@ onMounted(() => {
 
 onUnmounted(() => clearInterval(interval))
 
+function normalizeHealthStatus(status: string): string {
+  if (status === 'ok') return 'up'
+  return status
+}
+
 const services = [
   { key: 'postgres', name: 'PostgreSQL', description: 'Campaign data, enrollments, logs, consents' },
   { key: 'redis', name: 'Redis', description: 'Frequency cap sorted sets, NATS deduplication' },
@@ -83,7 +88,7 @@ const services = [
         >
           <div class="flex items-center justify-between mb-3">
             <h3 class="text-lg font-semibold text-gray-900">{{ svc.name }}</h3>
-            <StatusBadge :status="(health.checks as any)[svc.key]" />
+            <StatusBadge :status="normalizeHealthStatus((health.checks as any)[svc.key])" />
           </div>
           <p class="text-sm text-gray-500">{{ svc.description }}</p>
         </div>

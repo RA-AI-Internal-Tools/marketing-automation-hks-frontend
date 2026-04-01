@@ -114,7 +114,11 @@ async function handleRunNow(id: number) {
 
 async function handleDelete(id: number) {
   if (!confirm('Are you sure you want to delete this report schedule?')) return
-  store.remove(id)
+  try {
+    await store.remove(id)
+  } catch (e: any) {
+    alert(e.response?.data?.error || 'Failed to delete report')
+  }
 }
 </script>
 
@@ -235,7 +239,7 @@ async function handleDelete(id: number) {
             </div>
           </div>
           <div class="flex items-center gap-3">
-            <StatusBadge :status="report.is_active ? 'active' : 'expired'" />
+            <StatusBadge :status="report.is_active ? 'active' : 'inactive'" />
             <button
               v-if="auth.canWrite"
               @click="openEdit(report)"

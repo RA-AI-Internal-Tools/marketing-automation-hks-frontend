@@ -101,7 +101,7 @@ async function createOptOut(channel: string) {
           <tr v-for="c in consents" :key="c.id" class="hover:bg-gray-50">
             <td class="px-4 py-3 text-sm font-medium text-gray-900 uppercase">{{ c.channel }}</td>
             <td class="px-4 py-3">
-              <StatusBadge :status="c.opted_in ? 'active' : 'expired'" />
+              <StatusBadge :status="c.opted_in ? 'active' : 'inactive'" />
               <span class="ml-2 text-sm text-gray-500">{{ c.opted_in ? 'Opted In' : 'Opted Out' }}</span>
             </td>
             <td class="px-4 py-3 text-sm text-gray-500">{{ new Date(c.updated_at).toLocaleString() }}</td>
@@ -127,10 +127,9 @@ async function createOptOut(channel: string) {
       <!-- Quick opt-out for channels not yet in the table -->
       <div v-if="consents.length < allChannels.length" class="px-6 py-4 border-t border-gray-200 bg-gray-50">
         <p class="text-xs text-gray-500 mb-2">Quick opt-out (implicit opt-in channels):</p>
-        <div class="flex gap-2">
+        <div v-if="auth.canWrite" class="flex gap-2">
           <button
             v-for="ch in allChannels.filter(c => !consents.find(x => x.channel === c))"
-            v-if="auth.canWrite"
             :key="ch"
             @click="createOptOut(ch)"
             class="px-3 py-1 text-xs border border-gray-300 rounded-lg hover:bg-gray-100"

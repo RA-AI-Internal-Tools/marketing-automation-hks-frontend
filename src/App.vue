@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watchEffect } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import {
@@ -108,8 +108,17 @@ const sections = computed(() =>
 )
 
 const openSections = ref<Record<string, boolean>>(
-  Object.fromEntries(sections.map((s) => [s.label, s.defaultOpen ?? false])),
+  Object.fromEntries(sections.value.map((s) => [s.label, s.defaultOpen ?? false])),
 )
+
+// Keep openSections in sync when sections change (e.g. after role changes)
+watchEffect(() => {
+  for (const s of sections.value) {
+    if (!(s.label in openSections.value)) {
+      openSections.value[s.label] = s.defaultOpen ?? false
+    }
+  }
+})
 
 function toggleSection(label: string) {
   openSections.value[label] = !openSections.value[label]

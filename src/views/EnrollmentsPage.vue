@@ -11,6 +11,7 @@ const auth = useAuthStore()
 const enrollments = ref<CampaignEnrollment[]>([])
 const total = ref(0)
 const loading = ref(true)
+const error = ref('')
 const page = ref(0)
 const limit = 25
 
@@ -20,6 +21,7 @@ const filterClient = ref('')
 
 async function load() {
   loading.value = true
+  error.value = ''
   try {
     const params: Record<string, any> = { limit, offset: page.value * limit }
     if (filterStatus.value) params.status = filterStatus.value
@@ -29,6 +31,8 @@ async function load() {
     const result = await fetchEnrollments(params)
     enrollments.value = result.data || []
     total.value = result.total
+  } catch (e: any) {
+    error.value = e.response?.data?.error || 'Failed to load enrollments'
   } finally {
     loading.value = false
   }
@@ -86,6 +90,9 @@ function formatDate(d?: string): string {
         class="rounded-lg border border-gray-300 px-3 py-2 text-sm w-32"
       />
     </div>
+
+    <!-- Error -->
+    <div v-if="error" class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{{ error }}</div>
 
     <!-- Table -->
     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
