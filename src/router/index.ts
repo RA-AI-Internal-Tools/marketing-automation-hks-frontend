@@ -213,4 +213,10 @@ router.beforeEach((to) => {
   }
 })
 
+// Update document title on navigation
+router.afterEach((to) => {
+  const title = to.meta.title as string | undefined
+  document.title = title ? `${title} — HKS Marketing` : 'HKS Marketing Automation'
+})
+
 export default router

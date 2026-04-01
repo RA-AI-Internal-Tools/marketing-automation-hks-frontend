@@ -7,19 +7,19 @@ defineProps<{
 }>()
 
 const accentColors: Record<string, string> = {
-  indigo: 'bg-[#020288]',
+  indigo: 'bg-[var(--color-primary)]',
   green: 'bg-emerald-500',
   yellow: 'bg-amber-500',
   red: 'bg-red-500',
-  blue: 'bg-[#0099db]',
+  blue: 'bg-[var(--color-accent)]',
 }
 
 const subtitleColors: Record<string, string> = {
-  indigo: 'text-[#020288]',
+  indigo: 'text-[var(--color-primary)]',
   green: 'text-emerald-600',
   yellow: 'text-amber-600',
   red: 'text-red-600',
-  blue: 'text-[#0099db]',
+  blue: 'text-[var(--color-accent)]',
 }
 </script>
 

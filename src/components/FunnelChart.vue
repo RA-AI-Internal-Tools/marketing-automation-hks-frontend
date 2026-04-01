@@ -12,10 +12,10 @@ function widthPercent(index: number): number {
 }
 
 const colors = [
-  'bg-[#020288]',
-  'bg-[#0d35d7]',
-  'bg-[#0099db]',
-  'bg-[#50C8ED]',
+  'bg-[var(--color-primary)]',
+  'bg-[var(--color-primary-hover)]',
+  'bg-[var(--color-accent)]',
+  'bg-[var(--color-accent-hover)]',
   'bg-cyan-300',
 ]
 </script>

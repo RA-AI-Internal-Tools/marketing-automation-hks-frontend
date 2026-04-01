@@ -170,7 +170,7 @@ const chartOptions = {
                          log.status === 'failed' ? 'bg-red-50 text-red-700' :
                          'bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)]'"
               >
-                <span class="h-1.5 w-1.5 rounded-full" :class="log.status === 'sent' ? 'bg-emerald-500' : log.status === 'failed' ? 'bg-red-500' : 'bg-gray-400'"></span>
+                <span class="h-1.5 w-1.5 rounded-full" :class="log.status === 'sent' ? 'bg-emerald-500' : log.status === 'failed' ? 'bg-red-500' : 'bg-[var(--color-text-muted)]'"></span>
                 {{ log.status }}
               </span>
               <span class="text-[var(--color-text-secondary)] font-medium">{{ log.campaign_slug }}</span>

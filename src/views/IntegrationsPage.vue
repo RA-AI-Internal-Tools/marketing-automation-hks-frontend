@@ -22,7 +22,9 @@ const { showToast } = useToast()
 const search = ref('')
 const activeCategory = ref<ProviderType | 'all'>('all')
 const formVisible = ref(false)
+const formSaving = ref(false)
 const editingIntegration = ref<Integration | null>(null)
+const testingIds = ref<Set<number>>(new Set())
 
 const categories: { value: ProviderType | 'all'; label: string }[] = [
   { value: 'all', label: 'All' },
@@ -62,6 +64,7 @@ function openEdit(id: number) {
 }
 
 async function handleSave(req: IntegrationRequest, id?: number) {
+  formSaving.value = true
   try {
     if (id) {
       await store.update(id, req)
@@ -73,15 +76,22 @@ async function handleSave(req: IntegrationRequest, id?: number) {
     formVisible.value = false
   } catch (e: any) {
     showToast(e.response?.data?.error || 'Failed to save integration', 'error')
+  } finally {
+    formSaving.value = false
   }
 }
 
 async function handleTest(id: number) {
+  testingIds.value.add(id)
   try {
     const result = await store.testConnection(id)
     showToast(result.success ? 'Connection successful' : `Connection failed: ${result.message}`, result.success ? 'success' : 'error')
+    // Reload to update last_tested_at
+    await store.load()
   } catch (e: any) {
     showToast(e.response?.data?.error || 'Test connection failed', 'error')
+  } finally {
+    testingIds.value.delete(id)
   }
 }
 </script>
@@ -189,6 +199,7 @@ async function handleTest(id: number) {
         v-for="integration in filtered"
         :key="integration.id"
         :integration="integration"
+        :testing="testingIds.has(integration.id)"
         @edit="openEdit"
         @test="handleTest"
       />
@@ -198,6 +209,7 @@ async function handleTest(id: number) {
     <IntegrationForm
       :visible="formVisible"
       :integration="editingIntegration"
+      :saving="formSaving"
       @close="formVisible = false"
       @save="handleSave"
     />

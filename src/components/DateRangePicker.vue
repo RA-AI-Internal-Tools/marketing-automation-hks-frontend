@@ -41,14 +41,14 @@ const untilDate = computed({
         type="date"
         :value="sinceDate"
         @input="sinceDate = ($event.target as HTMLInputElement).value"
-        class="px-2.5 py-1.5 border border-[var(--color-border)] rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[#0099db] transition-shadow"
+        class="px-2.5 py-1.5 border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)] transition-shadow"
       />
       <span class="text-[var(--color-text-muted)]">to</span>
       <input
         type="date"
         :value="untilDate"
         @input="untilDate = ($event.target as HTMLInputElement).value"
-        class="px-2.5 py-1.5 border border-[var(--color-border)] rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[#0099db] transition-shadow"
+        class="px-2.5 py-1.5 border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)] transition-shadow"
       />
     </div>
   </div>

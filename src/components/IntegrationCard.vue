@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import type { Integration } from '@/api/types'
 import {
   LinkIcon,
@@ -15,14 +14,13 @@ import {
 
 const props = defineProps<{
   integration: Integration
+  testing?: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'edit', id: number): void
   (e: 'test', id: number): void
 }>()
-
-const testing = ref(false)
 
 const typeIcons: Record<string, any> = {
   email: EnvelopeIcon,
@@ -53,10 +51,8 @@ function formatDate(d: string) {
   return new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-async function handleTest() {
-  testing.value = true
+function handleTest() {
   emit('test', props.integration.id)
-  setTimeout(() => { testing.value = false }, 2000)
 }
 </script>
 

@@ -11,11 +11,11 @@ const props = defineProps<{
 }>()
 
 const accentColors: Record<string, string> = {
-  indigo: 'bg-[#020288]',
+  indigo: 'bg-[var(--color-primary)]',
   green: 'bg-emerald-500',
   yellow: 'bg-amber-500',
   red: 'bg-red-500',
-  blue: 'bg-[#0099db]',
+  blue: 'bg-[var(--color-accent)]',
 }
 </script>
 

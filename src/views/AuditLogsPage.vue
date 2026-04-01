@@ -87,7 +87,7 @@ onMounted(load)
       <div>
         <label class="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1">Action Type</label>
         <select v-model="filterAction"
-          class="px-3 py-1.5 text-sm border border-[var(--color-border)] rounded-lg focus:outline-none focus:ring-[var(--color-accent)]/40">
+          class="px-3 py-1.5 text-sm border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)]">
           <option value="">All actions</option>
           <option v-for="a in actionOptions" :key="a" :value="a">{{ a }}</option>
         </select>
@@ -95,12 +95,12 @@ onMounted(load)
       <div>
         <label class="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1">From</label>
         <input v-model="filterDateFrom" type="date"
-          class="px-3 py-1.5 text-sm border border-[var(--color-border)] rounded-lg focus:outline-none focus:ring-[var(--color-accent)]/40" />
+          class="px-3 py-1.5 text-sm border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)]" />
       </div>
       <div>
         <label class="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1">To</label>
         <input v-model="filterDateTo" type="date"
-          class="px-3 py-1.5 text-sm border border-[var(--color-border)] rounded-lg focus:outline-none focus:ring-[var(--color-accent)]/40" />
+          class="px-3 py-1.5 text-sm border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)]" />
       </div>
       <button @click="applyFilters"
         class="px-4 py-1.5 text-sm font-medium text-white bg-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors">
@@ -136,7 +136,7 @@ onMounted(load)
             </td>
             <td class="px-4 py-3 text-[var(--color-text-secondary)]">{{ log.user_email }}</td>
             <td class="px-4 py-3">
-              <span class="px-2 py-0.5 rounded-full text-xs font-medium" :class="actionColors[log.action] || 'bg-gray-100 text-gray-700'">
+              <span class="px-2 py-0.5 rounded-full text-xs font-medium" :class="actionColors[log.action] || 'bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)]'">
                 {{ log.action }}
               </span>
             </td>

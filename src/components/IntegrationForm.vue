@@ -7,6 +7,7 @@ import type { Integration, IntegrationRequest, ProviderType, IntegrationStatus }
 const props = defineProps<{
   visible: boolean
   integration?: Integration | null
+  saving?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -21,7 +22,6 @@ const providerType = ref<ProviderType>('email')
 const endpointUrl = ref('')
 const apiKey = ref('')
 const status = ref<IntegrationStatus>('not_configured')
-const saving = ref(false)
 const error = ref('')
 
 const isEdit = computed(() => !!props.integration)
@@ -53,26 +53,21 @@ watch(() => props.visible, (v) => {
   error.value = ''
 })
 
-async function handleSubmit() {
+function handleSubmit() {
   error.value = ''
   if (!name.value.trim()) {
     error.value = 'Provider name is required'
     return
   }
 
-  saving.value = true
-  try {
-    const req: IntegrationRequest = {
-      name: name.value.trim(),
-      provider_type: providerType.value,
-      endpoint_url: endpointUrl.value.trim() || undefined,
-      api_key: apiKey.value.trim() || undefined,
-      status: status.value,
-    }
-    emit('save', req, props.integration?.id)
-  } finally {
-    saving.value = false
+  const req: IntegrationRequest = {
+    name: name.value.trim(),
+    provider_type: providerType.value,
+    endpoint_url: endpointUrl.value.trim() || undefined,
+    api_key: apiKey.value.trim() || undefined,
+    status: status.value,
   }
+  emit('save', req, props.integration?.id)
 }
 </script>
 

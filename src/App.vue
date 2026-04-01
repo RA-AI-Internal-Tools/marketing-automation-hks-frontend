@@ -7,6 +7,8 @@ import { useDashboardStore } from '@/stores/dashboard'
 import { useCampaignsStore } from '@/stores/campaigns'
 import { useTemplatesStore } from '@/stores/templates'
 import { useReportsStore } from '@/stores/reports'
+import { useEnvironmentStore } from '@/stores/environment'
+import { useIntegrationsStore } from '@/stores/integrations'
 import AppSidebar from '@/components/AppSidebar.vue'
 import AppHeader from '@/components/AppHeader.vue'
 
@@ -44,6 +46,10 @@ function handleLogout() {
   useCampaignsStore().$reset()
   useTemplatesStore().$reset()
   useReportsStore().$reset()
+  useEnvironmentStore().$reset()
+  useIntegrationsStore().$reset()
+  sidebarCollapsed.value = false
+  sidebarMobileOpen.value = false
   auth.logout()
   router.push('/login')
 }

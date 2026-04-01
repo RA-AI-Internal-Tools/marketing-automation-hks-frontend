@@ -10,11 +10,11 @@ const props = defineProps<{
 }>()
 
 function cellColor(value: number): string {
-  if (value >= 80) return 'bg-[#020288] text-white'
-  if (value >= 60) return 'bg-[#0d35d7] text-white'
-  if (value >= 40) return 'bg-[#0099db] text-white'
-  if (value >= 20) return 'bg-[#0099db]/20 text-[#020288]'
-  if (value > 0) return 'bg-[#0099db]/10 text-[#0d35d7]'
+  if (value >= 80) return 'bg-[var(--color-primary)] text-white'
+  if (value >= 60) return 'bg-[var(--color-primary-hover)] text-white'
+  if (value >= 40) return 'bg-[var(--color-accent)] text-white'
+  if (value >= 20) return 'bg-[var(--color-accent-light)] text-[var(--color-primary)]'
+  if (value > 0) return 'bg-[var(--color-primary-soft)] text-[var(--color-primary)]'
   return 'bg-[var(--color-bg-page)] text-[var(--color-text-muted)]'
 }
 

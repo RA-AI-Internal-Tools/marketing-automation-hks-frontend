@@ -43,7 +43,7 @@ defineExpose({ trigger })
       leave-from-class="opacity-100"
       leave-to-class="opacity-0"
     >
-      <div v-if="showDialog" class="fixed inset-0 z-[70] flex items-center justify-center p-4">
+      <div v-if="showDialog" class="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4">
         <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" @click="showDialog = false" />
         <div class="relative bg-[var(--color-bg-card)] rounded-xl border border-[var(--env-production-border)] shadow-xl p-6 max-w-sm w-full">
           <div class="flex items-center gap-3 mb-4">

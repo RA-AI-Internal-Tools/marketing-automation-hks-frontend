@@ -84,7 +84,7 @@ async function handleChangePassword() {
               v-model="currentPassword"
               type="password"
               required
-              class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-[var(--color-accent)]/40"
+              class="w-full px-3 py-2 border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)]"
             />
           </div>
           <div>
@@ -93,7 +93,7 @@ async function handleChangePassword() {
               v-model="newPassword"
               type="password"
               required
-              class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-[var(--color-accent)]/40"
+              class="w-full px-3 py-2 border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)]"
             />
           </div>
           <div>
@@ -102,7 +102,7 @@ async function handleChangePassword() {
               v-model="confirmPassword"
               type="password"
               required
-              class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-[var(--color-accent)]/40"
+              class="w-full px-3 py-2 border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)]"
             />
           </div>
 
