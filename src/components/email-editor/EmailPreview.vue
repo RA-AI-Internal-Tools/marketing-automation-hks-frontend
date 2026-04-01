@@ -63,7 +63,7 @@ function handleIframeLoad(e: Event) {
           ]"
           title="Desktop preview"
         >
-          <ComputerDesktopIcon class="h-4.5 w-4.5" />
+          <ComputerDesktopIcon class="h-[18px] w-[18px]" />
         </button>
         <button
           @click="viewMode = 'mobile'"
@@ -73,7 +73,7 @@ function handleIframeLoad(e: Event) {
           ]"
           title="Mobile preview"
         >
-          <DevicePhoneMobileIcon class="h-4.5 w-4.5" />
+          <DevicePhoneMobileIcon class="h-[18px] w-[18px]" />
         </button>
         <div class="w-px h-5 bg-gray-300 mx-1.5"></div>
         <button
@@ -81,8 +81,8 @@ function handleIframeLoad(e: Event) {
           class="p-2 rounded-lg text-gray-500 hover:bg-gray-200 transition-colors"
           :title="darkBg ? 'Light background' : 'Dark background'"
         >
-          <MoonIcon v-if="!darkBg" class="h-4.5 w-4.5" />
-          <SunIcon v-else class="h-4.5 w-4.5" />
+          <MoonIcon v-if="!darkBg" class="h-[18px] w-[18px]" />
+          <SunIcon v-else class="h-[18px] w-[18px]" />
         </button>
       </div>
       <span class="text-xs text-gray-400">{{ viewMode === 'mobile' ? '375px' : 'Full width' }}</span>

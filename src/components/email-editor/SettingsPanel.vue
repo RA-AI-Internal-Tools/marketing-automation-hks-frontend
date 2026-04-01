@@ -57,7 +57,7 @@ function handleTagKeydown(e: KeyboardEvent) {
 // Auto-generate template key from name
 const autoKey = ref(true)
 watch(() => props.name, (val) => {
-  if (autoKey.value && !props.templateKey) {
+  if (autoKey.value && !props.templateKey.trim()) {
     emit('update:templateKey', val.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''))
   }
 })
