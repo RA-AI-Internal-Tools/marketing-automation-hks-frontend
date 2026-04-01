@@ -116,44 +116,44 @@ onMounted(loadPreferences)
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 flex items-start justify-center pt-12 px-4">
+  <div class="min-h-screen bg-[var(--color-bg-page)] flex items-start justify-center pt-12 px-4">
     <div class="w-full max-w-lg">
       <!-- Header -->
       <div class="text-center mb-8">
-        <h1 class="text-2xl font-bold text-gray-900">Notification Preferences</h1>
-        <p class="mt-2 text-gray-600">Manage how DueGate communicates with you</p>
+        <h1 class="text-2xl font-bold text-[var(--color-text-primary)]">Notification Preferences</h1>
+        <p class="mt-2 text-[var(--color-text-secondary)]">Manage how DueGate communicates with you</p>
       </div>
 
       <!-- Error -->
-      <div v-if="error" class="mb-4 bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm">
+      <div v-if="error" class="mb-4 bg-[var(--color-error-bg)] text-[var(--color-error-text)] px-4 py-3 rounded-lg text-sm">
         {{ error }}
       </div>
 
       <!-- Success -->
-      <div v-if="success" class="mb-4 bg-green-50 text-green-700 px-4 py-3 rounded-lg text-sm">
+      <div v-if="success" class="mb-4 bg-[var(--color-success-bg)] text-[var(--color-success-text)] px-4 py-3 rounded-lg text-sm">
         {{ success }}
       </div>
 
       <!-- Loading -->
-      <div v-if="loading" class="text-center py-12 text-gray-500">Loading your preferences...</div>
+      <div v-if="loading" class="text-center py-12 text-[var(--color-text-tertiary)]">Loading your preferences...</div>
 
       <!-- Channel list -->
-      <div v-else-if="clientId && !tokenInvalid" class="bg-white rounded-xl border border-gray-200/80 shadow-sm divide-y divide-gray-100">
+      <div v-else-if="clientId && !tokenInvalid" class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm divide-y divide-[var(--color-border-muted)]">
         <div
           v-for="channel in channels"
           :key="channel.channel"
           class="flex items-center justify-between p-5"
         >
           <div>
-            <div class="font-medium text-gray-900">{{ channel.label }}</div>
-            <div class="text-sm text-gray-500 mt-0.5">{{ channel.description }}</div>
+            <div class="font-medium text-[var(--color-text-primary)]">{{ channel.label }}</div>
+            <div class="text-sm text-[var(--color-text-tertiary)] mt-0.5">{{ channel.description }}</div>
           </div>
           <button
             @click="toggleChannel(channel)"
             :disabled="saving !== null"
             :class="[
-              'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-[#0099db]/40 focus:ring-offset-2',
-              channel.opted_in ? 'bg-[#020288]' : 'bg-gray-200',
+              'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-[var(--color-accent)]/40 focus:ring-offset-2',
+              channel.opted_in ? 'bg-[var(--color-primary)]' : 'bg-[var(--color-border)]',
               saving !== null ? 'opacity-50 cursor-not-allowed' : '',
             ]"
           >
@@ -171,7 +171,7 @@ onMounted(loadPreferences)
           <button
             @click="optOutAll"
             :disabled="saving !== null || channels.every(c => !c.opted_in)"
-            class="w-full py-2 px-4 text-sm font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            class="w-full py-2 px-4 text-sm font-medium text-[var(--color-error-text)] border border-[var(--color-error-border)] rounded-lg hover:bg-[var(--color-error-bg)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {{ saving === 'all' ? 'Unsubscribing...' : 'Unsubscribe from all' }}
           </button>
@@ -179,7 +179,7 @@ onMounted(loadPreferences)
       </div>
 
       <!-- Footer -->
-      <p class="mt-6 text-center text-xs text-gray-400">
+      <p class="mt-6 text-center text-xs text-[var(--color-text-muted)]">
         Changes are saved immediately. You can update your preferences at any time.
       </p>
     </div>

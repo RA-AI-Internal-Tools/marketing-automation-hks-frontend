@@ -48,11 +48,11 @@ const services = [
   <div class="page-enter">
     <PageHeader title="Health Monitor" description="Real-time infrastructure health status" />
 
-    <div v-if="loading" class="text-center py-12 text-gray-400">Checking health...</div>
+    <div v-if="loading" class="text-center py-12 text-[var(--color-text-muted)]">Checking health...</div>
 
     <template v-else>
       <!-- Overall status -->
-      <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6 mb-6">
+      <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6 mb-6">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-4">
             <div
@@ -64,15 +64,15 @@ const services = [
               {{ health?.status === 'ok' ? '\u2713' : error ? '\u2715' : '!' }}
             </div>
             <div>
-              <h2 class="text-xl font-bold text-gray-900">
+              <h2 class="text-xl font-bold text-[var(--color-text-primary)]">
                 {{ error ? 'Unreachable' : health?.status === 'ok' ? 'All Systems Operational' : 'Degraded Performance' }}
               </h2>
-              <p class="text-sm text-gray-500">Last checked: {{ lastChecked }}</p>
+              <p class="text-sm text-[var(--color-text-tertiary)]">Last checked: {{ lastChecked }}</p>
             </div>
           </div>
           <button
             @click="checkHealth"
-            class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200"
+            class="px-4 py-2 bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] text-sm font-medium rounded-lg hover:bg-[var(--color-bg-hover)]"
           >
             Refresh
           </button>
@@ -84,13 +84,13 @@ const services = [
         <div
           v-for="svc in services"
           :key="svc.key"
-          class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6"
+          class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6"
         >
           <div class="flex items-center justify-between mb-3">
-            <h3 class="text-lg font-semibold tracking-tight text-gray-900">{{ svc.name }}</h3>
+            <h3 class="text-lg font-semibold tracking-tight text-[var(--color-text-primary)]">{{ svc.name }}</h3>
             <StatusBadge :status="normalizeHealthStatus((health.checks as any)[svc.key])" />
           </div>
-          <p class="text-sm text-gray-500">{{ svc.description }}</p>
+          <p class="text-sm text-[var(--color-text-tertiary)]">{{ svc.description }}</p>
         </div>
       </div>
 

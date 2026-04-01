@@ -62,7 +62,7 @@ function formatDate(d?: string): string {
       <button
         v-if="auth.canWrite"
         @click="exportLogs({ campaign: filterCampaign, status: filterStatus, channel: filterChannel })"
-        class="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+        class="px-4 py-2 bg-[var(--color-bg-card)] text-[var(--color-text-secondary)] text-sm font-medium rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-hover)] transition-colors"
       >
         Export CSV
       </button>
@@ -74,9 +74,9 @@ function formatDate(d?: string): string {
         v-model="filterCampaign"
         type="text"
         placeholder="Campaign slug..."
-        class="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+        class="rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm"
       />
-      <select v-model="filterStatus" class="rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white">
+      <select v-model="filterStatus" class="rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm bg-[var(--color-bg-card)]">
         <option value="">All statuses</option>
         <option value="sent">Sent</option>
         <option value="failed">Failed</option>
@@ -85,7 +85,7 @@ function formatDate(d?: string): string {
         <option value="no_consent">No Consent</option>
         <option value="condition_not_met">Condition Not Met</option>
       </select>
-      <select v-model="filterChannel" class="rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white">
+      <select v-model="filterChannel" class="rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm bg-[var(--color-bg-card)]">
         <option value="">All channels</option>
         <option value="email">Email</option>
         <option value="sms">SMS</option>
@@ -95,38 +95,38 @@ function formatDate(d?: string): string {
     </div>
 
     <!-- Error -->
-    <div v-if="error" class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{{ error }}</div>
+    <div v-if="error" class="mb-4 bg-[var(--color-error-bg)] border border-[var(--color-error-border)] text-[var(--color-error-text)] px-4 py-3 rounded-lg text-sm">{{ error }}</div>
 
     <!-- Table -->
-    <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm overflow-hidden">
+    <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden">
       <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+        <table class="min-w-full divide-y divide-[var(--color-border)]">
+          <thead class="bg-[var(--color-bg-page)]">
             <tr>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Time</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Campaign</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Client</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Step</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Channel</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Provider</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Error</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Time</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Campaign</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Client</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Step</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Channel</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Provider</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Status</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Error</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100">
+          <tbody class="divide-y divide-[var(--color-border-muted)]">
             <tr v-if="loading">
-              <td colspan="8" class="px-4 py-8 text-center text-gray-400">Loading...</td>
+              <td colspan="8" class="px-4 py-8 text-center text-[var(--color-text-muted)]">Loading...</td>
             </tr>
             <tr v-else-if="logs.length === 0">
-              <td colspan="8" class="px-4 py-8 text-center text-gray-400">No logs found</td>
+              <td colspan="8" class="px-4 py-8 text-center text-[var(--color-text-muted)]">No logs found</td>
             </tr>
-            <tr v-for="log in logs" :key="log.id" class="hover:bg-slate-50/70 transition-colors">
-              <td class="px-4 py-3 text-xs text-gray-500">{{ formatDate(log.created_at) }}</td>
-              <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ log.campaign_slug }}</td>
-              <td class="px-4 py-3 text-sm text-gray-700">{{ log.client_id }}</td>
-              <td class="px-4 py-3 text-sm text-gray-700">{{ log.step_index }}</td>
-              <td class="px-4 py-3 text-sm text-gray-700">{{ log.channel }}</td>
-              <td class="px-4 py-3 text-sm text-gray-500">{{ log.provider }}</td>
+            <tr v-for="log in logs" :key="log.id" class="hover:bg-[var(--color-bg-hover)] transition-colors">
+              <td class="px-4 py-3 text-xs text-[var(--color-text-tertiary)]">{{ formatDate(log.created_at) }}</td>
+              <td class="px-4 py-3 text-sm font-medium text-[var(--color-text-primary)]">{{ log.campaign_slug }}</td>
+              <td class="px-4 py-3 text-sm text-[var(--color-text-secondary)]">{{ log.client_id }}</td>
+              <td class="px-4 py-3 text-sm text-[var(--color-text-secondary)]">{{ log.step_index }}</td>
+              <td class="px-4 py-3 text-sm text-[var(--color-text-secondary)]">{{ log.channel }}</td>
+              <td class="px-4 py-3 text-sm text-[var(--color-text-tertiary)]">{{ log.provider }}</td>
               <td class="px-4 py-3"><StatusBadge :status="log.status" /></td>
               <td class="px-4 py-3 text-xs text-red-500 max-w-[200px] truncate" :title="log.error_message">
                 {{ log.error_message || '—' }}
@@ -137,11 +137,11 @@ function formatDate(d?: string): string {
       </div>
 
       <!-- Pagination -->
-      <div class="px-4 py-3 border-t border-gray-200 flex items-center justify-between text-sm text-gray-500">
+      <div class="px-4 py-3 border-t border-[var(--color-border)] flex items-center justify-between text-sm text-[var(--color-text-tertiary)]">
         <span>{{ total }} total</span>
         <div class="flex gap-2">
-          <button :disabled="page === 0" @click="page--; load()" class="px-3 py-1 rounded border border-gray-300 disabled:opacity-50 hover:bg-slate-50/70 transition-colors">Prev</button>
-          <button :disabled="(page + 1) * limit >= total" @click="page++; load()" class="px-3 py-1 rounded border border-gray-300 disabled:opacity-50 hover:bg-slate-50/70 transition-colors">Next</button>
+          <button :disabled="page === 0" @click="page--; load()" class="px-3 py-1 rounded border border-[var(--color-border)] disabled:opacity-50 hover:bg-[var(--color-bg-hover)] transition-colors">Prev</button>
+          <button :disabled="(page + 1) * limit >= total" @click="page++; load()" class="px-3 py-1 rounded border border-[var(--color-border)] disabled:opacity-50 hover:bg-[var(--color-bg-hover)] transition-colors">Next</button>
         </div>
       </div>
     </div>

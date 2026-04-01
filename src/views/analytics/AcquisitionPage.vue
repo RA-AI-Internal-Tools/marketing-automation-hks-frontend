@@ -30,8 +30,8 @@ watch(() => analytics.queryParams, load)
 
 <template>
   <AnalyticsLayout title="Acquisition" description="Traffic sources, UTM campaigns, and signups">
-    <div v-if="loading" class="text-center py-12 text-gray-400">Loading...</div>
-    <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{{ error }}</div>
+    <div v-if="loading" class="text-center py-12 text-[var(--color-text-muted)]">Loading...</div>
+    <div v-else-if="error" class="bg-[var(--color-error-bg)] border border-[var(--color-error-border)] text-[var(--color-error-text)] px-4 py-3 rounded-lg text-sm">{{ error }}</div>
     <div v-else-if="data" class="space-y-6">
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard title="New Users" :value="data.new_users.toLocaleString()" />
@@ -41,30 +41,30 @@ watch(() => analytics.queryParams, load)
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
-          <h3 class="text-sm font-semibold text-gray-900 mb-4">Traffic Sources</h3>
+        <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+          <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Traffic Sources</h3>
           <DonutChart
             v-if="data.sources.length"
             :labels="data.sources.map((s) => s.source)"
             :values="data.sources.map((s) => s.count)"
           />
-          <p v-else class="text-sm text-gray-400">No data</p>
+          <p v-else class="text-sm text-[var(--color-text-muted)]">No data</p>
         </div>
-        <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
-          <h3 class="text-sm font-semibold text-gray-900 mb-4">UTM Campaigns</h3>
+        <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+          <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">UTM Campaigns</h3>
           <table v-if="data.utm_campaigns.length" class="w-full text-sm">
-            <thead><tr class="text-left text-gray-500 text-xs uppercase">
+            <thead><tr class="text-left text-[var(--color-text-tertiary)] text-xs uppercase">
               <th class="pb-2">Campaign</th><th class="pb-2 text-right">Visits</th><th class="pb-2 text-right">Conversions</th>
             </tr></thead>
             <tbody>
-              <tr v-for="c in data.utm_campaigns" :key="c.campaign" class="border-t border-gray-100">
-                <td class="py-2 text-gray-900">{{ c.campaign }}</td>
-                <td class="py-2 text-right text-gray-600">{{ c.count.toLocaleString() }}</td>
-                <td class="py-2 text-right text-gray-600">{{ c.conversions.toLocaleString() }}</td>
+              <tr v-for="c in data.utm_campaigns" :key="c.campaign" class="border-t border-[var(--color-border-muted)]">
+                <td class="py-2 text-[var(--color-text-primary)]">{{ c.campaign }}</td>
+                <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ c.count.toLocaleString() }}</td>
+                <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ c.conversions.toLocaleString() }}</td>
               </tr>
             </tbody>
           </table>
-          <p v-else class="text-sm text-gray-400">No data</p>
+          <p v-else class="text-sm text-[var(--color-text-muted)]">No data</p>
         </div>
       </div>
     </div>

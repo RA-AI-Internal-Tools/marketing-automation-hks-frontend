@@ -56,67 +56,67 @@ async function handleChangePassword() {
   <div class="page-enter">
     <PageHeader title="Settings" description="Application configuration and account settings" />
 
-    <div v-if="loading" class="text-center py-12 text-gray-400">Loading...</div>
+    <div v-if="loading" class="text-center py-12 text-[var(--color-text-muted)]">Loading...</div>
 
     <div v-else class="space-y-6 max-w-2xl">
       <!-- Account info -->
-      <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
-        <h3 class="text-sm font-semibold text-gray-900 mb-4">Account</h3>
+      <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+        <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Account</h3>
         <div class="space-y-2 text-sm">
           <div class="flex justify-between">
-            <span class="text-gray-500">Email</span>
-            <span class="text-gray-900">{{ auth.email }}</span>
+            <span class="text-[var(--color-text-tertiary)]">Email</span>
+            <span class="text-[var(--color-text-primary)]">{{ auth.email }}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-gray-500">Token Expiry</span>
-            <span class="text-gray-900">{{ settings?.jwt_expiry_hours || 24 }} hours</span>
+            <span class="text-[var(--color-text-tertiary)]">Token Expiry</span>
+            <span class="text-[var(--color-text-primary)]">{{ settings?.jwt_expiry_hours || 24 }} hours</span>
           </div>
         </div>
       </div>
 
       <!-- Change password -->
-      <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
-        <h3 class="text-sm font-semibold text-gray-900 mb-4">Change Password</h3>
+      <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+        <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Change Password</h3>
         <form @submit.prevent="handleChangePassword" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+            <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Current Password</label>
             <input
               v-model="currentPassword"
               type="password"
               required
-              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40"
+              class="w-full px-3 py-2 border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)]"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+            <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">New Password</label>
             <input
               v-model="newPassword"
               type="password"
               required
-              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40"
+              class="w-full px-3 py-2 border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)]"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+            <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Confirm New Password</label>
             <input
               v-model="confirmPassword"
               type="password"
               required
-              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40"
+              class="w-full px-3 py-2 border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)]"
             />
           </div>
 
-          <div v-if="passwordError" class="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
+          <div v-if="passwordError" class="text-sm text-[var(--color-error-text)] bg-[var(--color-error-bg)] px-3 py-2 rounded-lg">
             {{ passwordError }}
           </div>
-          <div v-if="passwordSuccess" class="text-sm text-green-700 bg-green-50 px-3 py-2 rounded-lg">
+          <div v-if="passwordSuccess" class="text-sm text-[var(--color-success-text)] bg-[var(--color-success-bg)] px-3 py-2 rounded-lg">
             {{ passwordSuccess }}
           </div>
 
           <button
             type="submit"
             :disabled="saving"
-            class="px-6 py-2.5 bg-[#020288] text-white text-sm font-medium rounded-lg hover:bg-[#0d35d7] disabled:opacity-50 transition-colors"
+            class="px-6 py-2.5 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] disabled:opacity-50 transition-colors"
           >
             {{ saving ? 'Updating...' : 'Update Password' }}
           </button>

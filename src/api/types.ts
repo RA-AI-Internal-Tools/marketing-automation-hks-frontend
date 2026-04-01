@@ -340,6 +340,35 @@ export interface AuditLog {
   created_at: string
 }
 
+// Integration types
+
+export type ProviderType = 'email' | 'sms' | 'push' | 'webhook' | 'crm' | 'analytics'
+export type IntegrationStatus = 'connected' | 'not_configured' | 'error' | 'disabled'
+
+export interface Integration {
+  id: number
+  name: string
+  provider_type: ProviderType
+  environment: 'sandbox' | 'production'
+  status: IntegrationStatus
+  config: Record<string, any>
+  endpoint_url?: string
+  api_key_configured: boolean
+  last_tested_at?: string
+  last_test_success?: boolean
+  updated_at: string
+  created_at: string
+}
+
+export interface IntegrationRequest {
+  name: string
+  provider_type: ProviderType
+  endpoint_url?: string
+  api_key?: string
+  config?: Record<string, any>
+  status?: IntegrationStatus
+}
+
 // Report types
 
 export interface ReportSchedule {

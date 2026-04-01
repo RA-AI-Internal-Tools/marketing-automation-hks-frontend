@@ -12,10 +12,10 @@ function widthPercent(index: number): number {
 }
 
 const colors = [
-  'bg-[#020288]',
-  'bg-[#0d35d7]',
-  'bg-[#0099db]',
-  'bg-[#50C8ED]',
+  'bg-[var(--color-primary)]',
+  'bg-[var(--color-primary-hover)]',
+  'bg-[var(--color-accent)]',
+  'bg-[var(--color-accent-hover)]',
   'bg-cyan-300',
 ]
 </script>
@@ -23,7 +23,7 @@ const colors = [
 <template>
   <div class="space-y-3">
     <div v-for="(stage, i) in stages" :key="stage.name" class="flex items-center gap-4">
-      <div class="w-32 text-sm font-medium text-gray-700 text-right shrink-0">
+      <div class="w-32 text-sm font-medium text-[var(--color-text-secondary)] text-right shrink-0">
         {{ stage.name }}
       </div>
       <div class="flex-1">
@@ -36,7 +36,7 @@ const colors = [
           </span>
         </div>
       </div>
-      <div class="w-16 text-right text-sm font-medium text-gray-500 shrink-0">
+      <div class="w-16 text-right text-sm font-medium text-[var(--color-text-tertiary)] shrink-0">
         {{ stage.conversion_rate.toFixed(1) }}%
       </div>
     </div>

@@ -30,25 +30,25 @@ const untilDate = computed({
       :class="[
         'px-3.5 py-1.5 text-xs font-medium rounded-full border transition-all duration-150',
         store.preset === p.value
-          ? 'bg-[#020288] text-white border-[#020288] shadow-sm'
-          : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50',
+          ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)] shadow-sm'
+          : 'bg-[var(--color-bg-card)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:border-[var(--color-border)] hover:bg-[var(--color-bg-page)]',
       ]"
     >
       {{ p.label }}
     </button>
-    <div class="flex items-center gap-1.5 text-xs text-gray-500">
+    <div class="flex items-center gap-1.5 text-xs text-[var(--color-text-tertiary)]">
       <input
         type="date"
         :value="sinceDate"
         @input="sinceDate = ($event.target as HTMLInputElement).value"
-        class="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#0099db]/40 focus:border-[#0099db] transition-shadow"
+        class="px-2.5 py-1.5 border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)] transition-shadow"
       />
-      <span class="text-gray-400">to</span>
+      <span class="text-[var(--color-text-muted)]">to</span>
       <input
         type="date"
         :value="untilDate"
         @input="untilDate = ($event.target as HTMLInputElement).value"
-        class="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#0099db]/40 focus:border-[#0099db] transition-shadow"
+        class="px-2.5 py-1.5 border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)] transition-shadow"
       />
     </div>
   </div>

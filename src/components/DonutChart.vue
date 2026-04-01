@@ -28,7 +28,7 @@ const chartData = computed(() => ({
       data: props.values,
       backgroundColor: props.colors || defaultColors.slice(0, props.values.length),
       borderWidth: 2,
-      borderColor: '#fff',
+      borderColor: 'var(--color-bg-card)',
     },
   ],
 }))

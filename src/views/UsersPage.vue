@@ -132,7 +132,7 @@ onMounted(load)
     <PageHeader title="User Management" description="Manage dashboard users and their roles">
       <button
         @click="openCreate"
-        class="inline-flex items-center gap-2 px-4 py-2 bg-[#020288] text-white text-sm font-medium rounded-lg hover:bg-[#0d35d7] transition-colors"
+        class="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors"
       >
         <PlusIcon class="h-4 w-4" />
         Add User
@@ -140,39 +140,39 @@ onMounted(load)
     </PageHeader>
 
     <!-- Error -->
-    <div v-if="error" class="mb-4 bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm">
+    <div v-if="error" class="mb-4 bg-[var(--color-error-bg)] text-[var(--color-error-text)] px-4 py-3 rounded-lg text-sm">
       {{ error }}
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="text-center py-12 text-gray-500">Loading users...</div>
+    <div v-if="loading" class="text-center py-12 text-[var(--color-text-tertiary)]">Loading users...</div>
 
     <!-- Users table -->
-    <div v-else class="bg-white rounded-xl border border-gray-200/80 shadow-sm overflow-hidden">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
+    <div v-else class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden">
+      <table class="min-w-full divide-y divide-[var(--color-border)]">
+        <thead class="bg-[var(--color-bg-page)]">
           <tr>
-            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
-            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Email</th>
-            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Role</th>
-            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
-            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Last Login</th>
-            <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Actions</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Name</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Email</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Role</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Status</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Last Login</th>
+            <th class="px-6 py-3 text-right text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Actions</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100">
-          <tr v-for="user in users" :key="user.id" class="hover:bg-slate-50/70 transition-colors">
+        <tbody class="divide-y divide-[var(--color-border-muted)]">
+          <tr v-for="user in users" :key="user.id" class="hover:bg-[var(--color-bg-hover)] transition-colors">
             <td class="px-6 py-4">
-              <div class="font-medium text-gray-900">{{ user.name }}</div>
+              <div class="font-medium text-[var(--color-text-primary)]">{{ user.name }}</div>
             </td>
-            <td class="px-6 py-4 text-sm text-gray-600">{{ user.email }}</td>
+            <td class="px-6 py-4 text-sm text-[var(--color-text-secondary)]">{{ user.email }}</td>
             <td class="px-6 py-4">
               <span
                 :class="[
                   'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize',
                   user.role === 'admin' ? 'bg-red-100 text-red-700' :
                   user.role === 'editor' ? 'bg-blue-100 text-blue-700' :
-                  'bg-gray-100 text-gray-700'
+                  'bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)]'
                 ]"
               >
                 {{ user.role }}
@@ -182,26 +182,26 @@ onMounted(load)
               <span
                 :class="[
                   'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-                  user.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                  user.is_active ? 'bg-green-100 text-green-700' : 'bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)]'
                 ]"
               >
                 {{ user.is_active ? 'Active' : 'Disabled' }}
               </span>
             </td>
-            <td class="px-6 py-4 text-sm text-gray-500">{{ formatDate(user.last_login_at) }}</td>
+            <td class="px-6 py-4 text-sm text-[var(--color-text-tertiary)]">{{ formatDate(user.last_login_at) }}</td>
             <td class="px-6 py-4 text-right">
               <div v-if="auth.isAdmin" class="flex items-center justify-end gap-2">
-                <button @click="openEdit(user)" class="text-gray-400 hover:text-[#020288] transition-colors" title="Edit">
+                <button @click="openEdit(user)" class="text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors" title="Edit">
                   <PencilSquareIcon class="h-4 w-4" />
                 </button>
-                <button @click="confirmDelete = user" class="text-gray-400 hover:text-red-600 transition-colors" title="Delete">
+                <button @click="confirmDelete = user" class="text-[var(--color-text-muted)] hover:text-red-600 transition-colors" title="Delete">
                   <TrashIcon class="h-4 w-4" />
                 </button>
               </div>
             </td>
           </tr>
           <tr v-if="users.length === 0">
-            <td colspan="6" class="px-6 py-12 text-center text-gray-500">No users found</td>
+            <td colspan="6" class="px-6 py-12 text-center text-[var(--color-text-tertiary)]">No users found</td>
           </tr>
         </tbody>
       </table>
@@ -211,43 +211,43 @@ onMounted(load)
     <Teleport to="body">
       <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="fixed inset-0 bg-black/50" @click="showModal = false" />
-        <div class="relative bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+        <div class="relative bg-[var(--color-bg-card)] rounded-xl shadow-xl w-full max-w-md p-6">
           <div class="flex items-center justify-between mb-6">
-            <h2 class="text-lg font-semibold tracking-tight text-gray-900">
+            <h2 class="text-lg font-semibold tracking-tight text-[var(--color-text-primary)]">
               {{ editingUser ? 'Edit User' : 'Create User' }}
             </h2>
-            <button @click="showModal = false" class="text-gray-400 hover:text-gray-600">
+            <button @click="showModal = false" class="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]">
               <XMarkIcon class="h-5 w-5" />
             </button>
           </div>
 
           <form @submit.prevent="handleSave" class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+              <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Name</label>
               <input v-model="form.name" type="text" required
-                class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-[#0099db]/40 focus:border-[#0099db]" />
+                class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)]" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Email</label>
               <input v-model="form.email" type="email" required
-                class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-[#0099db]/40 focus:border-[#0099db]" />
+                class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)]" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">
+              <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
                 Password {{ editingUser ? '(leave blank to keep current)' : '' }}
               </label>
               <input v-model="form.password" type="password" :required="!editingUser"
-                class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-[#0099db]/40 focus:border-[#0099db]" />
+                class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)]" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+              <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Role</label>
               <select v-model="form.role"
-                class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-[#0099db]/40 focus:border-[#0099db]">
+                class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)]">
                 <option value="admin">Admin</option>
                 <option value="editor">Editor</option>
                 <option value="viewer">Viewer</option>
               </select>
-              <p class="mt-1 text-xs text-gray-500">
+              <p class="mt-1 text-xs text-[var(--color-text-tertiary)]">
                 <strong>Admin:</strong> Full access including user management.
                 <strong>Editor:</strong> Create/edit campaigns and templates.
                 <strong>Viewer:</strong> Read-only access.
@@ -255,19 +255,19 @@ onMounted(load)
             </div>
             <div class="flex items-center gap-2">
               <input v-model="form.is_active" type="checkbox" id="is_active"
-                class="h-4 w-4 text-[#020288] border-gray-300 rounded" />
-              <label for="is_active" class="text-sm text-gray-700">Active</label>
+                class="h-4 w-4 text-[var(--color-primary)] border-[var(--color-border)] rounded" />
+              <label for="is_active" class="text-sm text-[var(--color-text-secondary)]">Active</label>
             </div>
 
             <div v-if="error" class="text-sm text-red-600">{{ error }}</div>
 
             <div class="flex justify-end gap-3 pt-2">
               <button type="button" @click="showModal = false"
-                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-slate-50/70 transition-colors">
+                class="px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-bg-hover)] transition-colors">
                 Cancel
               </button>
               <button type="submit" :disabled="saving"
-                class="px-4 py-2 text-sm font-medium text-white bg-[#020288] rounded-lg hover:bg-[#0d35d7] disabled:opacity-50">
+                class="px-4 py-2 text-sm font-medium text-white bg-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary-hover)] disabled:opacity-50">
                 {{ saving ? 'Saving...' : (editingUser ? 'Update' : 'Create') }}
               </button>
             </div>
@@ -280,15 +280,15 @@ onMounted(load)
     <Teleport to="body">
       <div v-if="confirmDelete" class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="fixed inset-0 bg-black/50" @click="confirmDelete = null" />
-        <div class="relative bg-white rounded-xl shadow-xl w-full max-w-sm p-6">
-          <h3 class="text-lg font-semibold tracking-tight text-gray-900 mb-2">Delete User</h3>
-          <p class="text-sm text-gray-600 mb-6">
+        <div class="relative bg-[var(--color-bg-card)] rounded-xl shadow-xl w-full max-w-sm p-6">
+          <h3 class="text-lg font-semibold tracking-tight text-[var(--color-text-primary)] mb-2">Delete User</h3>
+          <p class="text-sm text-[var(--color-text-secondary)] mb-6">
             Are you sure you want to delete <strong>{{ confirmDelete.name }}</strong> ({{ confirmDelete.email }})?
             This action cannot be undone.
           </p>
           <div class="flex justify-end gap-3">
             <button @click="confirmDelete = null"
-              class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-slate-50/70 transition-colors">
+              class="px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-bg-hover)] transition-colors">
               Cancel
             </button>
             <button @click="handleDelete" :disabled="deleting"

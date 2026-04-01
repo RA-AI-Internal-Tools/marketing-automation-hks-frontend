@@ -95,7 +95,7 @@ async function handleSubmit() {
   }
 }
 
-const inputClass = 'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0099db]/40 focus:border-[#0099db] transition-shadow'
+const inputClass = 'w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[#0099db] transition-shadow'
 </script>
 
 <template>
@@ -108,7 +108,7 @@ const inputClass = 'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm f
       <button
         v-if="channel !== 'email' || loading"
         @click="router.push('/templates')"
-        class="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+        class="px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-bg-page)] transition-colors"
       >
         Back to Templates
       </button>
@@ -117,7 +117,7 @@ const inputClass = 'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm f
     <!-- Channel selector (only for new templates) -->
     <div v-if="!channelLocked && !loading" class="mb-4">
       <div class="flex items-center gap-2">
-        <span class="text-sm font-medium text-gray-600">Channel:</span>
+        <span class="text-sm font-medium text-[var(--color-text-secondary)]">Channel:</span>
         <div class="flex gap-1.5">
           <button
             v-for="ch in channels"
@@ -126,8 +126,8 @@ const inputClass = 'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm f
             :class="[
               'px-3.5 py-1.5 text-sm font-medium rounded-lg transition-all duration-150 capitalize',
               channel === ch
-                ? 'bg-[#020288] text-white shadow-sm'
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50',
+                ? 'bg-[var(--color-primary)] text-white shadow-sm'
+                : 'bg-[var(--color-bg-card)] text-[var(--color-text-secondary)] border border-[var(--color-border)] hover:bg-[var(--color-bg-page)]',
             ]"
           >
             {{ ch }}
@@ -136,12 +136,12 @@ const inputClass = 'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm f
       </div>
     </div>
 
-    <div v-if="loading" class="text-center py-12 text-gray-400">
+    <div v-if="loading" class="text-center py-12 text-[var(--color-text-muted)]">
       <div class="skeleton h-6 w-48 mx-auto mb-3"></div>
       <div class="skeleton h-4 w-32 mx-auto"></div>
     </div>
 
-    <div v-else-if="error && channel !== 'email'" class="text-sm text-red-600 bg-red-50 border border-red-100 px-4 py-3 rounded-lg">
+    <div v-else-if="error && channel !== 'email'" class="text-sm text-[var(--color-error-text)] bg-[var(--color-error-bg)] border border-[var(--color-error-border)] px-4 py-3 rounded-lg">
       {{ error }}
     </div>
 
@@ -154,20 +154,20 @@ const inputClass = 'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm f
 
     <!-- Non-email channels → Simple form -->
     <form v-else @submit.prevent="handleSubmit" class="space-y-5 max-w-2xl">
-      <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6 space-y-4">
+      <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6 space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Name <span class="text-red-500">*</span></label>
+            <label class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Name <span class="text-red-500">*</span></label>
             <input v-model="name" required :class="inputClass" placeholder="Template name" />
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Template Key <span class="text-red-500">*</span></label>
+            <label class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Template Key <span class="text-red-500">*</span></label>
             <input v-model="templateKey" required :class="inputClass" placeholder="e.g. welcome_sms" />
           </div>
         </div>
 
         <div v-if="channelLocked" class="flex items-center gap-2">
-          <span class="text-xs font-medium text-gray-600">Channel:</span>
+          <span class="text-xs font-medium text-[var(--color-text-secondary)]">Channel:</span>
           <span class="px-2.5 py-0.5 text-xs font-medium rounded-full capitalize"
             :class="{
               'bg-purple-100 text-purple-800': channel === 'sms',
@@ -180,7 +180,7 @@ const inputClass = 'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm f
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Body <span class="text-red-500">*</span></label>
+          <label class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Body <span class="text-red-500">*</span></label>
           <textarea
             v-model="body"
             required
@@ -191,7 +191,7 @@ const inputClass = 'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm f
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Variables (comma-separated)</label>
+          <label class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Variables (comma-separated)</label>
           <input
             v-model="variablesInput"
             :class="inputClass"
@@ -200,28 +200,28 @@ const inputClass = 'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm f
         </div>
 
         <div class="flex items-center justify-between py-1">
-          <span class="text-sm text-gray-700">Active</span>
+          <span class="text-sm text-[var(--color-text-secondary)]">Active</span>
           <label class="relative inline-flex items-center cursor-pointer">
             <input v-model="isActive" type="checkbox" class="sr-only peer" />
-            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#0099db]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-[#020288] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
+            <div class="w-9 h-5 bg-[var(--color-border)] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[var(--color-accent)]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-[var(--color-primary)] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
           </label>
         </div>
       </div>
 
-      <div v-if="error" class="text-sm text-red-600 bg-red-50 border border-red-100 px-4 py-3 rounded-lg">{{ error }}</div>
+      <div v-if="error" class="text-sm text-[var(--color-error-text)] bg-[var(--color-error-bg)] border border-[var(--color-error-border)] px-4 py-3 rounded-lg">{{ error }}</div>
 
       <div class="flex items-center gap-3">
         <button
           type="submit"
           :disabled="saving"
-          class="px-6 py-2.5 bg-[#020288] text-white text-sm font-medium rounded-lg hover:bg-[#0d35d7] disabled:opacity-50 transition-colors shadow-sm"
+          class="px-6 py-2.5 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] disabled:opacity-50 transition-colors shadow-sm"
         >
           {{ saving ? 'Saving...' : isEdit ? 'Update Template' : 'Create Template' }}
         </button>
         <button
           type="button"
           @click="router.push('/templates')"
-          class="px-6 py-2.5 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+          class="px-6 py-2.5 bg-[var(--color-bg-card)] text-[var(--color-text-secondary)] text-sm font-medium rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-page)] transition-colors"
         >
           Cancel
         </button>

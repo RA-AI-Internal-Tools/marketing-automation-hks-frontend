@@ -28,12 +28,12 @@ watch(() => analytics.queryParams, load)
 
 <template>
   <AnalyticsLayout title="Products & Catalog" description="Product performance and conversion metrics">
-    <div v-if="loading" class="text-center py-12 text-gray-400">Loading...</div>
-    <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{{ error }}</div>
-    <div v-else-if="data" class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
+    <div v-if="loading" class="text-center py-12 text-[var(--color-text-muted)]">Loading...</div>
+    <div v-else-if="error" class="bg-[var(--color-error-bg)] border border-[var(--color-error-border)] text-[var(--color-error-text)] px-4 py-3 rounded-lg text-sm">{{ error }}</div>
+    <div v-else-if="data" class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
-          <thead><tr class="text-left text-gray-500 text-xs uppercase">
+          <thead><tr class="text-left text-[var(--color-text-tertiary)] text-xs uppercase">
             <th class="pb-2">Product</th>
             <th class="pb-2 text-right">Views</th>
             <th class="pb-2 text-right">Add to Cart</th>
@@ -43,19 +43,19 @@ watch(() => analytics.queryParams, load)
             <th class="pb-2 text-right">Revenue</th>
           </tr></thead>
           <tbody>
-            <tr v-for="p in data.products" :key="p.product_id" class="border-t border-gray-100">
-              <td class="py-2 text-gray-900 font-medium">{{ p.name }}</td>
-              <td class="py-2 text-right text-gray-600">{{ p.views.toLocaleString() }}</td>
-              <td class="py-2 text-right text-gray-600">{{ p.add_to_cart.toLocaleString() }}</td>
+            <tr v-for="p in data.products" :key="p.product_id" class="border-t border-[var(--color-border-muted)]">
+              <td class="py-2 text-[var(--color-text-primary)] font-medium">{{ p.name }}</td>
+              <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ p.views.toLocaleString() }}</td>
+              <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ p.add_to_cart.toLocaleString() }}</td>
               <td class="py-2 text-right text-blue-600">{{ p.cart_rate.toFixed(1) }}%</td>
-              <td class="py-2 text-right text-gray-600">{{ p.purchases.toLocaleString() }}</td>
+              <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ p.purchases.toLocaleString() }}</td>
               <td class="py-2 text-right text-green-600">{{ p.conversion_rate.toFixed(1) }}%</td>
-              <td class="py-2 text-right text-gray-900 font-medium">${{ p.revenue.toLocaleString() }}</td>
+              <td class="py-2 text-right text-[var(--color-text-primary)] font-medium">${{ p.revenue.toLocaleString() }}</td>
             </tr>
           </tbody>
         </table>
       </div>
-      <p v-if="!data.products.length" class="text-sm text-gray-400 text-center py-4">No product data available</p>
+      <p v-if="!data.products.length" class="text-sm text-[var(--color-text-muted)] text-center py-4">No product data available</p>
     </div>
   </AnalyticsLayout>
 </template>

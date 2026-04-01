@@ -15,6 +15,13 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+// Inject environment header on every request
+api.interceptors.request.use((config) => {
+  const env = localStorage.getItem('ma_environment') || 'sandbox'
+  config.headers['X-Environment'] = env
+  return config
+})
+
 // On 401 responses, clear auth state and redirect to login
 // Skip redirect for public routes (e.g. /preferences) that use token-based auth
 api.interceptors.response.use(
