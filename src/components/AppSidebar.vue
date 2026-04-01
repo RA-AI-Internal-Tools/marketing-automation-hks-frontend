@@ -81,14 +81,6 @@ const allSections: NavSection[] = [
     ],
   },
   {
-    label: 'Integrations',
-    defaultOpen: true,
-    items: [
-      { name: 'Integrations', to: '/integrations', icon: LinkIcon },
-      { name: 'Channels', to: '/channels', icon: MegaphoneIcon },
-    ],
-  },
-  {
     label: 'Analytics',
     defaultOpen: false,
     items: [
@@ -116,6 +108,8 @@ const allSections: NavSection[] = [
     defaultOpen: false,
     items: [
       { name: 'Settings', to: '/settings', icon: Cog6ToothIcon },
+      { name: 'Integrations', to: '/integrations', icon: LinkIcon },
+      { name: 'Channels', to: '/channels', icon: MegaphoneIcon },
       { name: 'Health', to: '/health', icon: HeartIcon },
       { name: 'Logs', to: '/logs', icon: DocumentTextIcon },
       { name: 'Audit Logs', to: '/audit-logs', icon: ShieldCheckIcon, adminOnly: true },
