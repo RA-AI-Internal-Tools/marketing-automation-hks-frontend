@@ -126,8 +126,8 @@ function handleLogout() {
 </script>
 
 <template>
-  <!-- Login page: no sidebar -->
-  <RouterView v-if="route.name === 'login'" />
+  <!-- Public pages: no sidebar -->
+  <RouterView v-if="route.meta.public" />
 
   <!-- Authenticated layout -->
   <div v-else class="min-h-screen bg-gray-50">

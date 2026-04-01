@@ -31,6 +31,7 @@ watch(() => analytics.queryParams, load)
 <template>
   <AnalyticsLayout title="Acquisition" description="Traffic sources, UTM campaigns, and signups">
     <div v-if="loading" class="text-center py-12 text-gray-400">Loading...</div>
+    <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{{ error }}</div>
     <div v-else-if="data" class="space-y-6">
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard title="New Users" :value="data.new_users.toLocaleString()" />

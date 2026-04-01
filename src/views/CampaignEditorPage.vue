@@ -27,6 +27,7 @@ const steps = ref<Step[]>([{ delay_minutes: 0, channel: 'email', template_key: '
 const saving = ref(false)
 const error = ref('')
 const loading = ref(false)
+const nextVariantId = ref(0)
 
 const channels = ['email', 'sms', 'whatsapp', 'push']
 const conditions = ['always', 'has_ordered_since', 'not_ordered_since', 'kyc_level_gte', 'spend_gte']
@@ -79,9 +80,10 @@ function addVariant(stepIndex: number) {
   if (!steps.value[stepIndex]!.variants) {
     steps.value[stepIndex]!.variants = []
   }
-  const count = steps.value[stepIndex]!.variants!.length
+  const id = String.fromCharCode(65 + nextVariantId.value)
+  nextVariantId.value++
   steps.value[stepIndex]!.variants!.push({
-    id: String.fromCharCode(65 + count), // A, B, C...
+    id,
     template_key: '',
     weight: 50,
   })

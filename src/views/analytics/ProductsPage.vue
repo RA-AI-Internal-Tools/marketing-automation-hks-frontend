@@ -29,6 +29,7 @@ watch(() => analytics.queryParams, load)
 <template>
   <AnalyticsLayout title="Products & Catalog" description="Product performance and conversion metrics">
     <div v-if="loading" class="text-center py-12 text-gray-400">Loading...</div>
+    <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{{ error }}</div>
     <div v-else-if="data" class="bg-white rounded-xl border border-gray-200 p-6">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">

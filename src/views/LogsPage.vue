@@ -35,7 +35,15 @@ async function load() {
 }
 
 onMounted(load)
-watch([filterCampaign, filterStatus, filterChannel], () => { page.value = 0; load() })
+
+let debounceTimer: ReturnType<typeof setTimeout> | null = null
+watch([filterCampaign, filterStatus, filterChannel], () => {
+  if (debounceTimer) clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => {
+    page.value = 0
+    load()
+  }, 300)
+})
 
 function formatDate(d?: string): string {
   if (!d) return '—'

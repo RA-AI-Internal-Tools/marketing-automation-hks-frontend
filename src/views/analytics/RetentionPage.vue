@@ -30,6 +30,7 @@ watch(() => analytics.queryParams, load)
 <template>
   <AnalyticsLayout title="Retention & CRM" description="Cohort analysis, campaign effectiveness, and consent stats">
     <div v-if="loading" class="text-center py-12 text-gray-400">Loading...</div>
+    <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{{ error }}</div>
     <div v-else-if="data" class="space-y-6">
       <div class="bg-white rounded-xl border border-gray-200 p-6">
         <h3 class="text-sm font-semibold text-gray-900 mb-4">Cohort Retention</h3>

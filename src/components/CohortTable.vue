@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
 const props = defineProps<{
   cohorts: {
     cohort: string
@@ -16,7 +18,7 @@ function cellColor(value: number): string {
   return 'bg-gray-50 text-gray-400'
 }
 
-const maxPeriods = Math.max(...(props.cohorts.map((c) => c.periods.length) || [0]), 0)
+const maxPeriods = computed(() => Math.max(...(props.cohorts.map((c) => c.periods.length) || [0]), 0))
 </script>
 
 <template>

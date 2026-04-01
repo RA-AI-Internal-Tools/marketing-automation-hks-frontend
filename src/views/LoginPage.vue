@@ -6,7 +6,7 @@ import { useAuthStore } from '@/stores/auth'
 const auth = useAuthStore()
 const router = useRouter()
 
-const email = ref('admin@duegate.com')
+const email = ref('')
 const password = ref('')
 const error = ref('')
 const loading = ref(false)

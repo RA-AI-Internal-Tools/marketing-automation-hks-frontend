@@ -29,6 +29,7 @@ const stats = ref<OverviewStats | null>(null)
 const volume = ref<DailyVolume[]>([])
 const campaigns = ref<CampaignPerformance[]>([])
 const loading = ref(true)
+const error = ref('')
 
 onMounted(async () => {
   try {
@@ -40,6 +41,8 @@ onMounted(async () => {
     stats.value = s
     volume.value = v
     campaigns.value = c
+  } catch (e: any) {
+    error.value = e.response?.data?.error || 'Failed to load dashboard data'
   } finally {
     loading.value = false
   }
@@ -96,6 +99,8 @@ const chartOptions = {
     </div>
 
     <div v-if="loading" class="text-center py-12 text-gray-400">Loading dashboard...</div>
+
+    <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{{ error }}</div>
 
     <template v-else>
       <!-- Stats cards -->

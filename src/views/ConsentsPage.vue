@@ -3,7 +3,10 @@ import { ref } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import { fetchConsents, optOut, optIn } from '@/api/dashboard'
+import { useAuthStore } from '@/stores/auth'
 import type { ClientConsent } from '@/api/types'
+
+const auth = useAuthStore()
 
 const clientId = ref('')
 const consents = ref<ClientConsent[]>([])
@@ -104,6 +107,7 @@ async function createOptOut(channel: string) {
             <td class="px-4 py-3 text-sm text-gray-500">{{ new Date(c.updated_at).toLocaleString() }}</td>
             <td class="px-4 py-3 text-right">
               <button
+                v-if="auth.canWrite"
                 @click="toggleConsent(c)"
                 :class="c.opted_in ? 'text-red-600 hover:text-red-800' : 'text-green-600 hover:text-green-800'"
                 class="text-sm font-medium"
@@ -126,6 +130,7 @@ async function createOptOut(channel: string) {
         <div class="flex gap-2">
           <button
             v-for="ch in allChannels.filter(c => !consents.find(x => x.channel === c))"
+            v-if="auth.canWrite"
             :key="ch"
             @click="createOptOut(ch)"
             class="px-3 py-1 text-xs border border-gray-300 rounded-lg hover:bg-gray-100"

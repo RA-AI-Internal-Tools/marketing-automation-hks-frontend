@@ -156,6 +156,12 @@ const router = createRouter({
       name: 'analytics-reports',
       component: () => import('@/views/analytics/ReportsPage.vue'),
     },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('@/views/NotFoundPage.vue'),
+      meta: { public: true },
+    },
   ],
 })
 

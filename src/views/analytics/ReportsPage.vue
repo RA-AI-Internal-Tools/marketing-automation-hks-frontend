@@ -3,15 +3,26 @@ import { onMounted } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import { useReportsStore } from '@/stores/reports'
+import { useAuthStore } from '@/stores/auth'
 import { runReport } from '@/api/reports'
 
 const store = useReportsStore()
+const auth = useAuthStore()
 
 onMounted(() => store.load())
 
 async function handleRunNow(id: number) {
-  await runReport(id)
-  store.load()
+  try {
+    await runReport(id)
+    store.load()
+  } catch (e: any) {
+    alert(e.response?.data?.error || 'Failed to run report')
+  }
+}
+
+async function handleDelete(id: number) {
+  if (!confirm('Are you sure you want to delete this report schedule?')) return
+  store.remove(id)
 }
 </script>
 
@@ -46,13 +57,15 @@ async function handleRunNow(id: number) {
           <div class="flex items-center gap-3">
             <StatusBadge :status="report.is_active ? 'active' : 'expired'" />
             <button
+              v-if="auth.canWrite"
               @click="handleRunNow(report.id)"
               class="px-3 py-1.5 text-xs font-medium text-indigo-600 border border-indigo-300 rounded-lg hover:bg-indigo-50"
             >
               Run Now
             </button>
             <button
-              @click="store.remove(report.id)"
+              v-if="auth.canWrite"
+              @click="handleDelete(report.id)"
               class="px-3 py-1.5 text-xs font-medium text-red-600 border border-red-300 rounded-lg hover:bg-red-50"
             >
               Delete
