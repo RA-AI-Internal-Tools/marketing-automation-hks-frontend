@@ -31,7 +31,7 @@ async function handleSubmit() {
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
         <div class="text-center mb-8">
           <h1 class="text-xl font-bold text-gray-900">Marketing Automation</h1>
-          <p class="text-sm text-gray-500 mt-1">DueGate Campaign Engine</p>
+          <p class="text-sm text-gray-500 mt-1">HKS Global Campaign Engine</p>
         </div>
 
         <form @submit.prevent="handleSubmit" class="space-y-4">

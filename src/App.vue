@@ -165,7 +165,7 @@ function handleLogout() {
     >
       <div class="p-6 border-b border-gray-200">
         <h1 class="text-lg font-bold text-gray-900">Marketing Automation</h1>
-        <p class="text-xs text-gray-500 mt-1">DueGate Campaign Engine</p>
+        <p class="text-xs text-gray-500 mt-1">HKS Global Campaign Engine</p>
       </div>
       <nav class="p-3 flex-1 overflow-y-auto space-y-1">
         <div v-for="section in sections" :key="section.label">
