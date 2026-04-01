@@ -5,7 +5,7 @@ import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import { useCampaignsStore } from '@/stores/campaigns'
 import { useAuthStore } from '@/stores/auth'
-import { PlusIcon, PencilSquareIcon, TrashIcon } from '@heroicons/vue/24/outline'
+import { PlusIcon, PencilSquareIcon, TrashIcon, RocketLaunchIcon } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
 const store = useCampaignsStore()

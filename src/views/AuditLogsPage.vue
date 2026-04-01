@@ -87,7 +87,7 @@ onMounted(load)
       <div>
         <label class="block text-xs font-medium text-gray-500 mb-1">Action Type</label>
         <select v-model="filterAction"
-          class="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-[#0099db]/40 focus:ring-[#0099db]/40">
+          class="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-[#0099db]/40">
           <option value="">All actions</option>
           <option v-for="a in actionOptions" :key="a" :value="a">{{ a }}</option>
         </select>
@@ -95,12 +95,12 @@ onMounted(load)
       <div>
         <label class="block text-xs font-medium text-gray-500 mb-1">From</label>
         <input v-model="filterDateFrom" type="date"
-          class="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-[#0099db]/40 focus:ring-[#0099db]/40" />
+          class="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-[#0099db]/40" />
       </div>
       <div>
         <label class="block text-xs font-medium text-gray-500 mb-1">To</label>
         <input v-model="filterDateTo" type="date"
-          class="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-[#0099db]/40 focus:ring-[#0099db]/40" />
+          class="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-[#0099db]/40" />
       </div>
       <button @click="applyFilters"
         class="px-4 py-1.5 text-sm font-medium text-white bg-[#020288] rounded-lg hover:bg-[#0d35d7] transition-colors">

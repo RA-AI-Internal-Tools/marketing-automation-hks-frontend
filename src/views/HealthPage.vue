@@ -45,7 +45,7 @@ const services = [
 </script>
 
 <template>
-  <div class="page-enter page-enter">
+  <div class="page-enter">
     <PageHeader title="Health Monitor" description="Real-time infrastructure health status" />
 
     <div v-if="loading" class="text-center py-12 text-gray-400">Checking health...</div>

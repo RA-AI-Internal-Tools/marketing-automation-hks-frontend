@@ -44,5 +44,10 @@ export const useTemplatesStore = defineStore('templates', () => {
     templates.value = templates.value.filter((t) => t.id !== id)
   }
 
-  return { templates, loading, load, get, create, update, remove }
+  function $reset() {
+    templates.value = []
+    loading.value = false
+  }
+
+  return { templates, loading, load, get, create, update, remove, $reset }
 })

@@ -146,14 +146,14 @@ async function handleDelete(id: number) {
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
             <input v-model="form.name" type="text" placeholder="e.g. Weekly Campaign Summary"
-              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40 focus:ring-[#0099db]/40" />
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40" />
           </div>
 
           <!-- Schedule -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Schedule</label>
             <select v-model="form.schedule"
-              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40 focus:ring-[#0099db]/40">
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40">
               <option v-for="opt in scheduleOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
             </select>
           </div>
@@ -162,7 +162,7 @@ async function handleDelete(id: number) {
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Format</label>
             <select v-model="form.format"
-              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40 focus:ring-[#0099db]/40">
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40">
               <option v-for="opt in formatOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
             </select>
           </div>
@@ -190,7 +190,7 @@ async function handleDelete(id: number) {
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Recipients (comma-separated emails)</label>
             <input v-model="form.recipients" type="text" placeholder="alice@example.com, bob@example.com"
-              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40 focus:ring-[#0099db]/40" />
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40" />
           </div>
 
           <!-- Active -->

@@ -53,7 +53,7 @@ async function handleChangePassword() {
 </script>
 
 <template>
-  <div class="page-enter page-enter">
+  <div class="page-enter">
     <PageHeader title="Settings" description="Application configuration and account settings" />
 
     <div v-if="loading" class="text-center py-12 text-gray-400">Loading...</div>
@@ -84,7 +84,7 @@ async function handleChangePassword() {
               v-model="currentPassword"
               type="password"
               required
-              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40 focus:ring-[#0099db]/40"
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40"
             />
           </div>
           <div>
@@ -93,7 +93,7 @@ async function handleChangePassword() {
               v-model="newPassword"
               type="password"
               required
-              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40 focus:ring-[#0099db]/40"
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40"
             />
           </div>
           <div>
@@ -102,7 +102,7 @@ async function handleChangePassword() {
               v-model="confirmPassword"
               type="password"
               required
-              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40 focus:ring-[#0099db]/40"
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40"
             />
           </div>
 

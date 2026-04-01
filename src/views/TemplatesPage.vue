@@ -41,7 +41,7 @@ const channelColors: Record<string, string> = {
 </script>
 
 <template>
-  <div class="page-enter page-enter">
+  <div class="page-enter">
     <div class="flex items-center justify-between mb-6">
       <PageHeader title="Templates" description="Message templates for each channel" />
       <div class="flex items-center gap-2">

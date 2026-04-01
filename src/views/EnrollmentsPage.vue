@@ -56,7 +56,7 @@ function formatDate(d?: string): string {
 </script>
 
 <template>
-  <div class="page-enter page-enter">
+  <div class="page-enter">
     <div class="flex items-center justify-between mb-6">
       <PageHeader title="Enrollments" description="Client campaign enrollment tracking" />
       <button

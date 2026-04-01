@@ -55,7 +55,7 @@ async function createOptOut(channel: string) {
 </script>
 
 <template>
-  <div class="page-enter page-enter">
+  <div class="page-enter">
     <PageHeader title="Consent Management" description="Manage client opt-in/opt-out preferences per channel" />
 
     <!-- Lookup form -->

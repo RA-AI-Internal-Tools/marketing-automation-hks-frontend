@@ -2,6 +2,10 @@
 import { ref, computed, watchEffect } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useDashboardStore } from '@/stores/dashboard'
+import { useCampaignsStore } from '@/stores/campaigns'
+import { useTemplatesStore } from '@/stores/templates'
+import { useReportsStore } from '@/stores/reports'
 import hksLogo from '@/assets/hks-logo.svg'
 import {
   ChartBarIcon,
@@ -130,6 +134,10 @@ function isActiveItem(to: string): boolean {
 }
 
 function handleLogout() {
+  useDashboardStore().$reset()
+  useCampaignsStore().$reset()
+  useTemplatesStore().$reset()
+  useReportsStore().$reset()
   auth.logout()
   router.push('/login')
 }

@@ -52,5 +52,10 @@ export const useCampaignsStore = defineStore('campaigns', () => {
     return result
   }
 
-  return { campaigns, loading, load, get, create, update, remove, toggle }
+  function $reset() {
+    campaigns.value = []
+    loading.value = false
+  }
+
+  return { campaigns, loading, load, get, create, update, remove, toggle, $reset }
 })

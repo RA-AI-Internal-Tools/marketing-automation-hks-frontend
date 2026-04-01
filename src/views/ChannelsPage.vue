@@ -57,7 +57,7 @@ const chartOptions = {
 </script>
 
 <template>
-  <div class="page-enter page-enter">
+  <div class="page-enter">
     <PageHeader title="Channel Analytics" description="Message delivery performance per channel" />
 
     <div v-if="loading" class="text-center py-12 text-gray-400">Loading channels...</div>
