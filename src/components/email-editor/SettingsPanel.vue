@@ -57,7 +57,7 @@ function handleTagKeydown(e: KeyboardEvent) {
 // Auto-generate template key from name
 const autoKey = ref(true)
 watch(() => props.name, (val) => {
-  if (autoKey.value && !props.templateKey) {
+  if (autoKey.value && !props.templateKey.trim()) {
     emit('update:templateKey', val.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''))
   }
 })
@@ -71,7 +71,7 @@ const labelClass = 'block text-xs font-medium text-gray-600 mb-1'
 </script>
 
 <template>
-  <div class="p-5 space-y-5 overflow-y-auto max-h-[calc(100vh-280px)]">
+  <div class="p-5 space-y-5">
     <h3 class="text-sm font-semibold text-gray-900">Template Settings</h3>
 
     <!-- Name & Key -->

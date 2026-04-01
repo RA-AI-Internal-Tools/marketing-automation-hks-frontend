@@ -14,7 +14,7 @@ export interface VariableCategory {
   variables: VariableDefinition[]
 }
 
-const VAR_REGEX = /\{\{(\w+)\}\}/g
+const VAR_REGEX = /\{\{([\w.]+)\}\}/g
 
 export function extractVariables(text: string): string[] {
   const vars = new Set<string>()
@@ -39,7 +39,7 @@ export function extractVariablesFromMultiple(...texts: (string | undefined | nul
 
 export function renderTemplate(template: string, data: Record<string, any>): string {
   return template.replace(VAR_REGEX, (match, varName: string) => {
-    if (varName in data) {
+    if (Object.prototype.hasOwnProperty.call(data, varName)) {
       const val = data[varName]
       return val != null ? String(val) : match
     }

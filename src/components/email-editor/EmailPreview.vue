@@ -19,6 +19,7 @@ const props = defineProps<{
 type ViewMode = 'desktop' | 'mobile'
 const viewMode = ref<ViewMode>('desktop')
 const darkBg = ref(false)
+const iframeHeight = ref(400)
 
 const renderedSubject = computed(() => renderTemplate(props.subject, props.sampleData))
 const renderedPreheader = computed(() => renderTemplate(props.preheader, props.sampleData))
@@ -34,6 +35,19 @@ const renderedHtml = computed(() => {
 })
 
 const iframeWidth = computed(() => (viewMode.value === 'mobile' ? '375px' : '100%'))
+
+function handleIframeLoad(e: Event) {
+  const iframe = e.target as HTMLIFrameElement
+  try {
+    const doc = iframe.contentDocument
+    if (doc?.body) {
+      const height = doc.body.scrollHeight
+      iframeHeight.value = Math.max(400, height + 32)
+    }
+  } catch {
+    // Cross-origin or sandbox restriction — keep default height
+  }
+}
 </script>
 
 <template>
@@ -49,7 +63,7 @@ const iframeWidth = computed(() => (viewMode.value === 'mobile' ? '375px' : '100
           ]"
           title="Desktop preview"
         >
-          <ComputerDesktopIcon class="h-4.5 w-4.5" />
+          <ComputerDesktopIcon class="h-[18px] w-[18px]" />
         </button>
         <button
           @click="viewMode = 'mobile'"
@@ -59,7 +73,7 @@ const iframeWidth = computed(() => (viewMode.value === 'mobile' ? '375px' : '100
           ]"
           title="Mobile preview"
         >
-          <DevicePhoneMobileIcon class="h-4.5 w-4.5" />
+          <DevicePhoneMobileIcon class="h-[18px] w-[18px]" />
         </button>
         <div class="w-px h-5 bg-gray-300 mx-1.5"></div>
         <button
@@ -67,8 +81,8 @@ const iframeWidth = computed(() => (viewMode.value === 'mobile' ? '375px' : '100
           class="p-2 rounded-lg text-gray-500 hover:bg-gray-200 transition-colors"
           :title="darkBg ? 'Light background' : 'Dark background'"
         >
-          <MoonIcon v-if="!darkBg" class="h-4.5 w-4.5" />
-          <SunIcon v-else class="h-4.5 w-4.5" />
+          <MoonIcon v-if="!darkBg" class="h-[18px] w-[18px]" />
+          <SunIcon v-else class="h-[18px] w-[18px]" />
         </button>
       </div>
       <span class="text-xs text-gray-400">{{ viewMode === 'mobile' ? '375px' : 'Full width' }}</span>
@@ -102,9 +116,10 @@ const iframeWidth = computed(() => (viewMode.value === 'mobile' ? '375px' : '100
         v-else
         :srcdoc="renderedHtml"
         sandbox="allow-same-origin"
-        :style="{ width: iframeWidth, maxWidth: '100%' }"
-        class="bg-white rounded-lg shadow-md border-0 min-h-[400px] transition-all duration-300"
+        :style="{ width: iframeWidth, maxWidth: '100%', height: iframeHeight + 'px' }"
+        class="bg-white rounded-lg shadow-md border-0 transition-all duration-300"
         title="Email preview"
+        @load="handleIframeLoad"
       ></iframe>
     </div>
   </div>

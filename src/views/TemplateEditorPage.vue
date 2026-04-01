@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import PageHeader from '@/components/PageHeader.vue'
 import EmailTemplateEditor from '@/components/email-editor/EmailTemplateEditor.vue'
 import { useTemplatesStore } from '@/stores/templates'
-import type { TemplateRequest } from '@/api/types'
+import type { MessageTemplate, TemplateRequest } from '@/api/types'
 
 const route = useRoute()
 const router = useRouter()
@@ -16,6 +16,9 @@ const templateId = computed(() => Number(route.params.id))
 // Channel selection — determines which editor to show
 const channel = ref('email')
 const channelLocked = ref(false)
+
+// Loaded template data (shared between parent and email editor)
+const loadedTemplate = ref<MessageTemplate | null>(null)
 
 // Simple form state (for non-email channels)
 const templateKey = ref('')
@@ -37,13 +40,20 @@ onMounted(async () => {
     try {
       const tmpl = await store.get(templateId.value)
       channel.value = tmpl.channel
-      channelLocked.value = true // can't change channel on existing template
-      templateKey.value = tmpl.template_key
-      name.value = tmpl.name
-      subject.value = tmpl.subject || ''
-      body.value = tmpl.body
-      variablesInput.value = tmpl.variables ? tmpl.variables.join(', ') : ''
-      isActive.value = tmpl.is_active
+      channelLocked.value = true
+
+      if (tmpl.channel === 'email') {
+        // Pass the loaded template directly to EmailTemplateEditor
+        loadedTemplate.value = tmpl
+      } else {
+        // Populate simple form for non-email channels
+        templateKey.value = tmpl.template_key
+        name.value = tmpl.name
+        subject.value = tmpl.subject || ''
+        body.value = tmpl.body
+        variablesInput.value = tmpl.variables ? tmpl.variables.join(', ') : ''
+        isActive.value = tmpl.is_active
+      }
     } catch {
       error.value = 'Failed to load template'
     } finally {
@@ -96,6 +106,7 @@ const inputClass = 'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm f
         :description="isEdit ? 'Modify message template' : 'Create a new message template'"
       />
       <button
+        v-if="channel !== 'email' || loading"
         @click="router.push('/templates')"
         class="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
       >
@@ -104,7 +115,7 @@ const inputClass = 'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm f
     </div>
 
     <!-- Channel selector (only for new templates) -->
-    <div v-if="!channelLocked" class="mb-4">
+    <div v-if="!channelLocked && !loading" class="mb-4">
       <div class="flex items-center gap-2">
         <span class="text-sm font-medium text-gray-600">Channel:</span>
         <div class="flex gap-1.5">
@@ -130,10 +141,15 @@ const inputClass = 'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm f
       <div class="skeleton h-4 w-32 mx-auto"></div>
     </div>
 
+    <div v-else-if="error && channel !== 'email'" class="text-sm text-red-600 bg-red-50 border border-red-100 px-4 py-3 rounded-lg">
+      {{ error }}
+    </div>
+
     <!-- EMAIL channel → Full email editor -->
     <EmailTemplateEditor
       v-else-if="channel === 'email'"
       :template-id="isEdit ? templateId : undefined"
+      :initial-template="loadedTemplate"
     />
 
     <!-- Non-email channels → Simple form -->

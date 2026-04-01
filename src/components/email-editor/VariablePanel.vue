@@ -4,10 +4,6 @@ import {
   VARIABLE_CATEGORIES,
   type VariableCategory,
 } from '@/utils/email-template'
-
-function wrapToken(name: string) {
-  return `\u007B\u007B${name}\u007D\u007D`
-}
 import {
   MagnifyingGlassIcon,
   ClipboardDocumentIcon,
@@ -16,6 +12,10 @@ import {
   ChevronRightIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/vue/24/outline'
+
+function wrapToken(name: string) {
+  return `\u007B\u007B${name}\u007D\u007D`
+}
 
 const props = defineProps<{
   usedVariables: Set<string>
