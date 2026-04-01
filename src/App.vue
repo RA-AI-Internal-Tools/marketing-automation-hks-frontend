@@ -178,7 +178,7 @@ function handleLogout() {
         <div class="flex items-center gap-3">
           <img :src="hksLogo" alt="HKS Global" class="h-7" />
         </div>
-        <p class="text-[11px] font-medium text-[#0099db] mt-2 tracking-wider uppercase">Campaign Engine</p>
+        <p class="text-[11px] font-medium text-[#0099db] mt-2 tracking-wider uppercase">Growth Engine</p>
       </div>
 
       <!-- Navigation -->

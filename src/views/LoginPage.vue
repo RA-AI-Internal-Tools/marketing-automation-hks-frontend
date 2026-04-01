@@ -38,7 +38,7 @@ async function handleSubmit() {
         <div class="text-center mb-8">
           <img :src="hksLogo" alt="HKS Global" class="h-10 mx-auto mb-4 invert" />
           <h1 class="text-xl font-bold tracking-tight text-gray-900">Marketing Automation</h1>
-          <p class="text-sm text-[#0099db] font-medium mt-1">HKS Global Campaign Engine</p>
+          <p class="text-sm text-[#0099db] font-medium mt-1">HKS Global Growth Engine</p>
         </div>
 
         <form @submit.prevent="handleSubmit" class="space-y-4">
