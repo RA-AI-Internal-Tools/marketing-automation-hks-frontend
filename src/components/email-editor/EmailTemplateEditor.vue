@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTemplatesStore } from '@/stores/templates'
 import { useVariableParser } from '@/composables/useVariableParser'
@@ -11,7 +11,7 @@ import {
   DEFAULT_EMAIL_HTML,
   extractVariablesFromMultiple,
 } from '@/utils/email-template'
-import type { EmailTemplateRequest } from '@/api/types'
+import type { MessageTemplate, EmailTemplateRequest } from '@/api/types'
 
 import EditorTabs from './EditorTabs.vue'
 import CodeEditor from './CodeEditor.vue'
@@ -26,6 +26,7 @@ import { Bars3Icon, XMarkIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps<{
   templateId?: number
+  initialTemplate?: MessageTemplate | null
 }>()
 
 const router = useRouter()
@@ -79,42 +80,53 @@ const { errors, warnings, hasErrors, errorCount, warningCount } = useEmailValida
 // Code editor ref for variable insertion
 const codeEditorRef = ref<InstanceType<typeof CodeEditor>>()
 
+function populateFromTemplate(tmpl: MessageTemplate) {
+  name.value = tmpl.name
+  templateKey.value = tmpl.template_key
+  subject.value = tmpl.subject || ''
+  body.value = tmpl.body || ''
+  isActive.value = tmpl.is_active
+
+  // Extended fields (may not exist on older templates)
+  const ext = tmpl as any
+  preheader.value = ext.preheader || ''
+  fromName.value = ext.from_name || ''
+  fromEmail.value = ext.from_email || ''
+  replyTo.value = ext.reply_to || ''
+  category.value = ext.category || ''
+  language.value = ext.language || ''
+  tags.value = ext.tags || []
+  if (ext.sample_payload) {
+    sampleData.value = ext.sample_payload
+  }
+}
+
 // Load template
 onMounted(async () => {
   if (isEdit.value && props.templateId) {
-    loading.value = true
-    try {
-      const tmpl = await store.get(props.templateId)
-      name.value = tmpl.name
-      templateKey.value = tmpl.template_key
-      subject.value = tmpl.subject || ''
-      body.value = tmpl.body || ''
-      isActive.value = tmpl.is_active
-
-      // Extended fields (may not exist on older templates)
-      const ext = tmpl as any
-      preheader.value = ext.preheader || ''
-      fromName.value = ext.from_name || ''
-      fromEmail.value = ext.from_email || ''
-      replyTo.value = ext.reply_to || ''
-      category.value = ext.category || ''
-      language.value = ext.language || ''
-      tags.value = ext.tags || []
-      if (ext.sample_payload) {
-        sampleData.value = ext.sample_payload
+    // Use pre-loaded data if available (avoids double API call)
+    if (props.initialTemplate) {
+      populateFromTemplate(props.initialTemplate)
+      await nextTick()
+      markClean()
+    } else {
+      loading.value = true
+      try {
+        const tmpl = await store.get(props.templateId)
+        populateFromTemplate(tmpl)
+        await nextTick()
+        markClean()
+      } catch {
+        error.value = 'Failed to load template'
+      } finally {
+        loading.value = false
       }
-
-      // Mark clean after loading
-      setTimeout(() => markClean(), 100)
-    } catch {
-      error.value = 'Failed to load template'
-    } finally {
-      loading.value = false
     }
   } else {
     // New template — set starter HTML
     body.value = DEFAULT_EMAIL_HTML
-    setTimeout(() => markClean(), 100)
+    await nextTick()
+    markClean()
   }
 })
 
@@ -228,6 +240,17 @@ async function handleDuplicate() {
   }
 }
 
+// Cancel / navigate back
+function handleCancel() {
+  if (isDirty.value) {
+    if (!window.confirm('You have unsaved changes. Are you sure you want to leave?')) {
+      return
+    }
+  }
+  markClean()
+  router.push('/templates')
+}
+
 // Go to field handler from validation panel
 function handleGoToField(field: string) {
   if (field === 'body') {
@@ -235,6 +258,11 @@ function handleGoToField(field: string) {
   } else {
     activeTab.value = 'settings'
   }
+}
+
+// Dismiss error
+function dismissError() {
+  error.value = ''
 }
 
 // Keyboard shortcut: Ctrl+S to save
@@ -260,13 +288,18 @@ function handleKeydown(e: KeyboardEvent) {
     </div>
 
     <template v-else>
-      <!-- Top bar: tabs + sidebar toggle -->
+      <!-- Top bar: tabs + channel indicator + sidebar toggle -->
       <div class="flex items-center justify-between px-4 py-2.5 bg-white border-b border-gray-200">
-        <EditorTabs
-          v-model:activeTab="activeTab"
-          :error-count="errorCount"
-          :warning-count="warningCount"
-        />
+        <div class="flex items-center gap-3">
+          <EditorTabs
+            v-model:activeTab="activeTab"
+            :error-count="errorCount"
+            :warning-count="warningCount"
+          />
+          <span class="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold bg-blue-100 text-blue-700 rounded-full uppercase tracking-wide">
+            Email
+          </span>
+        </div>
         <button
           @click="sidebarOpen = !sidebarOpen"
           class="lg:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
@@ -277,9 +310,12 @@ function handleKeydown(e: KeyboardEvent) {
         </button>
       </div>
 
-      <!-- Error banner -->
-      <div v-if="error" class="px-4 py-2 bg-red-50 border-b border-red-100 text-sm text-red-600">
-        {{ error }}
+      <!-- Error banner (dismissible) -->
+      <div v-if="error" class="flex items-center justify-between px-4 py-2 bg-red-50 border-b border-red-100">
+        <span class="text-sm text-red-600">{{ error }}</span>
+        <button @click="dismissError" class="text-red-400 hover:text-red-600 p-1 rounded transition-colors">
+          <XMarkIcon class="h-4 w-4" />
+        </button>
       </div>
 
       <!-- Main content area -->
@@ -366,7 +402,7 @@ function handleKeydown(e: KeyboardEvent) {
         <!-- Sidebar overlay backdrop (mobile) -->
         <div
           v-if="sidebarOpen"
-          class="lg:hidden fixed inset-0 z-30 bg-black/40"
+          class="lg:hidden fixed inset-0 z-[35] bg-black/40"
           @click="sidebarOpen = false"
         ></div>
       </div>
@@ -378,6 +414,7 @@ function handleKeydown(e: KeyboardEvent) {
         :is-edit="isEdit"
         :has-errors="hasErrors"
         @save="handleSave"
+        @cancel="handleCancel"
         @export-html="handleExportHtml"
         @import-html="handleImportHtml"
         @duplicate="handleDuplicate"

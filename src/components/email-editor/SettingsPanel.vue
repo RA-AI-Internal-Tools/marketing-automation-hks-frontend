@@ -71,7 +71,7 @@ const labelClass = 'block text-xs font-medium text-gray-600 mb-1'
 </script>
 
 <template>
-  <div class="p-5 space-y-5 overflow-y-auto max-h-[calc(100vh-280px)]">
+  <div class="p-5 space-y-5">
     <h3 class="text-sm font-semibold text-gray-900">Template Settings</h3>
 
     <!-- Name & Key -->
