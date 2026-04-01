@@ -19,6 +19,10 @@ const channels = ['email', 'sms', 'whatsapp', 'push']
 async function handleSend() {
   error.value = ''
   result.value = null
+  if (!templateKey.value || templateKey.value.trim() === '') {
+    error.value = 'Template key is required'
+    return
+  }
   if (!clientId.value) {
     error.value = 'Client ID is required'
     return

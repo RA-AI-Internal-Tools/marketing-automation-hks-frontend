@@ -24,14 +24,3 @@ export async function runReport(id: number): Promise<void> {
   await api.post(`/api/reports/${id}/run-now`)
 }
 
-export async function downloadReport(id: number): Promise<void> {
-  const { data, headers } = await api.get(`/api/reports/${id}/download`, { responseType: 'blob' })
-  const match = (headers['content-disposition'] as string | undefined)?.match(/filename=(.+)/)
-  const filename = match?.[1] ?? `report-${id}.pdf`
-  const url = URL.createObjectURL(data)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
-}

@@ -98,6 +98,20 @@ function removeVariant(stepIndex: number, variantIndex: number) {
 
 async function handleSubmit() {
   error.value = ''
+
+  // Validate steps before submitting
+  for (let i = 0; i < steps.value.length; i++) {
+    const step = steps.value[i]!
+    if (!step.template_key || step.template_key.trim() === '') {
+      error.value = `Step ${i + 1}: Template key is required`
+      return
+    }
+    if (step.delay_minutes < 0) {
+      error.value = `Step ${i + 1}: Delay must be non-negative`
+      return
+    }
+  }
+
   saving.value = true
   try {
     const req: CampaignRequest = {

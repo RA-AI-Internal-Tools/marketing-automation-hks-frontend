@@ -92,14 +92,6 @@ export async function fetchHealth(): Promise<HealthCheck> {
   return data
 }
 
-export async function triggerEvent(eventType: string, clientId: number, context?: Record<string, any>): Promise<void> {
-  await api.post('/api/events/trigger', { event_type: eventType, client_id: clientId, context })
-}
-
-export async function cancelEvent(event: string, clientId: number): Promise<void> {
-  await api.post('/api/events/cancel', { event, client_id: clientId })
-}
-
 // Export (Axios blob download — includes auth header)
 export async function exportLogs(params: Record<string, any> = {}): Promise<void> {
   const { data, headers } = await api.get('/api/export/logs', { params, responseType: 'blob' })

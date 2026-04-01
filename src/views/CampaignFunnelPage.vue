@@ -34,9 +34,13 @@ const funnelStages = computed(() => {
 })
 
 async function loadCampaigns() {
-  campaigns.value = await fetchCampaigns()
-  if (!selectedSlug.value && campaigns.value.length > 0) {
-    selectedSlug.value = campaigns.value[0].slug
+  try {
+    campaigns.value = await fetchCampaigns()
+    if (!selectedSlug.value && campaigns.value.length > 0) {
+      selectedSlug.value = campaigns.value[0].slug
+    }
+  } catch (e: any) {
+    error.value = e.response?.data?.error || 'Failed to load campaigns'
   }
 }
 
@@ -62,8 +66,9 @@ async function loadVariants() {
   if (!selectedSlug.value) return
   try {
     variants.value = await fetchVariantPerformance(selectedSlug.value, selectedStep.value)
-  } catch {
-    // ignore
+  } catch (e: any) {
+    console.error('Failed to load variants:', e)
+    error.value = e.response?.data?.error || 'Failed to load variant data'
   }
 }
 
