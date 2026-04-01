@@ -25,6 +25,8 @@ export interface Step {
   condition: string
   condition_params?: Record<string, any>
   variants?: StepVariant[]
+  true_next?: number | null
+  false_next?: number | null
 }
 
 export interface CampaignEnrollment {

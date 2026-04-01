@@ -64,6 +64,20 @@ function addStep() {
 
 function removeStep(index: number) {
   steps.value.splice(index, 1)
+  // Remap branch references in all remaining steps
+  for (const s of steps.value) {
+    for (const field of ['true_next', 'false_next'] as const) {
+      const val = s[field]
+      if (val == null || val === -1) continue
+      if (val === index) {
+        // Referenced the removed step — reset to sequential
+        s[field] = null
+      } else if (val > index) {
+        // Decrement indices above the removed step
+        s[field] = val - 1
+      }
+    }
+  }
 }
 
 function moveStep(index: number, direction: number) {
@@ -73,7 +87,57 @@ function moveStep(index: number, direction: number) {
   const item = arr[index]!
   arr.splice(index, 1)
   arr.splice(newIndex, 0, item)
+  // Remap branch references: index and newIndex were swapped
+  for (const s of arr) {
+    for (const field of ['true_next', 'false_next'] as const) {
+      const val = s[field]
+      if (val == null || val === -1) continue
+      if (val === index) {
+        s[field] = newIndex
+      } else if (val === newIndex) {
+        s[field] = index
+      }
+    }
+  }
   steps.value = arr
+}
+
+function stepTargetOptions(allSteps: Step[], currentIndex: number) {
+  const options: { label: string; value: number | null }[] = [
+    { label: 'Next step (sequential)', value: null },
+  ]
+  for (let j = 0; j < allSteps.length; j++) {
+    if (j === currentIndex) continue
+    const s = allSteps[j]!
+    options.push({
+      label: `Step ${j + 1}: ${s.channel} — ${s.template_key || '(no template)'}`,
+      value: j,
+    })
+  }
+  options.push({ label: 'Complete campaign', value: -1 })
+  return options
+}
+
+function hasBranchableCondition(step: Step): boolean {
+  return !!step.condition && step.condition !== 'always' && step.condition !== 'always_true'
+}
+
+function isBranchingEnabled(step: Step): boolean {
+  return step.true_next !== undefined || step.false_next !== undefined
+}
+
+function toggleBranching(step: Step, enabled: boolean) {
+  if (enabled) {
+    step.true_next = null
+    step.false_next = null
+  } else {
+    step.true_next = undefined
+    step.false_next = undefined
+  }
+}
+
+function setBranchTarget(step: Step, field: 'true_next' | 'false_next', value: string) {
+  step[field] = value === '' ? null : Number(value)
 }
 
 function addVariant(stepIndex: number) {
@@ -279,6 +343,48 @@ async function handleSubmit() {
                 <button type="button" @click="removeVariant(i, vi)" class="text-gray-400 hover:text-red-500">
                   <TrashIcon class="h-3.5 w-3.5" />
                 </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- If/Else Branching -->
+          <div v-if="hasBranchableCondition(step)" class="mt-3 border-t border-gray-100 pt-3">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-medium text-gray-500">If/Else Branching</span>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  :checked="isBranchingEnabled(step)"
+                  class="sr-only peer"
+                  @change="toggleBranching(step, !isBranchingEnabled(step))"
+                />
+                <div class="w-8 h-4 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-indigo-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all"></div>
+              </label>
+            </div>
+            <div v-if="isBranchingEnabled(step)" class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">If TRUE &rarr; go to</label>
+                <select
+                  :value="step.true_next === null || step.true_next === undefined ? '' : String(step.true_next)"
+                  class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                  @change="setBranchTarget(step, 'true_next', ($event.target as HTMLSelectElement).value)"
+                >
+                  <option v-for="opt in stepTargetOptions(steps, i)" :key="String(opt.value)" :value="opt.value === null ? '' : String(opt.value)">
+                    {{ opt.label }}
+                  </option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">If FALSE &rarr; go to</label>
+                <select
+                  :value="step.false_next === null || step.false_next === undefined ? '' : String(step.false_next)"
+                  class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                  @change="setBranchTarget(step, 'false_next', ($event.target as HTMLSelectElement).value)"
+                >
+                  <option v-for="opt in stepTargetOptions(steps, i)" :key="String(opt.value)" :value="opt.value === null ? '' : String(opt.value)">
+                    {{ opt.label }}
+                  </option>
+                </select>
               </div>
             </div>
           </div>
