@@ -116,12 +116,12 @@ function downloadBlob(blob: Blob, disposition: string) {
 
 // Campaign funnel & variants
 export async function fetchCampaignFunnel(slug: string): Promise<import('./types').CampaignFunnelStats> {
-  const { data } = await api.get(`/api/campaigns/${slug}/funnel`)
+  const { data } = await api.get(`/api/campaigns/slug/${slug}/funnel`)
   return data
 }
 
 export async function fetchVariantPerformance(slug: string, step?: number): Promise<import('./types').VariantPerformance[]> {
-  const { data } = await api.get(`/api/campaigns/${slug}/variants`, { params: { step } })
+  const { data } = await api.get(`/api/campaigns/slug/${slug}/variants`, { params: { step } })
   return data
 }
 

@@ -37,7 +37,10 @@ async function loadCampaigns() {
   try {
     campaigns.value = await fetchCampaigns()
     if (!selectedSlug.value && campaigns.value.length > 0) {
-      selectedSlug.value = campaigns.value[0].slug
+      const firstCampaign = campaigns.value[0]
+      if (firstCampaign) {
+        selectedSlug.value = firstCampaign.slug
+      }
     }
   } catch (e: any) {
     error.value = e.response?.data?.error || 'Failed to load campaigns'
