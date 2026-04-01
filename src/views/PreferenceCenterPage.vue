@@ -138,7 +138,7 @@ onMounted(loadPreferences)
       <div v-if="loading" class="text-center py-12 text-gray-500">Loading your preferences...</div>
 
       <!-- Channel list -->
-      <div v-else-if="clientId && !tokenInvalid" class="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+      <div v-else-if="clientId && !tokenInvalid" class="bg-white rounded-xl border border-gray-200/80 shadow-sm divide-y divide-gray-100">
         <div
           v-for="channel in channels"
           :key="channel.channel"
@@ -152,8 +152,8 @@ onMounted(loadPreferences)
             @click="toggleChannel(channel)"
             :disabled="saving !== null"
             :class="[
-              'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2',
-              channel.opted_in ? 'bg-indigo-600' : 'bg-gray-200',
+              'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-[#0099db]/40 focus:ring-offset-2',
+              channel.opted_in ? 'bg-[#020288]' : 'bg-gray-200',
               saving !== null ? 'opacity-50 cursor-not-allowed' : '',
             ]"
           >

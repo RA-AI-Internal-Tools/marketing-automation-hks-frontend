@@ -55,11 +55,11 @@ async function createOptOut(channel: string) {
 </script>
 
 <template>
-  <div>
+  <div class="page-enter">
     <PageHeader title="Consent Management" description="Manage client opt-in/opt-out preferences per channel" />
 
     <!-- Lookup form -->
-    <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+    <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6 mb-6">
       <div class="flex gap-3 items-end">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Client ID</label>
@@ -73,7 +73,7 @@ async function createOptOut(channel: string) {
         </div>
         <button
           @click="lookupConsents"
-          class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"
+          class="px-4 py-2 bg-[#020288] text-white text-sm font-medium rounded-lg hover:bg-[#0d35d7]"
         >
           Lookup
         </button>
@@ -84,9 +84,9 @@ async function createOptOut(channel: string) {
     <!-- Results -->
     <div v-if="loading" class="text-center py-12 text-gray-400">Loading...</div>
 
-    <div v-else-if="consents.length > 0 || clientId" class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div v-else-if="consents.length > 0 || clientId" class="bg-white rounded-xl border border-gray-200/80 shadow-sm overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-lg font-semibold text-gray-900">Consents for Client #{{ clientId }}</h2>
+        <h2 class="text-lg font-semibold tracking-tight text-gray-900">Consents for Client #{{ clientId }}</h2>
       </div>
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
@@ -98,7 +98,7 @@ async function createOptOut(channel: string) {
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
-          <tr v-for="c in consents" :key="c.id" class="hover:bg-gray-50">
+          <tr v-for="c in consents" :key="c.id" class="hover:bg-slate-50/70 transition-colors">
             <td class="px-4 py-3 text-sm font-medium text-gray-900 uppercase">{{ c.channel }}</td>
             <td class="px-4 py-3">
               <StatusBadge :status="c.opted_in ? 'active' : 'inactive'" />
@@ -132,7 +132,7 @@ async function createOptOut(channel: string) {
             v-for="ch in allChannels.filter(c => !consents.find(x => x.channel === c))"
             :key="ch"
             @click="createOptOut(ch)"
-            class="px-3 py-1 text-xs border border-gray-300 rounded-lg hover:bg-gray-100"
+            class="px-3 py-1 text-xs border border-gray-200 rounded-lg hover:bg-gray-100"
           >
             Opt out {{ ch }}
           </button>

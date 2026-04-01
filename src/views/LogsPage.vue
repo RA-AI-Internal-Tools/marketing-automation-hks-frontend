@@ -56,7 +56,7 @@ function formatDate(d?: string): string {
 </script>
 
 <template>
-  <div>
+  <div class="page-enter">
     <div class="flex items-center justify-between mb-6">
       <PageHeader title="Campaign Logs" description="Audit trail for every campaign step execution" />
       <button
@@ -98,7 +98,7 @@ function formatDate(d?: string): string {
     <div v-if="error" class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{{ error }}</div>
 
     <!-- Table -->
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm overflow-hidden">
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
@@ -120,7 +120,7 @@ function formatDate(d?: string): string {
             <tr v-else-if="logs.length === 0">
               <td colspan="8" class="px-4 py-8 text-center text-gray-400">No logs found</td>
             </tr>
-            <tr v-for="log in logs" :key="log.id" class="hover:bg-gray-50">
+            <tr v-for="log in logs" :key="log.id" class="hover:bg-slate-50/70 transition-colors">
               <td class="px-4 py-3 text-xs text-gray-500">{{ formatDate(log.created_at) }}</td>
               <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ log.campaign_slug }}</td>
               <td class="px-4 py-3 text-sm text-gray-700">{{ log.client_id }}</td>
@@ -140,8 +140,8 @@ function formatDate(d?: string): string {
       <div class="px-4 py-3 border-t border-gray-200 flex items-center justify-between text-sm text-gray-500">
         <span>{{ total }} total</span>
         <div class="flex gap-2">
-          <button :disabled="page === 0" @click="page--; load()" class="px-3 py-1 rounded border border-gray-300 disabled:opacity-50 hover:bg-gray-50">Prev</button>
-          <button :disabled="(page + 1) * limit >= total" @click="page++; load()" class="px-3 py-1 rounded border border-gray-300 disabled:opacity-50 hover:bg-gray-50">Next</button>
+          <button :disabled="page === 0" @click="page--; load()" class="px-3 py-1 rounded border border-gray-300 disabled:opacity-50 hover:bg-slate-50/70 transition-colors">Prev</button>
+          <button :disabled="(page + 1) * limit >= total" @click="page++; load()" class="px-3 py-1 rounded border border-gray-300 disabled:opacity-50 hover:bg-slate-50/70 transition-colors">Next</button>
         </div>
       </div>
     </div>

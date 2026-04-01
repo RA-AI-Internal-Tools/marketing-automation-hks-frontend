@@ -73,9 +73,9 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="page-enter space-y-6">
     <div class="flex items-center gap-3">
-      <ShieldCheckIcon class="w-7 h-7 text-indigo-500" />
+      <ShieldCheckIcon class="w-7 h-7 text-[#0099db]" />
       <div>
         <h1 class="text-2xl font-bold text-gray-900">Audit Logs</h1>
         <p class="text-sm text-gray-500">Track all administrative actions across the platform</p>
@@ -83,11 +83,11 @@ onMounted(load)
     </div>
 
     <!-- Filters -->
-    <div class="flex flex-wrap items-end gap-3 bg-white rounded-xl border border-gray-200 p-4">
+    <div class="flex flex-wrap items-end gap-3 bg-white rounded-xl border border-gray-200/80 shadow-sm p-4">
       <div>
         <label class="block text-xs font-medium text-gray-500 mb-1">Action Type</label>
         <select v-model="filterAction"
-          class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          class="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-[#0099db]/40">
           <option value="">All actions</option>
           <option v-for="a in actionOptions" :key="a" :value="a">{{ a }}</option>
         </select>
@@ -95,19 +95,19 @@ onMounted(load)
       <div>
         <label class="block text-xs font-medium text-gray-500 mb-1">From</label>
         <input v-model="filterDateFrom" type="date"
-          class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          class="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-[#0099db]/40" />
       </div>
       <div>
         <label class="block text-xs font-medium text-gray-500 mb-1">To</label>
         <input v-model="filterDateTo" type="date"
-          class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          class="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-[#0099db]/40" />
       </div>
       <button @click="applyFilters"
-        class="px-4 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors">
+        class="px-4 py-1.5 text-sm font-medium text-white bg-[#020288] rounded-lg hover:bg-[#0d35d7] transition-colors">
         Apply
       </button>
       <button @click="clearFilters"
-        class="px-4 py-1.5 text-sm font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+        class="px-4 py-1.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
         Clear
       </button>
     </div>
@@ -116,7 +116,7 @@ onMounted(load)
 
     <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{{ error }}</div>
 
-    <div v-else class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div v-else class="bg-white rounded-xl border border-gray-200/80 shadow-sm overflow-hidden">
       <table class="w-full text-sm">
         <thead class="bg-gray-50">
           <tr class="text-left text-gray-500 text-xs uppercase tracking-wide">
@@ -130,7 +130,7 @@ onMounted(load)
           </tr>
         </thead>
         <tbody>
-          <tr v-for="log in logs" :key="log.id" class="border-t border-gray-100 hover:bg-gray-50">
+          <tr v-for="log in logs" :key="log.id" class="border-t border-gray-100 hover:bg-slate-50/70 transition-colors">
             <td class="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">
               {{ new Date(log.created_at).toLocaleString() }}
             </td>

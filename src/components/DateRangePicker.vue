@@ -28,10 +28,10 @@ const untilDate = computed({
       :key="p.value"
       @click="store.setPreset(p.value)"
       :class="[
-        'px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors',
+        'px-3.5 py-1.5 text-xs font-medium rounded-full border transition-all duration-150',
         store.preset === p.value
-          ? 'bg-indigo-600 text-white border-indigo-600'
-          : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50',
+          ? 'bg-[#020288] text-white border-[#020288] shadow-sm'
+          : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50',
       ]"
     >
       {{ p.label }}
@@ -41,14 +41,14 @@ const untilDate = computed({
         type="date"
         :value="sinceDate"
         @input="sinceDate = ($event.target as HTMLInputElement).value"
-        class="px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        class="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#0099db]/40 focus:border-[#0099db] transition-shadow"
       />
-      <span>to</span>
+      <span class="text-gray-400">to</span>
       <input
         type="date"
         :value="untilDate"
         @input="untilDate = ($event.target as HTMLInputElement).value"
-        class="px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        class="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#0099db]/40 focus:border-[#0099db] transition-shadow"
       />
     </div>
   </div>

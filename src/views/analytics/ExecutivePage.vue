@@ -61,7 +61,7 @@ function fmt(n: number): string {
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
           <h3 class="text-sm font-semibold text-gray-900 mb-4">Revenue Trend</h3>
           <Line
             v-if="data.daily_revenue.length"
@@ -70,7 +70,7 @@ function fmt(n: number): string {
               datasets: [{
                 label: 'Revenue',
                 data: data.daily_revenue.map((d) => d.revenue),
-                borderColor: '#6366f1',
+                borderColor: '#020288',
                 backgroundColor: 'rgba(99, 102, 241, 0.1)',
                 fill: true,
                 tension: 0.3,
@@ -80,7 +80,7 @@ function fmt(n: number): string {
           />
           <p v-else class="text-sm text-gray-400">No data</p>
         </div>
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
           <h3 class="text-sm font-semibold text-gray-900 mb-4">Traffic Trend</h3>
           <Line
             v-if="data.daily_traffic.length"

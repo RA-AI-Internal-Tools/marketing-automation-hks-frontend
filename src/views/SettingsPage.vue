@@ -53,14 +53,14 @@ async function handleChangePassword() {
 </script>
 
 <template>
-  <div>
+  <div class="page-enter">
     <PageHeader title="Settings" description="Application configuration and account settings" />
 
     <div v-if="loading" class="text-center py-12 text-gray-400">Loading...</div>
 
     <div v-else class="space-y-6 max-w-2xl">
       <!-- Account info -->
-      <div class="bg-white rounded-xl border border-gray-200 p-6">
+      <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
         <h3 class="text-sm font-semibold text-gray-900 mb-4">Account</h3>
         <div class="space-y-2 text-sm">
           <div class="flex justify-between">
@@ -75,7 +75,7 @@ async function handleChangePassword() {
       </div>
 
       <!-- Change password -->
-      <div class="bg-white rounded-xl border border-gray-200 p-6">
+      <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
         <h3 class="text-sm font-semibold text-gray-900 mb-4">Change Password</h3>
         <form @submit.prevent="handleChangePassword" class="space-y-4">
           <div>
@@ -84,7 +84,7 @@ async function handleChangePassword() {
               v-model="currentPassword"
               type="password"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40"
             />
           </div>
           <div>
@@ -93,7 +93,7 @@ async function handleChangePassword() {
               v-model="newPassword"
               type="password"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40"
             />
           </div>
           <div>
@@ -102,7 +102,7 @@ async function handleChangePassword() {
               v-model="confirmPassword"
               type="password"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40"
             />
           </div>
 
@@ -116,7 +116,7 @@ async function handleChangePassword() {
           <button
             type="submit"
             :disabled="saving"
-            class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+            class="px-6 py-2.5 bg-[#020288] text-white text-sm font-medium rounded-lg hover:bg-[#0d35d7] disabled:opacity-50 transition-colors"
           >
             {{ saving ? 'Updating...' : 'Update Password' }}
           </button>

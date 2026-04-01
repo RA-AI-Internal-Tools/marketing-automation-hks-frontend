@@ -128,11 +128,11 @@ onMounted(load)
 </script>
 
 <template>
-  <div>
+  <div class="page-enter">
     <PageHeader title="User Management" description="Manage dashboard users and their roles">
       <button
         @click="openCreate"
-        class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+        class="inline-flex items-center gap-2 px-4 py-2 bg-[#020288] text-white text-sm font-medium rounded-lg hover:bg-[#0d35d7] transition-colors"
       >
         <PlusIcon class="h-4 w-4" />
         Add User
@@ -148,7 +148,7 @@ onMounted(load)
     <div v-if="loading" class="text-center py-12 text-gray-500">Loading users...</div>
 
     <!-- Users table -->
-    <div v-else class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div v-else class="bg-white rounded-xl border border-gray-200/80 shadow-sm overflow-hidden">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
@@ -161,7 +161,7 @@ onMounted(load)
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
-          <tr v-for="user in users" :key="user.id" class="hover:bg-gray-50">
+          <tr v-for="user in users" :key="user.id" class="hover:bg-slate-50/70 transition-colors">
             <td class="px-6 py-4">
               <div class="font-medium text-gray-900">{{ user.name }}</div>
             </td>
@@ -191,7 +191,7 @@ onMounted(load)
             <td class="px-6 py-4 text-sm text-gray-500">{{ formatDate(user.last_login_at) }}</td>
             <td class="px-6 py-4 text-right">
               <div v-if="auth.isAdmin" class="flex items-center justify-end gap-2">
-                <button @click="openEdit(user)" class="text-gray-400 hover:text-indigo-600 transition-colors" title="Edit">
+                <button @click="openEdit(user)" class="text-gray-400 hover:text-[#020288] transition-colors" title="Edit">
                   <PencilSquareIcon class="h-4 w-4" />
                 </button>
                 <button @click="confirmDelete = user" class="text-gray-400 hover:text-red-600 transition-colors" title="Delete">
@@ -213,7 +213,7 @@ onMounted(load)
         <div class="fixed inset-0 bg-black/50" @click="showModal = false" />
         <div class="relative bg-white rounded-xl shadow-xl w-full max-w-md p-6">
           <div class="flex items-center justify-between mb-6">
-            <h2 class="text-lg font-semibold text-gray-900">
+            <h2 class="text-lg font-semibold tracking-tight text-gray-900">
               {{ editingUser ? 'Edit User' : 'Create User' }}
             </h2>
             <button @click="showModal = false" class="text-gray-400 hover:text-gray-600">
@@ -225,24 +225,24 @@ onMounted(load)
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
               <input v-model="form.name" type="text" required
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-[#0099db]/40 focus:border-[#0099db]" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input v-model="form.email" type="email" required
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-[#0099db]/40 focus:border-[#0099db]" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">
                 Password {{ editingUser ? '(leave blank to keep current)' : '' }}
               </label>
               <input v-model="form.password" type="password" :required="!editingUser"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-[#0099db]/40 focus:border-[#0099db]" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
               <select v-model="form.role"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-[#0099db]/40 focus:border-[#0099db]">
                 <option value="admin">Admin</option>
                 <option value="editor">Editor</option>
                 <option value="viewer">Viewer</option>
@@ -255,7 +255,7 @@ onMounted(load)
             </div>
             <div class="flex items-center gap-2">
               <input v-model="form.is_active" type="checkbox" id="is_active"
-                class="h-4 w-4 text-indigo-600 border-gray-300 rounded" />
+                class="h-4 w-4 text-[#020288] border-gray-300 rounded" />
               <label for="is_active" class="text-sm text-gray-700">Active</label>
             </div>
 
@@ -263,11 +263,11 @@ onMounted(load)
 
             <div class="flex justify-end gap-3 pt-2">
               <button type="button" @click="showModal = false"
-                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-slate-50/70 transition-colors">
                 Cancel
               </button>
               <button type="submit" :disabled="saving"
-                class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                class="px-4 py-2 text-sm font-medium text-white bg-[#020288] rounded-lg hover:bg-[#0d35d7] disabled:opacity-50">
                 {{ saving ? 'Saving...' : (editingUser ? 'Update' : 'Create') }}
               </button>
             </div>
@@ -281,14 +281,14 @@ onMounted(load)
       <div v-if="confirmDelete" class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="fixed inset-0 bg-black/50" @click="confirmDelete = null" />
         <div class="relative bg-white rounded-xl shadow-xl w-full max-w-sm p-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">Delete User</h3>
+          <h3 class="text-lg font-semibold tracking-tight text-gray-900 mb-2">Delete User</h3>
           <p class="text-sm text-gray-600 mb-6">
             Are you sure you want to delete <strong>{{ confirmDelete.name }}</strong> ({{ confirmDelete.email }})?
             This action cannot be undone.
           </p>
           <div class="flex justify-end gap-3">
             <button @click="confirmDelete = null"
-              class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+              class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-slate-50/70 transition-colors">
               Cancel
             </button>
             <button @click="handleDelete" :disabled="deleting"

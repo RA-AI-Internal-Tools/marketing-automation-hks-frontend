@@ -39,7 +39,7 @@ watch(() => analytics.queryParams, load)
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
           <h3 class="text-sm font-semibold text-gray-900 mb-4">Top Events</h3>
           <table class="w-full text-sm">
             <thead><tr class="text-left text-gray-500 text-xs uppercase">
@@ -53,7 +53,7 @@ watch(() => analytics.queryParams, load)
             </tbody>
           </table>
         </div>
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
           <h3 class="text-sm font-semibold text-gray-900 mb-4">Geographic Distribution</h3>
           <table class="w-full text-sm">
             <thead><tr class="text-left text-gray-500 text-xs uppercase">

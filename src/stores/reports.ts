@@ -39,5 +39,10 @@ export const useReportsStore = defineStore('reports', () => {
     reports.value = reports.value.filter((r) => r.id !== id)
   }
 
-  return { reports, loading, load, create, update, remove }
+  function $reset() {
+    reports.value = []
+    loading.value = false
+  }
+
+  return { reports, loading, load, create, update, remove, $reset }
 })

@@ -41,7 +41,7 @@ watch(() => analytics.queryParams, load)
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
           <h3 class="text-sm font-semibold text-gray-900 mb-4">Traffic Sources</h3>
           <DonutChart
             v-if="data.sources.length"
@@ -50,7 +50,7 @@ watch(() => analytics.queryParams, load)
           />
           <p v-else class="text-sm text-gray-400">No data</p>
         </div>
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
           <h3 class="text-sm font-semibold text-gray-900 mb-4">UTM Campaigns</h3>
           <table v-if="data.utm_campaigns.length" class="w-full text-sm">
             <thead><tr class="text-left text-gray-500 text-xs uppercase">

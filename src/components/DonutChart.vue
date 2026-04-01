@@ -17,8 +17,8 @@ const props = defineProps<{
 }>()
 
 const defaultColors = [
-  '#6366f1', '#3b82f6', '#06b6d4', '#10b981', '#f59e0b',
-  '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316',
+  '#020288', '#0d35d7', '#0099db', '#50C8ED', '#10b981',
+  '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#f97316',
 ]
 
 const chartData = computed(() => ({

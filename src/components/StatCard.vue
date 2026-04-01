@@ -6,29 +6,32 @@ defineProps<{
   color?: 'indigo' | 'green' | 'yellow' | 'red' | 'blue'
 }>()
 
-const colorClasses: Record<string, string> = {
-  indigo: 'bg-indigo-50 text-indigo-700',
-  green: 'bg-green-50 text-green-700',
-  yellow: 'bg-yellow-50 text-yellow-700',
-  red: 'bg-red-50 text-red-700',
-  blue: 'bg-blue-50 text-blue-700',
+const accentColors: Record<string, string> = {
+  indigo: 'bg-[#020288]',
+  green: 'bg-emerald-500',
+  yellow: 'bg-amber-500',
+  red: 'bg-red-500',
+  blue: 'bg-[#0099db]',
 }
 
-const borderColorClasses: Record<string, string> = {
-  indigo: 'border-l-indigo-500',
-  green: 'border-l-green-500',
-  yellow: 'border-l-yellow-500',
-  red: 'border-l-red-500',
-  blue: 'border-l-blue-500',
+const subtitleColors: Record<string, string> = {
+  indigo: 'text-[#020288]',
+  green: 'text-emerald-600',
+  yellow: 'text-amber-600',
+  red: 'text-red-600',
+  blue: 'text-[#0099db]',
 }
 </script>
 
 <template>
-  <div class="bg-white rounded-xl border border-gray-200 p-6 border-l-4" :class="borderColorClasses[color || 'indigo']">
-    <p class="text-sm font-medium text-gray-500">{{ title }}</p>
-    <p class="mt-2 text-3xl font-bold text-gray-900">{{ value }}</p>
-    <p v-if="subtitle" class="mt-1 text-sm" :class="colorClasses[color || 'indigo']">
-      {{ subtitle }}
-    </p>
+  <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm card-interactive overflow-hidden">
+    <div class="h-1" :class="accentColors[color || 'indigo']"></div>
+    <div class="p-5">
+      <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">{{ title }}</p>
+      <p class="mt-2 text-2xl font-bold text-gray-900 tracking-tight">{{ value }}</p>
+      <p v-if="subtitle" class="mt-1.5 text-xs font-medium" :class="subtitleColors[color || 'indigo']">
+        {{ subtitle }}
+      </p>
+    </div>
   </div>
 </template>

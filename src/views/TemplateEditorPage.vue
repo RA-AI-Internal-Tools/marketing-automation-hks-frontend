@@ -80,7 +80,7 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div>
+  <div class="page-enter">
     <PageHeader
       :title="isEdit ? 'Edit Template' : 'New Template'"
       :description="isEdit ? 'Modify message template' : 'Create a new message template'"
@@ -89,26 +89,26 @@ async function handleSubmit() {
     <div v-if="loading" class="text-center py-12 text-gray-400">Loading...</div>
 
     <form v-else @submit.prevent="handleSubmit" class="space-y-6 max-w-2xl">
-      <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+      <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6 space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-            <input v-model="name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <input v-model="name" required class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Template Key</label>
-            <input v-model="templateKey" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g. welcome_email" />
+            <input v-model="templateKey" required class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40" placeholder="e.g. welcome_email" />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Channel</label>
-            <select v-model="channel" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <select v-model="channel" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40">
               <option v-for="ch in channels" :key="ch" :value="ch">{{ ch }}</option>
             </select>
           </div>
           <div class="flex items-center gap-3 pt-6">
             <label class="relative inline-flex items-center cursor-pointer">
               <input v-model="isActive" type="checkbox" class="sr-only peer" />
-              <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-indigo-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
+              <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-[#0099db]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-[#020288] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
             </label>
             <span class="text-sm text-gray-700">Active</span>
           </div>
@@ -116,7 +116,7 @@ async function handleSubmit() {
 
         <div v-if="channel === 'email'">
           <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-          <input v-model="subject" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Email subject line" />
+          <input v-model="subject" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40" placeholder="Email subject line" />
         </div>
 
         <div>
@@ -125,7 +125,7 @@ async function handleSubmit() {
             v-model="body"
             required
             rows="8"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40 font-mono"
             placeholder="Template body content. Use {{variable_name}} for dynamic content."
           ></textarea>
         </div>
@@ -134,7 +134,7 @@ async function handleSubmit() {
           <label class="block text-sm font-medium text-gray-700 mb-1">Variables (comma-separated)</label>
           <input
             v-model="variablesInput"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40"
             placeholder="e.g. first_name, order_id, amount"
           />
         </div>
@@ -146,7 +146,7 @@ async function handleSubmit() {
         <button
           type="submit"
           :disabled="saving"
-          class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+          class="px-6 py-2.5 bg-[#020288] text-white text-sm font-medium rounded-lg hover:bg-[#0d35d7] disabled:opacity-50 transition-colors"
         >
           {{ saving ? 'Saving...' : isEdit ? 'Update Template' : 'Create Template' }}
         </button>

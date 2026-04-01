@@ -6,10 +6,10 @@ defineProps<{
 </script>
 
 <template>
-  <div class="mb-6 flex items-center justify-between">
+  <div class="mb-6 flex items-center justify-between page-enter">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900">{{ title }}</h1>
-      <p v-if="description" class="mt-1 text-sm text-gray-500">{{ description }}</p>
+      <h1 class="text-2xl font-semibold tracking-tight text-gray-900">{{ title }}</h1>
+      <p v-if="description" class="mt-1 text-sm text-slate-500">{{ description }}</p>
     </div>
     <slot />
   </div>

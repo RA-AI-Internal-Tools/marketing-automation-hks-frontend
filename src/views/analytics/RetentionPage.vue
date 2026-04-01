@@ -32,14 +32,14 @@ watch(() => analytics.queryParams, load)
     <div v-if="loading" class="text-center py-12 text-gray-400">Loading...</div>
     <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{{ error }}</div>
     <div v-else-if="data" class="space-y-6">
-      <div class="bg-white rounded-xl border border-gray-200 p-6">
+      <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
         <h3 class="text-sm font-semibold text-gray-900 mb-4">Cohort Retention</h3>
         <CohortTable v-if="data.cohorts.length" :cohorts="data.cohorts" />
         <p v-else class="text-sm text-gray-400">No cohort data available</p>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
           <h3 class="text-sm font-semibold text-gray-900 mb-4">Campaign Conversions</h3>
           <table v-if="data.campaign_conversions.length" class="w-full text-sm">
             <thead><tr class="text-left text-gray-500 text-xs uppercase">
@@ -57,7 +57,7 @@ watch(() => analytics.queryParams, load)
           </table>
           <p v-else class="text-sm text-gray-400">No data</p>
         </div>
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <div class="bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
           <h3 class="text-sm font-semibold text-gray-900 mb-4">Consent Stats</h3>
           <table v-if="data.consent_stats.length" class="w-full text-sm">
             <thead><tr class="text-left text-gray-500 text-xs uppercase">

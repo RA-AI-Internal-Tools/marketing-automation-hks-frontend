@@ -23,6 +23,9 @@ export const useDashboardStore = defineStore('dashboard', () => {
   }
 
   function startSSE() {
+    // Prevent duplicate SSE connections
+    if (sseCleanup) return
+
     const token = localStorage.getItem('ma_auth_token')
     if (!token) return
 
@@ -53,6 +56,14 @@ export const useDashboardStore = defineStore('dashboard', () => {
     sseConnected.value = false
   }
 
+  function $reset() {
+    stopSSE()
+    stats.value = null
+    recentLogs.value = []
+    recentEnrollments.value = []
+    loading.value = false
+  }
+
   const hasStats = computed(() => stats.value !== null)
 
   return {
@@ -65,5 +76,6 @@ export const useDashboardStore = defineStore('dashboard', () => {
     loadStats,
     startSSE,
     stopSSE,
+    $reset,
   }
 })
