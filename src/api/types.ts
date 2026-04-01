@@ -138,6 +138,30 @@ export interface TemplateRequest {
   is_active: boolean
 }
 
+export interface EmailTemplateRequest extends TemplateRequest {
+  preheader?: string | null
+  html_body?: string | null
+  text_body?: string | null
+  from_name?: string | null
+  from_email?: string | null
+  reply_to?: string | null
+  category?: string | null
+  language?: string | null
+  tags?: string[]
+  sample_payload?: Record<string, any> | null
+  editor_mode?: 'code' | 'visual'
+}
+
+export interface TemplateVariable {
+  name: string
+  label: string
+  token: string
+  description: string
+  sampleValue: string
+  category: string
+  required: boolean
+}
+
 export interface CampaignRequest {
   name: string
   slug?: string
