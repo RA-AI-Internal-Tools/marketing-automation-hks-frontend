@@ -20,6 +20,10 @@ function confirmSwitch() {
   env.switchMode(pendingMode.value)
   showConfirm.value = false
 }
+
+function cancelSwitch() {
+  showConfirm.value = false
+}
 </script>
 
 <template>
@@ -60,7 +64,7 @@ function confirmSwitch() {
         leave-to-class="opacity-0"
       >
         <div v-if="showConfirm" class="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4">
-          <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" @click="showConfirm = false" />
+          <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" @click="cancelSwitch" />
           <div class="relative bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-xl p-6 max-w-sm w-full">
             <div class="flex items-center gap-3 mb-4">
               <div class="flex items-center justify-center h-10 w-10 rounded-full bg-[var(--env-production-bg)] border border-[var(--env-production-border)]">
@@ -78,7 +82,7 @@ function confirmSwitch() {
             </p>
             <div class="flex gap-3 justify-end">
               <button
-                @click="showConfirm = false"
+                @click="cancelSwitch"
                 class="px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] bg-[var(--color-bg-subtle)] rounded-lg hover:bg-[var(--color-bg-muted)] transition-colors"
               >
                 Cancel
