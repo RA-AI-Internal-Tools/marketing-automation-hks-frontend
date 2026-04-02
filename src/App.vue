@@ -113,17 +113,6 @@ function handleLogout() {
       @toggle-sidebar="toggleSidebar"
       @toggle-mobile="toggleMobile"
     />
-          <button
-            @click="handleLogout"
-            class="text-gray-400 hover:text-red-600 transition-colors flex-shrink-0 ml-2"
-            title="Logout"
-          >
-            <ArrowRightStartOnRectangleIcon class="h-5 w-5" />
-          </button>
-        </div>
-      </div>
-    </aside>
->>>>>>> 4999b01 (fix: add confirmation dialog when switching to production environment)
 
     <!-- Main content -->
     <main
