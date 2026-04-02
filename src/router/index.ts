@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useEnvironmentStore } from '@/stores/environment'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -210,6 +211,22 @@ router.beforeEach((to) => {
   // Write-access routes (admin or editor only)
   if (to.meta.requiresWrite && role !== 'admin' && role !== 'editor') {
     return { name: 'overview' }
+  }
+  // Production guard: prompt confirmation before entering write routes in production
+  if (to.meta.requiresWrite) {
+    const envStore = useEnvironmentStore()
+    if (envStore.isProduction) {
+      return new Promise<boolean>((resolve) => {
+        envStore.triggerGuard(() => resolve(true))
+        // If the user cancels, the promise never resolves — use cancelGuard to reject
+        const originalCancel = envStore.cancelGuard.bind(envStore)
+        envStore.cancelGuard = () => {
+          originalCancel()
+          resolve(false)
+          envStore.cancelGuard = originalCancel
+        }
+      })
+    }
   }
 })
 

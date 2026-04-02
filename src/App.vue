@@ -12,6 +12,7 @@ import { useIntegrationsStore } from '@/stores/integrations'
 import AppSidebar from '@/components/AppSidebar.vue'
 import AppHeader from '@/components/AppHeader.vue'
 import ErrorBoundary from '@/components/ErrorBoundary.vue'
+import ProductionGuard from '@/components/ProductionGuard.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -86,6 +87,9 @@ function handleLogout() {
       </Transition>
     </div>
   </Teleport>
+
+  <!-- Global production guard (store-driven, for router-level protection) -->
+  <ProductionGuard />
 
   <ErrorBoundary>
   <!-- Public pages: no sidebar -->
