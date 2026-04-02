@@ -332,8 +332,8 @@ export interface AuditLog {
 
 // Integration types
 
-export type ProviderType = 'email' | 'sms' | 'push' | 'webhook' | 'crm' | 'analytics'
-export type IntegrationStatus = 'connected' | 'not_configured' | 'error' | 'disabled'
+export type ProviderType = 'email' | 'sms' | 'push' | 'webhook' | 'crm' | 'analytics' | 'infrastructure'
+export type IntegrationStatus = 'connected' | 'degraded' | 'not_configured' | 'error' | 'disabled'
 
 export interface Integration {
   id: number

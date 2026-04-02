@@ -29,10 +29,12 @@ const typeIcons: Record<string, any> = {
   webhook: GlobeAltIcon,
   crm: UserGroupIcon,
   analytics: ChartBarIcon,
+  infrastructure: LinkIcon,
 }
 
 const statusConfig: Record<string, { label: string; colorClass: string; dotClass: string }> = {
   connected: { label: 'Connected', colorClass: 'bg-[var(--color-success-bg)] text-[var(--color-success-text)] border border-[var(--color-success-border)]', dotClass: 'bg-[var(--color-success)]' },
+  degraded: { label: 'Degraded', colorClass: 'bg-[var(--color-warning-bg)] text-[var(--color-warning-text)] border border-[var(--color-warning-border)]', dotClass: 'bg-[var(--color-warning)]' },
   not_configured: { label: 'Not Configured', colorClass: 'bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] border border-[var(--color-border)]', dotClass: 'bg-[var(--color-text-muted)]' },
   error: { label: 'Error', colorClass: 'bg-[var(--color-error-bg)] text-[var(--color-error-text)] border border-[var(--color-error-border)]', dotClass: 'bg-[var(--color-error)]' },
   disabled: { label: 'Disabled', colorClass: 'bg-[var(--color-warning-bg)] text-[var(--color-warning-text)] border border-[var(--color-warning-border)]', dotClass: 'bg-[var(--color-warning)]' },
@@ -45,6 +47,7 @@ const typeLabels: Record<string, string> = {
   webhook: 'Webhook',
   crm: 'CRM',
   analytics: 'Analytics',
+  infrastructure: 'Infrastructure',
 }
 
 function formatDate(d: string) {
