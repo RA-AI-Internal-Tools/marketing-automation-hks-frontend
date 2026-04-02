@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import { fetchHealth } from '@/api/dashboard'
@@ -32,26 +32,50 @@ onMounted(() => {
 
 onUnmounted(() => clearInterval(interval))
 
-function normalizeHealthStatus(status: string): string {
+function normalizeHealthStatus(status: string | undefined): string {
+  if (!status) return 'unknown'
   if (status === 'ok') return 'up'
   return status
 }
 
-const services = [
-  { key: 'postgres', name: 'PostgreSQL', description: 'Campaign data, enrollments, logs, consents' },
-  { key: 'redis', name: 'Redis', description: 'Frequency cap sorted sets, NATS deduplication' },
-  { key: 'nats', name: 'NATS', description: 'Event bus (campaign.trigger, campaign.cancel)' },
-]
+const serviceGroups = computed(() => [
+  {
+    title: 'Core Infrastructure',
+    description: 'Dependencies required for the service to run at all.',
+    items: [
+      { key: 'postgres', name: 'PostgreSQL', description: 'Campaign data, enrollments, logs, consents' },
+      { key: 'redis', name: 'Redis', description: 'Frequency caps, caches, deduplication support' },
+      { key: 'nats', name: 'NATS', description: 'Event bus for trigger and cancellation workflows' },
+    ],
+  },
+  {
+    title: 'Analytics & CDP',
+    description: 'Systems powering analytics and Tracardi-driven enrichment.',
+    items: [
+      { key: 'tracardi', name: 'Tracardi Analytics', description: 'Executive, funnel, user, product, and acquisition analytics source' },
+      { key: 'tracardi_segment_tagger', name: 'Tracardi Segment Tagger', description: 'Scheduled segment-tagging flow for dormant / at-risk profiles' },
+    ],
+  },
+  {
+    title: 'Delivery Providers',
+    description: 'Optional third-party systems used for outbound messaging when configured.',
+    items: [
+      { key: 'elastic_email', name: 'Elastic Email', description: 'Transactional and campaign email delivery provider' },
+      { key: 'plivo', name: 'Plivo', description: 'SMS delivery provider' },
+      { key: 'meta_whatsapp', name: 'Meta WhatsApp', description: 'WhatsApp template/message delivery via Meta Cloud API' },
+      { key: 'fcm', name: 'Firebase Cloud Messaging', description: 'Push notification delivery provider' },
+    ],
+  },
+])
 </script>
 
 <template>
   <div class="page-enter">
-    <PageHeader title="Health Monitor" description="Real-time infrastructure health status" />
+    <PageHeader title="Health Monitor" description="Real-time infrastructure and integration health status" />
 
     <div v-if="loading" class="text-center py-12 text-[var(--color-text-muted)]">Checking health...</div>
 
     <template v-else>
-      <!-- Overall status -->
       <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6 mb-6">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-4">
@@ -65,7 +89,7 @@ const services = [
             </div>
             <div>
               <h2 class="text-xl font-bold text-[var(--color-text-primary)]">
-                {{ error ? 'Unreachable' : health?.status === 'ok' ? 'All Systems Operational' : 'Degraded Performance' }}
+                {{ error ? 'Unreachable' : health?.status === 'ok' ? 'All Core Systems Operational' : 'Degraded Performance' }}
               </h2>
               <p class="text-sm text-[var(--color-text-tertiary)]">Last checked: {{ lastChecked }}</p>
             </div>
@@ -79,19 +103,31 @@ const services = [
         </div>
       </div>
 
-      <!-- Service cards -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4" v-if="health">
-        <div
-          v-for="svc in services"
-          :key="svc.key"
+      <div v-if="health" class="space-y-6">
+        <section
+          v-for="group in serviceGroups"
+          :key="group.title"
           class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6"
         >
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="text-lg font-semibold tracking-tight text-[var(--color-text-primary)]">{{ svc.name }}</h3>
-            <StatusBadge :status="normalizeHealthStatus((health.checks as any)[svc.key])" />
+          <div class="mb-4">
+            <h3 class="text-lg font-semibold tracking-tight text-[var(--color-text-primary)]">{{ group.title }}</h3>
+            <p class="text-sm text-[var(--color-text-tertiary)] mt-1">{{ group.description }}</p>
           </div>
-          <p class="text-sm text-[var(--color-text-tertiary)]">{{ svc.description }}</p>
-        </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div
+              v-for="svc in group.items"
+              :key="svc.key"
+              class="bg-[var(--color-bg-page)] rounded-xl border border-[var(--color-border)] p-5"
+            >
+              <div class="flex items-center justify-between mb-3 gap-3">
+                <h4 class="text-base font-semibold tracking-tight text-[var(--color-text-primary)]">{{ svc.name }}</h4>
+                <StatusBadge :status="normalizeHealthStatus((health.checks as any)[svc.key])" />
+              </div>
+              <p class="text-sm text-[var(--color-text-tertiary)]">{{ svc.description }}</p>
+            </div>
+          </div>
+        </section>
       </div>
 
       <p v-if="error" class="mt-6 text-center text-red-600">{{ error }}</p>

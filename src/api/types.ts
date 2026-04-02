@@ -103,11 +103,7 @@ export interface DailyVolume {
 
 export interface HealthCheck {
   status: string
-  checks: {
-    postgres: string
-    redis: string
-    nats: string
-  }
+  checks: Record<string, string>
 }
 
 export interface PaginatedResponse<T> {
