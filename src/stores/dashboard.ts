@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import type { OverviewStats, CampaignLog, CampaignEnrollment } from '@/api/types'
 import { fetchOverviewStats } from '@/api/dashboard'
 import { useSSE, type SSEEvent } from '@/composables/useSSE'
+import api from '@/api/client'
 
 export const useDashboardStore = defineStore('dashboard', () => {
   const stats = ref<OverviewStats | null>(null)
@@ -22,16 +23,24 @@ export const useDashboardStore = defineStore('dashboard', () => {
     }
   }
 
-  function startSSE() {
+  async function startSSE() {
     // Prevent duplicate SSE connections
     if (sseCleanup) return
 
     const token = localStorage.getItem('ma_auth_token')
     if (!token) return
 
+    let sseToken: string
+    try {
+      const { data } = await api.post('/api/sse/token')
+      sseToken = data.token
+    } catch {
+      return
+    }
+
     const baseUrl = import.meta.env.VITE_API_URL || ''
     const { connected, onEvent, disconnect } = useSSE(
-      `${baseUrl}/api/sse?token=${encodeURIComponent(token)}`,
+      `${baseUrl}/api/sse?token=${encodeURIComponent(sseToken)}`,
     )
 
     sseConnected.value = connected.value
