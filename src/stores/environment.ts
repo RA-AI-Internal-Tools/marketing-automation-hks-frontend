@@ -1,13 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { STORAGE_KEYS } from '@/constants/storage'
 
 export type EnvironmentMode = 'sandbox' | 'production'
 
-const STORAGE_KEY = 'ma_environment'
-
 function getStored(): EnvironmentMode {
   try {
-    const v = localStorage.getItem(STORAGE_KEY)
+    const v = localStorage.getItem(STORAGE_KEYS.ENVIRONMENT)
     if (v === 'sandbox' || v === 'production') return v
   } catch { /* ignore */ }
   return 'sandbox'
@@ -22,7 +21,7 @@ export const useEnvironmentStore = defineStore('environment', () => {
   function switchMode(newMode: EnvironmentMode) {
     mode.value = newMode
     try {
-      localStorage.setItem(STORAGE_KEY, newMode)
+      localStorage.setItem(STORAGE_KEYS.ENVIRONMENT, newMode)
     } catch { /* ignore */ }
   }
 

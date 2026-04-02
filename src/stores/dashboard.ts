@@ -4,6 +4,7 @@ import type { OverviewStats, CampaignLog, CampaignEnrollment } from '@/api/types
 import { fetchOverviewStats } from '@/api/dashboard'
 import { useSSE, type SSEEvent } from '@/composables/useSSE'
 import api from '@/api/client'
+import { STORAGE_KEYS } from '@/constants/storage'
 
 export const useDashboardStore = defineStore('dashboard', () => {
   const stats = ref<OverviewStats | null>(null)
@@ -31,7 +32,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
     // Prevent duplicate SSE connections
     if (sseCleanup) return
 
-    const token = localStorage.getItem('ma_auth_token')
+    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
     if (!token) return
 
     let sseToken: string

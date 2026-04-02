@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useEnvironmentStore } from '@/stores/environment'
+import { STORAGE_KEYS } from '@/constants/storage'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -195,8 +196,8 @@ const router = createRouter({
 // Navigation guard: redirect unauthenticated users to login
 router.beforeEach((to) => {
   const isPublic = to.meta.public === true
-  const token = localStorage.getItem('ma_auth_token')
-  const role = localStorage.getItem('ma_auth_role')
+  const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
+  const role = localStorage.getItem(STORAGE_KEYS.AUTH_ROLE)
 
   if (!isPublic && !token) {
     return { name: 'login' }

@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { STORAGE_KEYS } from '@/constants/storage'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '',
@@ -8,7 +9,7 @@ const api = axios.create({
 
 // Inject Bearer token on every request
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('ma_auth_token')
+  const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
@@ -34,10 +35,10 @@ api.interceptors.response.use(
       !error.config._publicRequest &&
       !isPublicRoute
     ) {
-      localStorage.removeItem('ma_auth_token')
-      localStorage.removeItem('ma_auth_email')
-      localStorage.removeItem('ma_auth_role')
-      localStorage.removeItem('ma_auth_name')
+      localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN)
+      localStorage.removeItem(STORAGE_KEYS.AUTH_EMAIL)
+      localStorage.removeItem(STORAGE_KEYS.AUTH_ROLE)
+      localStorage.removeItem(STORAGE_KEYS.AUTH_NAME)
       window.location.href = '/login'
     }
     return Promise.reject(error)
