@@ -11,6 +11,7 @@ import { useEnvironmentStore } from '@/stores/environment'
 import { useIntegrationsStore } from '@/stores/integrations'
 import AppSidebar from '@/components/AppSidebar.vue'
 import AppHeader from '@/components/AppHeader.vue'
+import ErrorBoundary from '@/components/ErrorBoundary.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -86,6 +87,7 @@ function handleLogout() {
     </div>
   </Teleport>
 
+  <ErrorBoundary>
   <!-- Public pages: no sidebar -->
   <RouterView v-if="route.meta.public" />
 
@@ -118,4 +120,5 @@ function handleLogout() {
       </div>
     </main>
   </div>
+  </ErrorBoundary>
 </template>
