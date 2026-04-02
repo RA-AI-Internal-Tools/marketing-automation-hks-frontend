@@ -10,6 +10,10 @@ const data = ref<ProductsData | null>(null)
 const loading = ref(true)
 const error = ref('')
 
+function safeNumber(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : 0
+}
+
 async function load() {
   loading.value = true
   error.value = ''
@@ -45,12 +49,12 @@ watch(() => analytics.queryParams, load)
           <tbody>
             <tr v-for="p in data.products" :key="p.product_id" class="border-t border-[var(--color-border-muted)]">
               <td class="py-2 text-[var(--color-text-primary)] font-medium">{{ p.name }}</td>
-              <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ p.views.toLocaleString() }}</td>
-              <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ p.add_to_cart.toLocaleString() }}</td>
-              <td class="py-2 text-right text-blue-600">{{ p.cart_rate.toFixed(1) }}%</td>
-              <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ p.purchases.toLocaleString() }}</td>
-              <td class="py-2 text-right text-green-600">{{ p.conversion_rate.toFixed(1) }}%</td>
-              <td class="py-2 text-right text-[var(--color-text-primary)] font-medium">${{ p.revenue.toLocaleString() }}</td>
+              <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ safeNumber(p.views).toLocaleString() }}</td>
+              <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ safeNumber(p.add_to_cart).toLocaleString() }}</td>
+              <td class="py-2 text-right text-blue-600">{{ safeNumber(p.cart_rate).toFixed(1) }}%</td>
+              <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ safeNumber(p.purchases).toLocaleString() }}</td>
+              <td class="py-2 text-right text-green-600">{{ safeNumber(p.conversion_rate).toFixed(1) }}%</td>
+              <td class="py-2 text-right text-[var(--color-text-primary)] font-medium">${{ safeNumber(p.revenue).toLocaleString() }}</td>
             </tr>
           </tbody>
         </table>

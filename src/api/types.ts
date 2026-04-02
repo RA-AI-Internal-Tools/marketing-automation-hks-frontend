@@ -226,7 +226,7 @@ export interface ProductsData {
     purchases: number
     cart_rate: number
     conversion_rate: number
-    revenue: number
+    revenue?: number
   }[]
 }
 
