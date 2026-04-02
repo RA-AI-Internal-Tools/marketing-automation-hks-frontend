@@ -11,13 +11,17 @@ export const useDashboardStore = defineStore('dashboard', () => {
   const recentEnrollments = ref<CampaignEnrollment[]>([])
   const sseConnected = ref(false)
   const loading = ref(false)
+  const error = ref<string | null>(null)
 
   let sseCleanup: (() => void) | null = null
 
   async function loadStats() {
     loading.value = true
+    error.value = null
     try {
       stats.value = await fetchOverviewStats()
+    } catch (e: any) {
+      error.value = e.response?.data?.error || e.message || 'Failed to load stats'
     } finally {
       loading.value = false
     }
@@ -81,6 +85,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
     recentEnrollments,
     sseConnected,
     loading,
+    error,
     hasStats,
     loadStats,
     startSSE,
