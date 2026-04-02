@@ -1,17 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '@/api/client'
-
-const TOKEN_KEY = 'ma_auth_token'
-const EMAIL_KEY = 'ma_auth_email'
-const ROLE_KEY = 'ma_auth_role'
-const NAME_KEY = 'ma_auth_name'
+import { STORAGE_KEYS } from '@/constants/storage'
 
 export const useAuthStore = defineStore('auth', () => {
-  const token = ref<string | null>(localStorage.getItem(TOKEN_KEY))
-  const email = ref<string | null>(localStorage.getItem(EMAIL_KEY))
-  const role = ref<string | null>(localStorage.getItem(ROLE_KEY))
-  const name = ref<string | null>(localStorage.getItem(NAME_KEY))
+  const token = ref<string | null>(localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN))
+  const email = ref<string | null>(localStorage.getItem(STORAGE_KEYS.AUTH_EMAIL))
+  const role = ref<string | null>(localStorage.getItem(STORAGE_KEYS.AUTH_ROLE))
+  const name = ref<string | null>(localStorage.getItem(STORAGE_KEYS.AUTH_NAME))
 
   const isAuthenticated = computed(() => !!token.value)
   const isAdmin = computed(() => role.value === 'admin')
@@ -31,10 +27,10 @@ export const useAuthStore = defineStore('auth', () => {
     email.value = data.email
     role.value = data.role || 'viewer'
     name.value = data.name || ''
-    localStorage.setItem(TOKEN_KEY, data.token)
-    localStorage.setItem(EMAIL_KEY, data.email)
-    localStorage.setItem(ROLE_KEY, data.role || 'viewer')
-    localStorage.setItem(NAME_KEY, data.name || '')
+    localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.token)
+    localStorage.setItem(STORAGE_KEYS.AUTH_EMAIL, data.email)
+    localStorage.setItem(STORAGE_KEYS.AUTH_ROLE, data.role || 'viewer')
+    localStorage.setItem(STORAGE_KEYS.AUTH_NAME, data.name || '')
   }
 
   function logout() {
@@ -42,10 +38,10 @@ export const useAuthStore = defineStore('auth', () => {
     email.value = null
     role.value = null
     name.value = null
-    localStorage.removeItem(TOKEN_KEY)
-    localStorage.removeItem(EMAIL_KEY)
-    localStorage.removeItem(ROLE_KEY)
-    localStorage.removeItem(NAME_KEY)
+    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN)
+    localStorage.removeItem(STORAGE_KEYS.AUTH_EMAIL)
+    localStorage.removeItem(STORAGE_KEYS.AUTH_ROLE)
+    localStorage.removeItem(STORAGE_KEYS.AUTH_NAME)
   }
 
   function getToken() {

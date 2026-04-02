@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useEnvironmentStore } from '@/stores/environment'
+import { STORAGE_KEYS } from '@/constants/storage'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -194,8 +196,8 @@ const router = createRouter({
 // Navigation guard: redirect unauthenticated users to login
 router.beforeEach((to) => {
   const isPublic = to.meta.public === true
-  const token = localStorage.getItem('ma_auth_token')
-  const role = localStorage.getItem('ma_auth_role')
+  const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
+  const role = localStorage.getItem(STORAGE_KEYS.AUTH_ROLE)
 
   if (!isPublic && !token) {
     return { name: 'login' }
@@ -210,6 +212,22 @@ router.beforeEach((to) => {
   // Write-access routes (admin or editor only)
   if (to.meta.requiresWrite && role !== 'admin' && role !== 'editor') {
     return { name: 'overview' }
+  }
+  // Production guard: prompt confirmation before entering write routes in production
+  if (to.meta.requiresWrite) {
+    const envStore = useEnvironmentStore()
+    if (envStore.isProduction) {
+      return new Promise<boolean>((resolve) => {
+        envStore.triggerGuard(() => resolve(true))
+        // If the user cancels, the promise never resolves — use cancelGuard to reject
+        const originalCancel = envStore.cancelGuard.bind(envStore)
+        envStore.cancelGuard = () => {
+          originalCancel()
+          resolve(false)
+          envStore.cancelGuard = originalCancel
+        }
+      })
+    }
   }
 })
 

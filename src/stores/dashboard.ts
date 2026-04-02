@@ -3,6 +3,8 @@ import { ref, computed } from 'vue'
 import type { OverviewStats, CampaignLog, CampaignEnrollment } from '@/api/types'
 import { fetchOverviewStats } from '@/api/dashboard'
 import { useSSE, type SSEEvent } from '@/composables/useSSE'
+import api from '@/api/client'
+import { STORAGE_KEYS } from '@/constants/storage'
 
 export const useDashboardStore = defineStore('dashboard', () => {
   const stats = ref<OverviewStats | null>(null)
@@ -10,28 +12,40 @@ export const useDashboardStore = defineStore('dashboard', () => {
   const recentEnrollments = ref<CampaignEnrollment[]>([])
   const sseConnected = ref(false)
   const loading = ref(false)
+  const error = ref<string | null>(null)
 
   let sseCleanup: (() => void) | null = null
 
   async function loadStats() {
     loading.value = true
+    error.value = null
     try {
       stats.value = await fetchOverviewStats()
+    } catch (e: any) {
+      error.value = e.response?.data?.error || e.message || 'Failed to load stats'
     } finally {
       loading.value = false
     }
   }
 
-  function startSSE() {
+  async function startSSE() {
     // Prevent duplicate SSE connections
     if (sseCleanup) return
 
-    const token = localStorage.getItem('ma_auth_token')
+    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
     if (!token) return
+
+    let sseToken: string
+    try {
+      const { data } = await api.post('/api/sse/token')
+      sseToken = data.token
+    } catch {
+      return
+    }
 
     const baseUrl = import.meta.env.VITE_API_URL || ''
     const { connected, onEvent, disconnect } = useSSE(
-      `${baseUrl}/api/sse?token=${encodeURIComponent(token)}`,
+      `${baseUrl}/api/sse?token=${encodeURIComponent(sseToken)}`,
     )
 
     sseConnected.value = connected.value
@@ -72,6 +86,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
     recentEnrollments,
     sseConnected,
     loading,
+    error,
     hasStats,
     loadStats,
     startSSE,
