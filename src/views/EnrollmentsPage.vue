@@ -4,9 +4,12 @@ import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import { fetchEnrollments, exportEnrollments } from '@/api/dashboard'
 import { useAuthStore } from '@/stores/auth'
+import { useToast } from '@/composables/useToast'
 import type { CampaignEnrollment } from '@/api/types'
 
 const auth = useAuthStore()
+const { showToast } = useToast()
+const exporting = ref(false)
 
 const enrollments = ref<CampaignEnrollment[]>([])
 const total = ref(0)
@@ -49,6 +52,18 @@ watch([filterStatus, filterCampaign, filterClient], () => {
   }, 300)
 })
 
+async function handleExport() {
+  exporting.value = true
+  try {
+    await exportEnrollments({ status: filterStatus.value, campaign: filterCampaign.value, client_id: filterClient.value })
+    showToast('Enrollments exported successfully', 'success')
+  } catch {
+    showToast('Failed to export enrollments', 'error')
+  } finally {
+    exporting.value = false
+  }
+}
+
 function formatDate(d?: string): string {
   if (!d) return '—'
   return new Date(d).toLocaleString()
@@ -61,10 +76,11 @@ function formatDate(d?: string): string {
       <PageHeader title="Enrollments" description="Client campaign enrollment tracking" />
       <button
         v-if="auth.canWrite"
-        @click="exportEnrollments({ status: filterStatus, campaign: filterCampaign, client_id: filterClient })"
-        class="px-4 py-2 bg-[var(--color-bg-card)] text-[var(--color-text-secondary)] text-sm font-medium rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-hover)] transition-colors"
+        :disabled="exporting"
+        @click="handleExport"
+        class="px-4 py-2 bg-[var(--color-bg-card)] text-[var(--color-text-secondary)] text-sm font-medium rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-hover)] transition-colors disabled:opacity-50"
       >
-        Export CSV
+        {{ exporting ? 'Exporting...' : 'Export CSV' }}
       </button>
     </div>
 

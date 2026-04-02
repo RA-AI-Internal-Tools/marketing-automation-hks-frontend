@@ -21,17 +21,34 @@ const selectedStep = ref(0)
 const loading = ref(false)
 const error = ref('')
 
+function rate(numerator: number, denominator: number): number {
+  if (denominator === 0) return 0
+  return (numerator / denominator) * 100
+}
+
 const funnelStages = computed(() => {
   if (!funnel.value) return []
   const f = funnel.value
+  const enrolled = f.enrolled || 1
   return [
     { name: 'Enrolled', count: f.enrolled, rate: 100, color: 'bg-blue-500', icon: FunnelIcon },
-    { name: 'Sent', count: f.sent, rate: f.sent_rate, color: 'bg-[#0099db]', icon: PaperAirplaneIcon },
-    { name: 'Delivered', count: f.delivered, rate: f.delivery_rate, color: 'bg-purple-500', icon: ArrowTrendingUpIcon },
-    { name: 'Opened', count: f.opened, rate: f.open_rate, color: 'bg-amber-500', icon: EnvelopeOpenIcon },
-    { name: 'Clicked', count: f.clicked, rate: f.click_rate, color: 'bg-green-500', icon: CursorArrowRaysIcon },
+    { name: 'Sent', count: f.sent, rate: rate(f.sent, enrolled), color: 'bg-[#0099db]', icon: PaperAirplaneIcon },
+    { name: 'Delivered', count: f.delivered, rate: rate(f.delivered, enrolled), color: 'bg-purple-500', icon: ArrowTrendingUpIcon },
+    { name: 'Opened', count: f.opened, rate: rate(f.opened, enrolled), color: 'bg-amber-500', icon: EnvelopeOpenIcon },
+    { name: 'Clicked', count: f.clicked, rate: rate(f.clicked, enrolled), color: 'bg-green-500', icon: CursorArrowRaysIcon },
   ]
 })
+
+const deliveryRate = computed(() => funnel.value ? rate(funnel.value.delivered, funnel.value.sent) : 0)
+const openRate = computed(() => funnel.value ? rate(funnel.value.opened, funnel.value.delivered) : 0)
+const clickRate = computed(() => funnel.value ? rate(funnel.value.clicked, funnel.value.opened) : 0)
+
+function variantOpenRate(v: VariantPerformance): number {
+  return rate(v.opened, v.delivered)
+}
+function variantClickRate(v: VariantPerformance): number {
+  return rate(v.clicked, v.opened)
+}
 
 async function loadCampaigns() {
   try {
@@ -149,15 +166,15 @@ function onCampaignChange() {
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-4">
           <p class="text-xs text-[var(--color-text-tertiary)] uppercase tracking-wide">Delivery Rate</p>
-          <p class="text-2xl font-bold text-[var(--color-text-primary)] mt-1">{{ funnel.delivery_rate.toFixed(1) }}%</p>
+          <p class="text-2xl font-bold text-[var(--color-text-primary)] mt-1">{{ deliveryRate.toFixed(1) }}%</p>
         </div>
         <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-4">
           <p class="text-xs text-[var(--color-text-tertiary)] uppercase tracking-wide">Open Rate</p>
-          <p class="text-2xl font-bold text-[var(--color-text-primary)] mt-1">{{ funnel.open_rate.toFixed(1) }}%</p>
+          <p class="text-2xl font-bold text-[var(--color-text-primary)] mt-1">{{ openRate.toFixed(1) }}%</p>
         </div>
         <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-4">
           <p class="text-xs text-[var(--color-text-tertiary)] uppercase tracking-wide">Click Rate</p>
-          <p class="text-2xl font-bold text-[var(--color-text-primary)] mt-1">{{ funnel.click_rate.toFixed(1) }}%</p>
+          <p class="text-2xl font-bold text-[var(--color-text-primary)] mt-1">{{ clickRate.toFixed(1) }}%</p>
         </div>
         <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-4">
           <p class="text-xs text-[var(--color-text-tertiary)] uppercase tracking-wide">Total Enrolled</p>
@@ -191,7 +208,6 @@ function onCampaignChange() {
           <thead>
             <tr class="text-left text-[var(--color-text-tertiary)] text-xs uppercase tracking-wide">
               <th class="pb-3">Variant</th>
-              <th class="pb-3">Template</th>
               <th class="pb-3 text-right">Sent</th>
               <th class="pb-3 text-right">Delivered</th>
               <th class="pb-3 text-right">Opened</th>
@@ -203,16 +219,15 @@ function onCampaignChange() {
           <tbody>
             <tr v-for="v in variants" :key="v.variant_id" class="border-t border-[var(--color-border-muted)]">
               <td class="py-3 font-medium text-[var(--color-text-primary)]">{{ v.variant_id }}</td>
-              <td class="py-3 text-[var(--color-text-secondary)] font-mono text-xs">{{ v.template_key }}</td>
-              <td class="py-3 text-right text-[var(--color-text-secondary)]">{{ v.total_sent.toLocaleString() }}</td>
+              <td class="py-3 text-right text-[var(--color-text-secondary)]">{{ v.sent.toLocaleString() }}</td>
               <td class="py-3 text-right text-[var(--color-text-secondary)]">{{ v.delivered.toLocaleString() }}</td>
               <td class="py-3 text-right text-[var(--color-text-secondary)]">{{ v.opened.toLocaleString() }}</td>
               <td class="py-3 text-right text-[var(--color-text-secondary)]">{{ v.clicked.toLocaleString() }}</td>
-              <td class="py-3 text-right font-semibold" :class="v.open_rate > 25 ? 'text-green-600' : 'text-amber-600'">
-                {{ v.open_rate.toFixed(1) }}%
+              <td class="py-3 text-right font-semibold" :class="variantOpenRate(v) > 25 ? 'text-green-600' : 'text-amber-600'">
+                {{ variantOpenRate(v).toFixed(1) }}%
               </td>
-              <td class="py-3 text-right font-semibold" :class="v.click_rate > 5 ? 'text-green-600' : 'text-amber-600'">
-                {{ v.click_rate.toFixed(1) }}%
+              <td class="py-3 text-right font-semibold" :class="variantClickRate(v) > 5 ? 'text-green-600' : 'text-amber-600'">
+                {{ variantClickRate(v).toFixed(1) }}%
               </td>
             </tr>
           </tbody>

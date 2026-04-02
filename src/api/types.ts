@@ -310,22 +310,16 @@ export interface CampaignFunnelStats {
   delivered: number
   opened: number
   clicked: number
-  sent_rate: number
-  delivery_rate: number
-  open_rate: number
-  click_rate: number
+  completed: number
+  cancelled: number
 }
 
 export interface VariantPerformance {
   variant_id: string
-  template_key: string
-  total_sent: number
+  sent: number
   delivered: number
   opened: number
   clicked: number
-  delivery_rate: number
-  open_rate: number
-  click_rate: number
 }
 
 export interface AuditLog {
