@@ -33,6 +33,9 @@ watch(() => analytics.queryParams, load)
     <div v-if="loading" class="text-center py-12 text-[var(--color-text-muted)]">Loading...</div>
     <div v-else-if="error" class="bg-[var(--color-error-bg)] border border-[var(--color-error-border)] text-[var(--color-error-text)] px-4 py-3 rounded-lg text-sm">{{ error }}</div>
     <div v-else-if="data" class="space-y-6">
+      <div class="bg-[var(--color-warning-bg)] border border-[var(--color-warning-border)] text-[var(--color-warning-text)] px-4 py-3 rounded-lg text-sm">
+        Some acquisition metrics are partial in staging. Source attribution is available, but signup and returning-user metrics depend on event quality upstream.
+      </div>
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard title="New Users" :value="data.new_users.toLocaleString()" />
         <MetricCard title="Returning Users" :value="data.returning_users.toLocaleString()" />

@@ -34,7 +34,11 @@ watch(() => analytics.queryParams, load)
   <AnalyticsLayout title="Products & Catalog" description="Product performance and conversion metrics">
     <div v-if="loading" class="text-center py-12 text-[var(--color-text-muted)]">Loading...</div>
     <div v-else-if="error" class="bg-[var(--color-error-bg)] border border-[var(--color-error-border)] text-[var(--color-error-text)] px-4 py-3 rounded-lg text-sm">{{ error }}</div>
-    <div v-else-if="data" class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+    <div v-else-if="data" class="space-y-4">
+      <div class="bg-[var(--color-warning-bg)] border border-[var(--color-warning-border)] text-[var(--color-warning-text)] px-4 py-3 rounded-lg text-sm">
+        Product metrics are derived from current staging event payloads. Product identity and revenue may be incomplete until upstream tracking sends canonical product fields consistently.
+      </div>
+      <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead><tr class="text-left text-[var(--color-text-tertiary)] text-xs uppercase">
@@ -60,6 +64,7 @@ watch(() => analytics.queryParams, load)
         </table>
       </div>
       <p v-if="!data.products.length" class="text-sm text-[var(--color-text-muted)] text-center py-4">No product data available</p>
+      </div>
     </div>
   </AnalyticsLayout>
 </template>

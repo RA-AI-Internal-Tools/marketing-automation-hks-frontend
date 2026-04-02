@@ -33,6 +33,9 @@ watch(() => analytics.queryParams, load)
     <div v-if="loading" class="text-center py-12 text-[var(--color-text-muted)]">Loading...</div>
     <div v-else-if="error" class="bg-[var(--color-error-bg)] border border-[var(--color-error-border)] text-[var(--color-error-text)] px-4 py-3 rounded-lg text-sm">{{ error }}</div>
     <div v-else-if="data" class="space-y-6">
+      <div class="bg-[var(--color-warning-bg)] border border-[var(--color-warning-border)] text-[var(--color-warning-text)] px-4 py-3 rounded-lg text-sm">
+        Payment analytics are partially derived from staging event payloads. Methods and failure reasons may be incomplete when upstream events omit PSP-specific metadata.
+      </div>
       <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <MetricCard title="Approval Rate" :value="data.approval_rate.toFixed(1) + '%'" color="green" />
         <MetricCard title="Decline Rate" :value="data.decline_rate.toFixed(1) + '%'" color="red" />
