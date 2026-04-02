@@ -84,17 +84,19 @@ async function handleDelete(id: number, name: string) {
         :key="campaign.id"
         class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6 card-interactive"
       >
-        <div class="flex items-start justify-between mb-4">
-          <div>
-            <h3 class="text-lg font-semibold tracking-tight text-[var(--color-text-primary)]">{{ campaign.name }}</h3>
-            <p class="text-sm text-[var(--color-text-tertiary)] mt-1">
-              Trigger: <code class="bg-[var(--color-bg-subtle)] px-1.5 py-0.5 rounded text-xs font-mono">{{ campaign.trigger_event }}</code>
-              <span v-if="campaign.cancellation_event" class="ml-2">
-                Cancel: <code class="bg-[var(--color-bg-subtle)] px-1.5 py-0.5 rounded text-xs font-mono">{{ campaign.cancellation_event }}</code>
-              </span>
-            </p>
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
+          <div class="min-w-0">
+            <h3 class="text-lg font-semibold tracking-tight text-[var(--color-text-primary)] break-words">{{ campaign.name }}</h3>
+            <div class="text-sm text-[var(--color-text-tertiary)] mt-1 flex flex-wrap items-center gap-2">
+              <span>Trigger:</span>
+              <code class="bg-[var(--color-bg-subtle)] px-1.5 py-0.5 rounded text-xs font-mono break-all">{{ campaign.trigger_event }}</code>
+              <template v-if="campaign.cancellation_event">
+                <span class="sm:ml-2">Cancel:</span>
+                <code class="bg-[var(--color-bg-subtle)] px-1.5 py-0.5 rounded text-xs font-mono break-all">{{ campaign.cancellation_event }}</code>
+              </template>
+            </div>
           </div>
-          <div class="flex items-center gap-3">
+          <div class="flex flex-wrap items-center gap-3 sm:justify-end">
             <!-- Toggle switch -->
             <label v-if="auth.canWrite" class="relative inline-flex items-center cursor-pointer">
               <input
@@ -126,13 +128,13 @@ async function handleDelete(id: number, name: string) {
         </div>
 
         <!-- Steps visualization -->
-        <div class="flex items-center gap-2 overflow-x-auto pb-2">
+        <div class="flex items-start gap-2 overflow-x-auto pb-2 -mx-1 px-1">
           <div
             v-for="(step, i) in campaign.steps"
             :key="i"
             class="flex items-center gap-2 shrink-0"
           >
-            <div class="border border-[var(--color-border)] rounded-lg px-3 py-2 text-center min-w-[100px] bg-[var(--color-bg-page)]">
+            <div class="border border-[var(--color-border)] rounded-lg px-2.5 py-2 text-center min-w-[96px] sm:min-w-[100px] max-w-[140px] bg-[var(--color-bg-page)]">
               <span
                 class="text-xs font-medium inline-block px-1.5 py-0.5 rounded"
                 :class="channelColors[step.channel] || 'bg-[var(--color-bg-subtle)] text-[var(--color-text-primary)]'"

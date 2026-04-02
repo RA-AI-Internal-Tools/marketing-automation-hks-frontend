@@ -107,7 +107,7 @@ const chartOptions = {
           class="inline-block h-2 w-2 rounded-full"
           :class="dashboardStore.sseConnected ? 'bg-emerald-500' : 'bg-[var(--color-text-muted)]'"
         ></span>
-        {{ dashboardStore.sseConnected ? 'Live' : 'Connecting...' }}
+        {{ dashboardStore.sseConnected ? 'Live' : 'Realtime disconnected' }}
       </div>
     </div>
 
