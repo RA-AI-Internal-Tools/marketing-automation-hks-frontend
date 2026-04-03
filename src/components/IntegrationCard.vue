@@ -54,6 +54,15 @@ function formatDate(d: string) {
   return new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+function maskEndpointUrl(url: string): string {
+  try {
+    const u = new URL(url)
+    return `${u.protocol}//${u.hostname}${u.port ? ':' + u.port : ''}/***`
+  } catch {
+    return url.length > 35 ? url.slice(0, 35) + '…' : url
+  }
+}
+
 function handleTest() {
   emit('test', props.integration.id)
 }
@@ -92,8 +101,8 @@ function handleTest() {
 
     <!-- Details -->
     <div class="space-y-1.5 text-xs text-[var(--color-text-tertiary)]">
-      <div v-if="integration.endpoint_url" class="truncate" :title="integration.endpoint_url">
-        {{ integration.endpoint_url }}
+      <div v-if="integration.endpoint_url" class="truncate" title="Click Edit to view full connection details">
+        {{ maskEndpointUrl(integration.endpoint_url) }}
       </div>
       <div class="flex items-center justify-between">
         <span>Updated {{ formatDate(integration.updated_at) }}</span>

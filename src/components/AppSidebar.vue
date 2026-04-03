@@ -190,6 +190,7 @@ function handleNavClick() {
     <!-- Navigation -->
     <nav class="flex-1 overflow-y-auto sidebar-scroll" :class="collapsed && !mobileOpen ? 'p-1.5' : 'p-3 space-y-1'">
       <div v-for="section in sections" :key="section.label">
+        <div v-if="(!collapsed || mobileOpen) && (section.label === 'Reports' || section.label === 'System')" class="mx-3 my-1 border-t border-[var(--sidebar-border)] opacity-40" />
         <!-- Section header (expanded mode) -->
         <button
           v-if="!collapsed || mobileOpen"

@@ -42,16 +42,18 @@ onMounted(async () => {
       </div>
 
       <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
-        <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Event Freshness</h3>
+        <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-2">Event Freshness</h3>
+        <p class="text-xs text-[var(--color-text-muted)] mb-4">Counts are pulled from the Tracardi event store. "Last seen" is inferred from count windows — real-time timestamps are not available in this Tracardi version.</p>
         <table class="w-full text-sm">
           <thead><tr class="text-left text-[var(--color-text-tertiary)] text-xs uppercase">
-            <th class="pb-2">Event Type</th><th class="pb-2 text-right">Last Seen</th><th class="pb-2 text-right">24h Count</th>
+            <th class="pb-2">Event Type</th><th class="pb-2 text-right">Last Seen</th><th class="pb-2 text-right">24h Count</th><th class="pb-2 text-right">7d Total</th>
           </tr></thead>
           <tbody>
             <tr v-for="e in data.event_freshness" :key="e.event_type" class="border-t border-[var(--color-border-muted)]">
               <td class="py-2 text-[var(--color-text-primary)] font-mono text-xs">{{ e.event_type }}</td>
-              <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ e.last_seen || 'never' }}</td>
-              <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ e.count_24h.toLocaleString() }}</td>
+              <td class="py-2 text-right text-xs" :class="e.last_seen && e.last_seen !== 'never' ? 'text-green-600' : 'text-[var(--color-text-muted)]'">{{ e.last_seen || 'never' }}</td>
+              <td class="py-2 text-right" :class="e.count_24h > 0 ? 'text-[var(--color-text-secondary)]' : 'text-[var(--color-text-muted)]'">{{ e.count_24h.toLocaleString() }}</td>
+              <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ Math.round((e.avg_7d ?? 0) * 7).toLocaleString() }}</td>
             </tr>
           </tbody>
         </table>

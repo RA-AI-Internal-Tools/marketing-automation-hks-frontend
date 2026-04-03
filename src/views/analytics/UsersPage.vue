@@ -37,6 +37,7 @@ watch(() => analytics.queryParams, load)
         <MetricCard title="WAU" :value="data.wau.toLocaleString()" />
         <MetricCard title="MAU" :value="data.mau.toLocaleString()" />
       </div>
+      <p class="text-xs text-[var(--color-text-muted)] -mt-2">DAU/WAU counts unique user IDs from <code class="bg-[var(--color-bg-subtle)] px-1 rounded">page-view</code> events in the selected period. MAU may differ due to date-range query limits in the current Tracardi version.</p>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">

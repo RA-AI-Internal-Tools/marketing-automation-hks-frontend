@@ -59,6 +59,7 @@ function fmt(n: number): string {
         <MetricCard title="Active Users" :value="fmt(data.active_users)" :delta="data.active_users_delta" />
         <MetricCard title="Orders" :value="fmt(data.total_orders)" :delta="data.total_orders_delta" />
       </div>
+      <p class="text-xs text-[var(--color-text-muted)] -mt-2">Traffic and active users are live from Tracardi. Revenue, conversion rate, and order counts populate once real purchase flows are active in the store.</p>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">

@@ -271,7 +271,7 @@ export interface RetentionData {
 
 export interface DataHealthData {
   services: { name: string; status: string }[]
-  event_freshness: { event_type: string; last_seen: string; count_24h: number }[]
+  event_freshness: { event_type: string; last_seen: string; count_24h: number; avg_7d?: number }[]
   volume_anomalies: { event_type: string; current: number; average: number; deviation: number }[]
   table_stats: { table: string; row_count: number }[]
 }

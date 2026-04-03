@@ -163,6 +163,7 @@ function onCampaignChange() {
       </div>
 
       <!-- Metric Cards -->
+      <p v-if="funnel.enrolled === 0" class="text-xs text-[var(--color-text-muted)]">Funnel metrics populate once campaigns have active enrollments and sent messages. Enable campaigns and wait for the first enrollment to appear.</p>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-4">
           <p class="text-xs text-[var(--color-text-tertiary)] uppercase tracking-wide">Delivery Rate</p>

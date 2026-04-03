@@ -130,7 +130,12 @@ function formatDate(d?: string): string {
               <td colspan="7" class="px-4 py-8 text-center text-[var(--color-text-muted)]">Loading...</td>
             </tr>
             <tr v-else-if="enrollments.length === 0">
-              <td colspan="7" class="px-4 py-8 text-center text-[var(--color-text-muted)]">No enrollments found</td>
+              <td colspan="7" class="px-4 py-8 text-center text-[var(--color-text-muted)]">
+                No enrollments found. Enrollments are created when a tracked event (e.g.
+                <code class="text-xs bg-[var(--color-bg-subtle)] px-1 rounded">client-registered</code>,
+                <code class="text-xs bg-[var(--color-bg-subtle)] px-1 rounded">checkout-started</code>)
+                matches an active campaign trigger.
+              </td>
             </tr>
             <tr v-for="e in enrollments" :key="e.id" class="hover:bg-[var(--color-bg-hover)] transition-colors">
               <td class="px-4 py-3 text-sm text-[var(--color-text-tertiary)]">#{{ e.id }}</td>

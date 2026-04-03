@@ -35,7 +35,7 @@ watch(() => analytics.queryParams, load)
       <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
         <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Cohort Retention</h3>
         <CohortTable v-if="data.cohorts.length" :cohorts="data.cohorts" />
-        <p v-else class="text-sm text-[var(--color-text-muted)]">No cohort data available</p>
+        <p v-else class="text-sm text-[var(--color-text-muted)]">Cohort retention data requires at least 2 weeks of <code class="text-xs bg-[var(--color-bg-subtle)] px-1 rounded">client-registered</code> events to build meaningful cohorts.</p>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -55,7 +55,7 @@ watch(() => analytics.queryParams, load)
               </tr>
             </tbody>
           </table>
-          <p v-else class="text-sm text-[var(--color-text-muted)]">No data</p>
+          <p v-else class="text-sm text-[var(--color-text-muted)]">No conversion data yet. Conversions are tracked when enrolled clients complete an <code class="text-xs bg-[var(--color-bg-subtle)] px-1 rounded">order-completed</code> event during an active enrollment.</p>
         </div>
         <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
           <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Consent Stats</h3>
@@ -73,7 +73,7 @@ watch(() => analytics.queryParams, load)
               </tr>
             </tbody>
           </table>
-          <p v-else class="text-sm text-[var(--color-text-muted)]">No data</p>
+          <p v-else class="text-sm text-[var(--color-text-muted)]">No consent records found. Consent data populates when clients opt out of a channel via the Consents page or the store's unsubscribe flow.</p>
         </div>
       </div>
     </div>

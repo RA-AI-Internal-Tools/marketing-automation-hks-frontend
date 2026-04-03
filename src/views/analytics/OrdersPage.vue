@@ -55,6 +55,7 @@ function fmtCurrency(n: number): string {
         <MetricCard title="AOV" :value="fmtCurrency(data.aov)" :delta="data.aov_delta" />
         <MetricCard title="Total Orders" :value="data.total_orders.toLocaleString()" :delta="data.total_orders_delta" />
       </div>
+      <p class="text-xs text-[var(--color-text-muted)] -mt-2">Revenue and order metrics are populated from <code class="bg-[var(--color-bg-subtle)] px-1 rounded">order-completed</code> events. Data appears once a successful checkout is completed in the store.</p>
 
       <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
         <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Revenue Trend</h3>

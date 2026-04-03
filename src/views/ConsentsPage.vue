@@ -63,6 +63,7 @@ async function createOptOut(channel: string) {
       <div class="flex gap-3 items-end">
         <div>
           <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Client ID</label>
+          <p class="text-xs text-[var(--color-text-muted)] mb-1">Enter a numeric DueGate client ID to view and manage channel consent preferences.</p>
           <input
             v-model="clientId"
             type="text"
