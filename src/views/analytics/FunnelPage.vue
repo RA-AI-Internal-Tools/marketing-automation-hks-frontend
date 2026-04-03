@@ -29,7 +29,7 @@ watch(() => analytics.queryParams, load)
 </script>
 
 <template>
-  <AnalyticsLayout title="Funnel Analysis" description="Conversion funnel from browsing to purchase">
+  <AnalyticsLayout title="Funnel Analysis" description="Conversion funnel from browsing to completed order">
     <div v-if="loading" class="text-center py-12 text-[var(--color-text-muted)]">Loading...</div>
     <div v-else-if="error" class="bg-[var(--color-error-bg)] border border-[var(--color-error-border)] text-[var(--color-error-text)] px-4 py-3 rounded-lg text-sm">{{ error }}</div>
     <div v-else-if="data" class="space-y-6">
