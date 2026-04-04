@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import type { OverviewStats, CampaignLog, CampaignEnrollment } from '@/api/types'
 import { fetchOverviewStats } from '@/api/dashboard'
 import { useSSE, type SSEEvent } from '@/composables/useSSE'
@@ -40,6 +40,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
     let reconnectAttempts = 0
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null
     let currentDisconnect: (() => void) | null = null
+    let stopCurrentWatch: (() => void) | null = null
     let stopped = false
 
     function handleSSEError() {
@@ -76,11 +77,14 @@ export const useDashboardStore = defineStore('dashboard', () => {
       )
 
       currentDisconnect = disconnect
-      sseConnected.value = connected.value
+
+      stopCurrentWatch?.()
+      stopCurrentWatch = watch(connected, (val) => {
+        sseConnected.value = val
+      }, { immediate: true })
 
       onEvent((evt: SSEEvent) => {
         reconnectAttempts = 0
-        sseConnected.value = true
         if (evt.type === 'log_created') {
           recentLogs.value.unshift(evt.payload)
           if (recentLogs.value.length > 50) recentLogs.value.pop()
@@ -94,6 +98,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
     sseCleanup = () => {
       stopped = true
       if (reconnectTimer) clearTimeout(reconnectTimer)
+      stopCurrentWatch?.()
+      stopCurrentWatch = null
       currentDisconnect?.()
       currentDisconnect = null
     }
