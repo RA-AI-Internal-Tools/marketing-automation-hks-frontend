@@ -5,7 +5,7 @@ export interface SSEEvent {
   payload: any
 }
 
-export function useSSE(url: string) {
+export function useSSE(url: string, onError?: () => void) {
   const connected = ref(false)
   const lastEvent = ref<SSEEvent | null>(null)
   let eventSource: EventSource | null = null
@@ -36,8 +36,12 @@ export function useSSE(url: string) {
     eventSource.onerror = () => {
       connected.value = false
       eventSource?.close()
-      // Auto-reconnect after 5 seconds
-      reconnectTimer = setTimeout(connect, 5000)
+      if (onError) {
+        onError()
+      } else {
+        // Default auto-reconnect after 5 seconds
+        reconnectTimer = setTimeout(connect, 5000)
+      }
     }
   }
 

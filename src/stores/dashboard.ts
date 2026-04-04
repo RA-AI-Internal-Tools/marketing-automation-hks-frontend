@@ -35,33 +35,70 @@ export const useDashboardStore = defineStore('dashboard', () => {
     const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
     if (!token) return
 
-    let sseToken: string
-    try {
-      const { data } = await api.post('/api/sse/token')
-      sseToken = data.token
-    } catch {
-      return
+    const MAX_RETRIES = 5
+    const BACKOFF_MS = 2000
+    let reconnectAttempts = 0
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null
+    let currentDisconnect: (() => void) | null = null
+    let stopped = false
+
+    function handleSSEError() {
+      sseConnected.value = false
+      currentDisconnect?.()
+      currentDisconnect = null
+
+      if (!stopped && reconnectAttempts < MAX_RETRIES) {
+        reconnectAttempts++
+        reconnectTimer = setTimeout(connectWithFreshToken, BACKOFF_MS)
+      }
     }
 
-    const baseUrl = import.meta.env.VITE_API_URL || ''
-    const { connected, onEvent, disconnect } = useSSE(
-      `${baseUrl}/api/sse?token=${encodeURIComponent(sseToken)}`,
-    )
+    async function connectWithFreshToken() {
+      if (stopped) return
 
-    sseConnected.value = connected.value
+      const authToken = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
+      if (!authToken) return
 
-    onEvent((evt: SSEEvent) => {
-      sseConnected.value = true
-      if (evt.type === 'log_created') {
-        recentLogs.value.unshift(evt.payload)
-        if (recentLogs.value.length > 50) recentLogs.value.pop()
-      } else if (evt.type === 'enrollment_created' || evt.type === 'enrollment_updated') {
-        recentEnrollments.value.unshift(evt.payload)
-        if (recentEnrollments.value.length > 50) recentEnrollments.value.pop()
+      let sseToken: string
+      try {
+        const { data } = await api.post('/api/sse/token')
+        sseToken = data.token
+      } catch {
+        return
       }
-    })
 
-    sseCleanup = disconnect
+      if (stopped) return
+
+      const baseUrl = import.meta.env.VITE_API_URL || ''
+      const { connected, onEvent, disconnect } = useSSE(
+        `${baseUrl}/api/sse?token=${encodeURIComponent(sseToken)}`,
+        handleSSEError,
+      )
+
+      currentDisconnect = disconnect
+      sseConnected.value = connected.value
+
+      onEvent((evt: SSEEvent) => {
+        reconnectAttempts = 0
+        sseConnected.value = true
+        if (evt.type === 'log_created') {
+          recentLogs.value.unshift(evt.payload)
+          if (recentLogs.value.length > 50) recentLogs.value.pop()
+        } else if (evt.type === 'enrollment_created' || evt.type === 'enrollment_updated') {
+          recentEnrollments.value.unshift(evt.payload)
+          if (recentEnrollments.value.length > 50) recentEnrollments.value.pop()
+        }
+      })
+    }
+
+    sseCleanup = () => {
+      stopped = true
+      if (reconnectTimer) clearTimeout(reconnectTimer)
+      currentDisconnect?.()
+      currentDisconnect = null
+    }
+
+    await connectWithFreshToken()
   }
 
   function stopSSE() {
