@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { fetchPushAudience, sendPushToAudience } from '@/api/push'
 import type { PushAudienceEntry, PushSendResponse } from '@/api/types'
 import { useAuthStore } from '@/stores/auth'
+import { useEnvironmentStore } from '@/stores/environment'
 import { useToast } from '@/composables/useToast'
 import { BellAlertIcon } from '@heroicons/vue/24/outline'
 
 const auth = useAuthStore()
+const env = useEnvironmentStore()
 const { showToast } = useToast()
 
 // --- Audience table state ---
@@ -54,6 +56,9 @@ const canSend = computed(() =>
   selected.value.size > 0 && pushTitle.value.trim() !== '' && pushBody.value.trim() !== '' && !sending.value
 )
 
+// --- Confirmation dialog ---
+const showConfirm = ref(false)
+
 // --- Result modal ---
 const showResultModal = ref(false)
 const sendResult = ref<PushSendResponse | null>(null)
@@ -67,6 +72,7 @@ async function load() {
     if (searchInput.value.trim()) params.search = searchInput.value.trim()
     if (filterPlatform.value) params.platform = filterPlatform.value
     if (filterActive.value) params.active = filterActive.value
+    params.environment = env.mode
     const res = await fetchPushAudience(params)
     rows.value = res.data || []
     total.value = res.total
@@ -99,8 +105,13 @@ function nextPage() {
 }
 
 // --- Send ---
-async function handleSend() {
+function requestSend() {
   if (!canSend.value) return
+  showConfirm.value = true
+}
+
+async function confirmAndSend() {
+  showConfirm.value = false
   sending.value = true
   try {
     const req = {
@@ -292,12 +303,43 @@ onMounted(load)
         <span class="text-sm text-[var(--color-text-tertiary)]">
           {{ selected.size > 0 ? `${selected.size} client${selected.size === 1 ? '' : 's'} selected` : 'No clients selected' }}
         </span>
-        <button @click="handleSend" :disabled="!canSend"
+        <button @click="requestSend" :disabled="!canSend"
           class="px-5 py-2 text-sm font-medium text-white bg-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
           {{ sending ? 'Sending...' : `Send to ${selected.size} client${selected.size === 1 ? '' : 's'}` }}
         </button>
       </div>
     </div>
+
+    <!-- Confirmation Dialog -->
+    <Teleport to="body">
+      <div v-if="showConfirm" class="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="showConfirm = false" />
+        <div class="relative bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-xl w-full max-w-md p-6 space-y-4">
+          <h3 class="text-lg font-semibold text-[var(--color-text-primary)]">Confirm Push Send</h3>
+          <p class="text-sm text-[var(--color-text-secondary)]">
+            You are about to send a push notification to
+            <strong>{{ selected.size }} client{{ selected.size === 1 ? '' : 's' }}</strong>
+            in <strong>{{ env.mode }}</strong> environment.
+          </p>
+          <div class="bg-[var(--color-bg-page)] rounded-lg p-3 text-sm space-y-1">
+            <div><span class="text-[var(--color-text-tertiary)]">Title:</span> {{ pushTitle }}</div>
+            <div><span class="text-[var(--color-text-tertiary)]">Body:</span> {{ pushBody }}</div>
+            <div v-if="pushLink"><span class="text-[var(--color-text-tertiary)]">Link:</span> {{ pushLink }}</div>
+          </div>
+          <p class="text-xs text-[var(--color-text-muted)]">This action cannot be undone.</p>
+          <div class="flex justify-end gap-3 pt-2">
+            <button @click="showConfirm = false"
+              class="px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-bg-page)] transition-colors">
+              Cancel
+            </button>
+            <button @click="confirmAndSend"
+              class="px-4 py-2 text-sm font-medium text-white bg-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors">
+              Send Now
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
 
     <!-- Result Modal -->
     <Teleport to="body">
