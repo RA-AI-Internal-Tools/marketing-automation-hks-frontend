@@ -76,6 +76,12 @@ const router = createRouter({
       meta: { title: 'Consents' },
     },
     {
+      path: '/push-audience',
+      name: 'push-audience',
+      component: () => import('@/views/PushAudiencePage.vue'),
+      meta: { title: 'Push Audience' },
+    },
+    {
       path: '/integrations',
       name: 'integrations',
       component: () => import('@/views/IntegrationsPage.vue'),

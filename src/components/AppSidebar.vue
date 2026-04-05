@@ -31,6 +31,7 @@ import {
   UserPlusIcon,
   LinkIcon,
   DocumentTextIcon,
+  BellAlertIcon,
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps<{
@@ -78,6 +79,7 @@ const allSections: NavSection[] = [
     items: [
       { name: 'Enrollments', to: '/enrollments', icon: UsersIcon },
       { name: 'Consents', to: '/consents', icon: ShieldCheckIcon },
+      { name: 'Push Audience', to: '/push-audience', icon: BellAlertIcon },
     ],
   },
   {
