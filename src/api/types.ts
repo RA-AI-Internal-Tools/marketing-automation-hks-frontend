@@ -330,6 +330,37 @@ export interface AuditLog {
   created_at: string
 }
 
+// Push Audience types
+
+export interface PushAudienceEntry {
+  client_id: number
+  device_count: number
+  platforms: string[]
+  last_seen_at: string
+  is_active: boolean
+}
+
+export interface PushSendRequest {
+  client_ids: number[]
+  title: string
+  body: string
+  link?: string
+  data?: Record<string, string>
+}
+
+export interface PushSendTokenResult {
+  client_id: number
+  device_token_masked: string
+  status: 'sent' | 'failed' | 'no_consent'
+  error?: string
+  provider_message_id?: string
+}
+
+export interface PushSendResponse {
+  results: PushSendTokenResult[]
+  summary: { total: number; sent: number; failed: number; no_consent: number }
+}
+
 // Integration types
 
 export type ProviderType = 'email' | 'sms' | 'push' | 'webhook' | 'crm' | 'analytics' | 'infrastructure'
