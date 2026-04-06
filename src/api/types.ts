@@ -64,6 +64,8 @@ export interface ClientConsent {
   client_id: number
   channel: string
   opted_in: boolean
+  purpose?: string
+  source?: string
   created_at: string
   updated_at: string
 }

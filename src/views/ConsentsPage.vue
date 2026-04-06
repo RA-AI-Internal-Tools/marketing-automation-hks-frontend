@@ -93,6 +93,7 @@ async function createOptOut(channel: string) {
         <thead class="bg-[var(--color-bg-page)]">
           <tr>
             <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Channel</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Purpose</th>
             <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Status</th>
             <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Updated</th>
             <th class="px-4 py-3 text-right text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Action</th>
@@ -101,6 +102,9 @@ async function createOptOut(channel: string) {
         <tbody class="divide-y divide-[var(--color-border-muted)]">
           <tr v-for="c in consents" :key="c.id" class="hover:bg-[var(--color-bg-hover)] transition-colors">
             <td class="px-4 py-3 text-sm font-medium text-[var(--color-text-primary)] uppercase">{{ c.channel }}</td>
+            <td class="px-4 py-3 text-sm text-[var(--color-text-tertiary)]">
+              {{ c.purpose || 'legacy / unspecified' }}
+            </td>
             <td class="px-4 py-3">
               <StatusBadge :status="c.opted_in ? 'active' : 'inactive'" />
               <span class="ml-2 text-sm text-[var(--color-text-tertiary)]">{{ c.opted_in ? 'Opted In' : 'Opted Out' }}</span>
@@ -118,7 +122,7 @@ async function createOptOut(channel: string) {
             </td>
           </tr>
           <tr v-if="consents.length === 0">
-            <td colspan="4" class="px-4 py-6 text-center text-[var(--color-text-muted)]">
+            <td colspan="5" class="px-4 py-6 text-center text-[var(--color-text-muted)]">
               No explicit consents found (all channels are implicitly opted-in)
             </td>
           </tr>
