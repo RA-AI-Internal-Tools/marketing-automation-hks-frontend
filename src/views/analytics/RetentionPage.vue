@@ -61,11 +61,12 @@ watch(() => analytics.queryParams, load)
           <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Consent Stats</h3>
           <table v-if="data.consent_stats.length" class="w-full text-sm">
             <thead><tr class="text-left text-[var(--color-text-tertiary)] text-xs uppercase">
-              <th class="pb-2">Channel</th><th class="pb-2 text-right">Opted In</th>
+              <th class="pb-2">Purpose</th><th class="pb-2">Channel</th><th class="pb-2 text-right">Opted In</th>
               <th class="pb-2 text-right">Opted Out</th><th class="pb-2 text-right">Rate</th>
             </tr></thead>
             <tbody>
-              <tr v-for="s in data.consent_stats" :key="s.channel" class="border-t border-[var(--color-border-muted)]">
+              <tr v-for="s in data.consent_stats" :key="`${s.purpose}-${s.channel}`" class="border-t border-[var(--color-border-muted)]">
+                <td class="py-2 text-[var(--color-text-secondary)] capitalize">{{ s.purpose || 'unspecified' }}</td>
                 <td class="py-2 text-[var(--color-text-primary)] capitalize">{{ s.channel }}</td>
                 <td class="py-2 text-right text-green-600">{{ s.opted_in.toLocaleString() }}</td>
                 <td class="py-2 text-right text-red-500">{{ s.opted_out.toLocaleString() }}</td>

@@ -42,6 +42,11 @@ async function toggleConsent(consent: ClientConsent) {
 
 const allChannels = ['email', 'sms', 'whatsapp', 'push']
 
+function purposeLabel(purpose?: string, channel?: string) {
+  if (purpose === 'personalization' && channel === 'global') return 'personalization (global)'
+  return purpose || 'legacy / unspecified'
+}
+
 async function createOptOut(channel: string) {
   const id = parseInt(clientId.value)
   if (!id) return
@@ -103,7 +108,7 @@ async function createOptOut(channel: string) {
           <tr v-for="c in consents" :key="c.id" class="hover:bg-[var(--color-bg-hover)] transition-colors">
             <td class="px-4 py-3 text-sm font-medium text-[var(--color-text-primary)] uppercase">{{ c.channel }}</td>
             <td class="px-4 py-3 text-sm text-[var(--color-text-tertiary)]">
-              {{ c.purpose || 'legacy / unspecified' }}
+              {{ purposeLabel(c.purpose, c.channel) }}
             </td>
             <td class="px-4 py-3">
               <StatusBadge :status="c.opted_in ? 'active' : 'inactive'" />

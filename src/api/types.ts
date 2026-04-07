@@ -264,6 +264,7 @@ export interface RetentionData {
     conversion_rate: number
   }[]
   consent_stats: {
+    purpose: string
     channel: string
     opted_in: number
     opted_out: number

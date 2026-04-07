@@ -26,6 +26,7 @@ const channels = ref<ChannelPreference[]>([
   { channel: 'whatsapp', label: 'WhatsApp', description: 'WhatsApp messages for order updates and support', opted_in: true },
   { channel: 'push', label: 'Push Notifications', description: 'Browser and mobile push notifications', opted_in: true },
 ])
+const personalization = ref(true)
 
 /** Build axios config that passes the signed token instead of the session Bearer token */
 function publicConfig() {
@@ -53,7 +54,12 @@ async function loadPreferences() {
     const { data } = await api.get(`/api/consents/${cid}`, publicConfig())
     const consentMap = new Map<string, boolean>()
     for (const c of data) {
-      consentMap.set(c.channel, c.opted_in)
+      if (c.purpose === 'marketing') {
+        consentMap.set(c.channel, c.opted_in)
+      }
+      if (c.purpose === 'personalization' && c.channel === 'global') {
+        personalization.value = c.opted_in
+      }
     }
     for (const ch of channels.value) {
       if (consentMap.has(ch.channel)) {
@@ -79,9 +85,9 @@ async function toggleChannel(channel: ChannelPreference) {
   try {
     const newState = !channel.opted_in
     if (newState) {
-      await api.post('/api/consents/opt-in', { client_id: clientId.value, channel: channel.channel }, publicConfig())
+      await api.post('/api/consents/opt-in', { client_id: clientId.value, purpose: 'marketing', channel: channel.channel }, publicConfig())
     } else {
-      await api.post('/api/consents/opt-out', { client_id: clientId.value, channel: channel.channel }, publicConfig())
+      await api.post('/api/consents/opt-out', { client_id: clientId.value, purpose: 'marketing', channel: channel.channel }, publicConfig())
     }
     channel.opted_in = newState
     success.value = `${channel.label} notifications ${newState ? 'enabled' : 'disabled'}`
@@ -99,7 +105,7 @@ async function optOutAll() {
   try {
     for (const ch of channels.value) {
       if (ch.opted_in) {
-        await api.post('/api/consents/opt-out', { client_id: clientId.value, channel: ch.channel }, publicConfig())
+        await api.post('/api/consents/opt-out', { client_id: clientId.value, purpose: 'marketing', channel: ch.channel }, publicConfig())
         ch.opted_in = false
       }
     }
