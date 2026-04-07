@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import AnalyticsLayout from '@/components/AnalyticsLayout.vue'
 import MetricCard from '@/components/MetricCard.vue'
 import { useAnalyticsStore } from '@/stores/analytics'
@@ -10,6 +10,15 @@ const analytics = useAnalyticsStore()
 const data = ref<UsersData | null>(null)
 const loading = ref(true)
 const error = ref('')
+
+const normalizedTopEvents = computed(() => {
+  const events = data.value?.top_events || []
+  return events.map((e: any) => ({
+    key: e.event_type || e.name || 'unknown',
+    label: e.event_type || e.name || 'unknown',
+    count: Number(e.count ?? e.value ?? 0),
+  }))
+})
 
 async function load() {
   loading.value = true
@@ -47,8 +56,8 @@ watch(() => analytics.queryParams, load)
               <th class="pb-2">Event</th><th class="pb-2 text-right">Count</th>
             </tr></thead>
             <tbody>
-              <tr v-for="e in data.top_events" :key="e.event_type" class="border-t border-[var(--color-border-muted)]">
-                <td class="py-2 text-[var(--color-text-primary)] font-mono text-xs">{{ e.event_type }}</td>
+              <tr v-for="e in normalizedTopEvents" :key="e.key" class="border-t border-[var(--color-border-muted)]">
+                <td class="py-2 text-[var(--color-text-primary)] font-mono text-xs">{{ e.label }}</td>
                 <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ e.count.toLocaleString() }}</td>
               </tr>
             </tbody>
