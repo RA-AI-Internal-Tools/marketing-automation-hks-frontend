@@ -124,6 +124,10 @@ const router = createRouter({
       meta: { title: 'Campaign Funnel' },
     },
     {
+      path: '/campaigns/slug/:slug/funnel',
+      redirect: (to) => ({ path: '/campaign-funnel', query: { slug: to.params.slug as string } }),
+    },
+    {
       path: '/audit-logs',
       name: 'audit-logs',
       component: () => import('@/views/AuditLogsPage.vue'),
