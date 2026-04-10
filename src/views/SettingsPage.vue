@@ -139,7 +139,6 @@ async function handleChangePassword() {
           </button>
         </form>
       </div>
-    </div>
 
       <!-- Flush cache -->
       <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
