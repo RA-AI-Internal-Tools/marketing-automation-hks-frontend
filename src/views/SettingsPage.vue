@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import { useAuthStore } from '@/stores/auth'
-import { fetchSettings, changePassword } from '@/api/dashboard'
+import { fetchSettings, changePassword, flushCache } from '@/api/dashboard'
 
 const auth = useAuthStore()
 
@@ -15,6 +15,9 @@ const confirmPassword = ref('')
 const passwordError = ref('')
 const passwordSuccess = ref('')
 const saving = ref(false)
+const flushing = ref(false)
+const flushSuccess = ref('')
+const flushError = ref('')
 
 onMounted(async () => {
   try {
@@ -23,6 +26,20 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+async function handleFlushCache() {
+  flushing.value = true
+  flushSuccess.value = ''
+  flushError.value = ''
+  try {
+    await flushCache()
+    flushSuccess.value = 'Analytics cache flushed successfully'
+  } catch (e: any) {
+    flushError.value = e.response?.data?.error || 'Failed to flush cache'
+  } finally {
+    flushing.value = false
+  }
+}
 
 async function handleChangePassword() {
   passwordError.value = ''
@@ -121,6 +138,28 @@ async function handleChangePassword() {
             {{ saving ? 'Updating...' : 'Update Password' }}
           </button>
         </form>
+      </div>
+    </div>
+
+      <!-- Flush cache -->
+      <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+        <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-2">Analytics Cache</h3>
+        <p class="text-sm text-[var(--color-text-tertiary)] mb-4">Clear all cached analytics data. The next page load will fetch fresh results from the database.</p>
+
+        <div v-if="flushError" class="text-sm text-[var(--color-error-text)] bg-[var(--color-error-bg)] px-3 py-2 rounded-lg mb-3">
+          {{ flushError }}
+        </div>
+        <div v-if="flushSuccess" class="text-sm text-[var(--color-success-text)] bg-[var(--color-success-bg)] px-3 py-2 rounded-lg mb-3">
+          {{ flushSuccess }}
+        </div>
+
+        <button
+          @click="handleFlushCache"
+          :disabled="flushing"
+          class="px-6 py-2.5 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] disabled:opacity-50 transition-colors"
+        >
+          {{ flushing ? 'Flushing...' : 'Flush Analytics Cache' }}
+        </button>
       </div>
     </div>
   </div>

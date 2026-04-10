@@ -5,7 +5,8 @@ import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import { useCampaignsStore } from '@/stores/campaigns'
 import { useAuthStore } from '@/stores/auth'
-import { PlusIcon, PencilSquareIcon, TrashIcon, RocketLaunchIcon } from '@heroicons/vue/24/outline'
+import { PlusIcon, PencilSquareIcon, TrashIcon, RocketLaunchIcon, DocumentDuplicateIcon } from '@heroicons/vue/24/outline'
+import { cloneCampaign } from '@/api/dashboard'
 
 const router = useRouter()
 const store = useCampaignsStore()
@@ -37,6 +38,15 @@ async function handleDelete(id: number, name: string) {
     await store.remove(id)
   } catch (e: any) {
     alert(e.response?.data?.error || 'Failed to delete campaign')
+  }
+}
+
+async function handleClone(id: number) {
+  try {
+    await cloneCampaign(id)
+    await store.load()
+  } catch (e: any) {
+    alert(e.response?.data?.error || 'Failed to clone campaign')
   }
 }
 </script>
@@ -108,6 +118,14 @@ async function handleDelete(id: number, name: string) {
               <div class="w-9 h-5 bg-[var(--color-border)] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[var(--color-accent)]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-[var(--color-primary)] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
             </label>
             <StatusBadge :status="campaign.is_active ? 'active' : 'inactive'" />
+            <button
+              v-if="auth.canWrite"
+              @click="handleClone(campaign.id)"
+              class="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
+              title="Clone"
+            >
+              <DocumentDuplicateIcon class="h-4 w-4" />
+            </button>
             <button
               v-if="auth.canWrite"
               @click="router.push(`/campaigns/${campaign.id}/edit`)"

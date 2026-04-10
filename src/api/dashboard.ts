@@ -162,6 +162,30 @@ export async function deleteTemplate(id: number): Promise<void> {
   await api.delete(`/api/templates/${id}`)
 }
 
+// Clone campaign
+export async function cloneCampaign(id: number): Promise<CampaignDefinition> {
+  const { data } = await api.post(`/api/campaigns/${id}/clone`)
+  return data
+}
+
+// Campaign graph
+export async function fetchCampaignGraph(id: number): Promise<any> {
+  const { data } = await api.get(`/api/campaigns/${id}/graph`)
+  return data
+}
+
+// Client journey
+export async function fetchClientJourney(clientId: number): Promise<any> {
+  const { data } = await api.get(`/api/clients/${clientId}/journey`)
+  return data
+}
+
+// Cache flush
+export async function flushCache(): Promise<any> {
+  const { data } = await api.post('/api/cache/flush')
+  return data
+}
+
 // Settings
 export async function fetchSettings(): Promise<any> {
   const { data } = await api.get('/api/settings')

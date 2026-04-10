@@ -32,6 +32,8 @@ import {
   LinkIcon,
   DocumentTextIcon,
   BellAlertIcon,
+  ExclamationTriangleIcon,
+  MapIcon,
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps<{
@@ -95,6 +97,10 @@ const allSections: NavSection[] = [
       { name: 'Orders', to: '/analytics/orders', icon: ShoppingCartIcon },
       { name: 'Retention', to: '/analytics/retention', icon: ArrowPathIcon },
       { name: 'Data Health', to: '/analytics/data-health', icon: ServerStackIcon },
+      { name: 'Attribution', to: '/analytics/attribution', icon: LinkIcon },
+      { name: 'Churn Risk', to: '/analytics/churn', icon: ExclamationTriangleIcon },
+      { name: 'Cohorts & LTV', to: '/analytics/cohort', icon: UserGroupIcon },
+      { name: 'Journey', to: '/analytics/journey', icon: MapIcon },
     ],
   },
   {

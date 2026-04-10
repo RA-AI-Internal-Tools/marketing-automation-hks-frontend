@@ -59,3 +59,23 @@ export async function fetchDataHealth(): Promise<DataHealthData> {
   const { data } = await api.get('/api/analytics/data-health')
   return data
 }
+
+export async function fetchAttribution(since?: string, until?: string): Promise<any> {
+  const { data } = await api.get('/api/analytics/attribution', params(since, until))
+  return data
+}
+
+export async function fetchChurn(): Promise<any> {
+  const { data } = await api.get('/api/analytics/churn')
+  return data
+}
+
+export async function fetchCohort(since?: string, until?: string): Promise<any> {
+  const { data } = await api.get('/api/analytics/cohort', params(since, until))
+  return data
+}
+
+export async function fetchLTV(since?: string, until?: string): Promise<any> {
+  const { data } = await api.get('/api/analytics/ltv', params(since, until))
+  return data
+}

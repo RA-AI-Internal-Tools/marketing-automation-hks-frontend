@@ -195,6 +195,30 @@ const router = createRouter({
       meta: { title: 'Reports' },
     },
     {
+      path: '/analytics/attribution',
+      name: 'analytics-attribution',
+      component: () => import('@/views/analytics/AttributionPage.vue'),
+      meta: { title: 'Attribution' },
+    },
+    {
+      path: '/analytics/churn',
+      name: 'analytics-churn',
+      component: () => import('@/views/analytics/ChurnPage.vue'),
+      meta: { title: 'Churn Risk' },
+    },
+    {
+      path: '/analytics/cohort',
+      name: 'analytics-cohort',
+      component: () => import('@/views/analytics/CohortPage.vue'),
+      meta: { title: 'Cohorts & LTV' },
+    },
+    {
+      path: '/analytics/journey',
+      name: 'analytics-journey',
+      component: () => import('@/views/analytics/JourneyPage.vue'),
+      meta: { title: 'Journey' },
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('@/views/NotFoundPage.vue'),
