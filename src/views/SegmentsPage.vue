@@ -211,6 +211,24 @@ function formatThreshold(segment: Segment): string {
       </button>
     </div>
 
+    <!-- Column guide -->
+    <div class="bg-[var(--color-bg-subtle)] border border-[var(--color-border)] rounded-xl p-4 mb-6 text-sm text-[var(--color-text-secondary)]">
+      <details>
+        <summary class="cursor-pointer font-semibold text-[var(--color-text-primary)] select-none">How segments work</summary>
+        <div class="mt-3 space-y-2">
+          <p>Segments group customers by behavioral rules. When a campaign uses a segment filter, only customers who qualify at enrollment time are entered into the campaign.</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+            <div><span class="font-medium text-[var(--color-text-primary)]">Rule Type</span> &mdash; What customer data to evaluate: days since last order, total order count, lifetime spend, average order value, or account age.</div>
+            <div><span class="font-medium text-[var(--color-text-primary)]">Thresholds</span> &mdash; The comparison value. E.g. <code class="bg-[var(--color-bg-card)] px-1 rounded text-xs">> 30</code> means "more than 30 days" or <code class="bg-[var(--color-bg-card)] px-1 rounded text-xs">2 &ndash; 4</code> means "between 2 and 4 orders".</div>
+            <div><span class="font-medium text-[var(--color-text-primary)]">Entry Events</span> &mdash; Which customer events trigger re-evaluation. When <code class="bg-[var(--color-bg-card)] px-1 rounded text-xs">order-completed</code> fires, the system checks if the customer now enters or exits this segment.</div>
+            <div><span class="font-medium text-[var(--color-text-primary)]">Tracardi</span> &mdash; <span class="text-green-600 font-medium">Connected</span> means thresholds sync to Tracardi for profile tagging. <span class="text-[var(--color-text-muted)]">--</span> means MA-only, not synced.</div>
+            <div><span class="font-medium text-[var(--color-text-primary)]">Members</span> &mdash; Current count of customers in this segment. Updates when entry events fire or when you click the evaluate button.</div>
+            <div><span class="font-medium text-[var(--color-text-primary)]">Actions</span> &mdash; <span class="font-medium">Play</span> = manually evaluate all customers now. <span class="font-medium">Edit</span> = change rules, thresholds, or Tracardi sync settings. Built-in segments (lock icon) can be edited but not deleted.</div>
+          </div>
+        </div>
+      </details>
+    </div>
+
     <!-- Skeleton loading -->
     <div v-if="loading" class="space-y-3">
       <div v-for="i in 4" :key="i" class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-5">
