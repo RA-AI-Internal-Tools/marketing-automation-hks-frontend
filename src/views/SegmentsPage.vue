@@ -288,7 +288,7 @@ function formatThreshold(segment: Segment): string {
                 </div>
               </td>
               <td class="px-4 py-3 text-right font-semibold text-[var(--color-text-primary)]">
-                {{ segment.member_count.toLocaleString() }}
+                {{ (segment.member_count ?? 0).toLocaleString() }}
               </td>
               <td class="px-4 py-3 text-center">
                 <StatusBadge v-if="segment.sync_to_tracardi" status="connected" />

@@ -84,7 +84,7 @@ onMounted(async () => {
             <UsersIcon class="h-6 w-6 text-[var(--color-info-text)]" />
           </div>
           <div>
-            <p class="text-2xl font-bold text-[var(--color-text-primary)]">{{ segment.member_count.toLocaleString() }}</p>
+            <p class="text-2xl font-bold text-[var(--color-text-primary)]">{{ (segment.member_count ?? 0).toLocaleString() }}</p>
             <p class="text-xs text-[var(--color-text-tertiary)]">Total Members</p>
           </div>
         </div>
