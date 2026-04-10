@@ -19,6 +19,7 @@ import {
   updateSegment,
   deleteSegment,
   evaluateSegment,
+  evaluateAllSegments,
 } from '@/api/dashboard'
 import type { Segment, SegmentRequest } from '@/api/types'
 
@@ -30,6 +31,7 @@ const segments = ref<Segment[]>([])
 const showModal = ref(false)
 const saving = ref(false)
 const evaluating = ref<string | null>(null)
+const evaluatingAll = ref(false)
 const editingSlug = ref<string | null>(null)
 const eventInput = ref('')
 
@@ -166,6 +168,19 @@ async function handleEvaluate(slug: string) {
   }
 }
 
+async function handleEvaluateAll() {
+  evaluatingAll.value = true
+  try {
+    const result = await evaluateAllSegments()
+    alert(`All segments evaluated: ${result.clients_evaluated} clients across ${result.segments_evaluated} segments.`)
+    await load()
+  } catch (e: any) {
+    alert(e.response?.data?.error || 'Failed to evaluate all segments')
+  } finally {
+    evaluatingAll.value = false
+  }
+}
+
 function addEvent() {
   const val = eventInput.value.trim()
   if (val && !form.value.entry_events.includes(val)) {
@@ -202,13 +217,23 @@ function formatThreshold(segment: Segment): string {
   <div class="page-enter">
     <div class="flex items-center justify-between mb-6">
       <PageHeader title="Segments" description="Define audience segments by behavioral rules" />
-      <button
-        v-if="auth.canWrite"
-        @click="openCreate"
-        class="flex items-center gap-2 px-4 py-2.5 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] shadow-sm transition-all"
-      >
-        <PlusIcon class="h-4 w-4" /> New Segment
-      </button>
+      <div class="flex items-center gap-2">
+        <button
+          v-if="auth.canWrite"
+          @click="handleEvaluateAll"
+          :disabled="evaluatingAll"
+          class="flex items-center gap-2 px-4 py-2.5 border border-[var(--color-border)] text-[var(--color-text-secondary)] text-sm font-medium rounded-lg hover:bg-[var(--color-bg-subtle)] disabled:opacity-50 transition-all"
+        >
+          <PlayIcon class="h-4 w-4" /> {{ evaluatingAll ? 'Evaluating...' : 'Evaluate All' }}
+        </button>
+        <button
+          v-if="auth.canWrite"
+          @click="openCreate"
+          class="flex items-center gap-2 px-4 py-2.5 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] shadow-sm transition-all"
+        >
+          <PlusIcon class="h-4 w-4" /> New Segment
+        </button>
+      </div>
     </div>
 
     <!-- Column guide -->

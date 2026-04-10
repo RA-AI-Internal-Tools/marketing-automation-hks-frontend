@@ -236,3 +236,8 @@ export async function evaluateSegment(slug: string): Promise<{ evaluated: number
   const { data } = await api.post(`/api/segments/${slug}/evaluate`)
   return data
 }
+
+export async function evaluateAllSegments(): Promise<any> {
+  const { data } = await api.post('/api/segments/evaluate-all')
+  return data
+}
