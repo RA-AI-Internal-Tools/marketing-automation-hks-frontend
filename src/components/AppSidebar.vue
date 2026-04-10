@@ -34,6 +34,7 @@ import {
   BellAlertIcon,
   ExclamationTriangleIcon,
   MapIcon,
+  AdjustmentsHorizontalIcon,
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps<{
@@ -80,6 +81,7 @@ const allSections: NavSection[] = [
     defaultOpen: true,
     items: [
       { name: 'Enrollments', to: '/enrollments', icon: UsersIcon },
+      { name: 'Segments', to: '/segments', icon: AdjustmentsHorizontalIcon },
       { name: 'Consents', to: '/consents', icon: ShieldCheckIcon },
       { name: 'Push Audience', to: '/push-audience', icon: BellAlertIcon },
     ],

@@ -82,6 +82,18 @@ const router = createRouter({
       meta: { title: 'Push Audience' },
     },
     {
+      path: '/segments',
+      name: 'segments',
+      component: () => import('@/views/SegmentsPage.vue'),
+      meta: { title: 'Segments' },
+    },
+    {
+      path: '/segments/:slug',
+      name: 'segment-detail',
+      component: () => import('@/views/SegmentDetailPage.vue'),
+      meta: { title: 'Segment Detail' },
+    },
+    {
       path: '/integrations',
       name: 'integrations',
       component: () => import('@/views/IntegrationsPage.vue'),

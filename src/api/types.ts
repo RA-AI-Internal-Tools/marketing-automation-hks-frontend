@@ -408,3 +408,48 @@ export interface ReportSchedule {
   created_at: string
   updated_at: string
 }
+
+// Segment types
+
+export interface Segment {
+  id: number
+  name: string
+  slug: string
+  description?: string
+  rule_type: string
+  operator: string
+  threshold_min: number
+  threshold_max?: number
+  entry_events: string[]
+  is_built_in: boolean
+  is_active: boolean
+  member_count: number
+  sync_to_tracardi: boolean
+  tracardi_event_type?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface SegmentRequest {
+  name: string
+  slug?: string
+  description?: string
+  rule_type: string
+  operator: string
+  threshold_min: number
+  threshold_max?: number
+  entry_events: string[]
+  is_active: boolean
+  sync_to_tracardi: boolean
+  tracardi_event_type?: string
+}
+
+export interface SegmentMember {
+  id: number
+  segment_id: number
+  client_id: number
+  entry_event: string
+  entry_at: string
+  status: 'active' | 'exited'
+  created_at: string
+}

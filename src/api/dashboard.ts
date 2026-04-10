@@ -13,6 +13,9 @@ import type {
   DailyVolume,
   HealthCheck,
   PaginatedResponse,
+  Segment,
+  SegmentRequest,
+  SegmentMember,
 } from './types'
 
 export async function fetchOverviewStats(): Promise<OverviewStats> {
@@ -197,4 +200,39 @@ export async function changePassword(currentPassword: string, newPassword: strin
     current_password: currentPassword,
     new_password: newPassword,
   })
+}
+
+// Segments
+export async function fetchSegments(): Promise<Segment[]> {
+  const { data } = await api.get('/api/segments')
+  return data
+}
+
+export async function fetchSegment(slug: string): Promise<Segment> {
+  const { data } = await api.get(`/api/segments/${slug}`)
+  return data
+}
+
+export async function createSegment(req: SegmentRequest): Promise<Segment> {
+  const { data } = await api.post('/api/segments', req)
+  return data
+}
+
+export async function updateSegment(slug: string, req: SegmentRequest): Promise<Segment> {
+  const { data } = await api.put(`/api/segments/${slug}`, req)
+  return data
+}
+
+export async function deleteSegment(slug: string): Promise<void> {
+  await api.delete(`/api/segments/${slug}`)
+}
+
+export async function fetchSegmentMembers(slug: string): Promise<SegmentMember[]> {
+  const { data } = await api.get(`/api/segments/${slug}/members`)
+  return data
+}
+
+export async function evaluateSegment(slug: string): Promise<{ evaluated: number }> {
+  const { data } = await api.post(`/api/segments/${slug}/evaluate`)
+  return data
 }
