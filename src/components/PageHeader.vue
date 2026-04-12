@@ -20,7 +20,7 @@ const resolvedKicker = computed(() => {
   if (/^\/(enrollments|segments|consents|push-audience)/.test(path)) return 'Audience'
   if (/^\/analytics\/reports/.test(path) || /^\/campaign-funnel/.test(path)) return 'Reports'
   if (/^\/analytics/.test(path)) return 'Intelligence'
-  if (/^\/(settings|integrations|channels|health|logs|audit-logs|users)/.test(path)) return 'System'
+  if (/^\/(settings|integrations|channels|health|logs|audit-logs|users|outbound-webhooks)/.test(path)) return 'System'
   return 'AR-PAY'
 })
 </script>
@@ -32,7 +32,15 @@ const resolvedKicker = computed(() => {
       <h1 class="page-header-title">{{ title }}</h1>
       <p v-if="description" class="page-header-desc">{{ description }}</p>
     </div>
-    <div class="page-header-slot"><slot /></div>
+    <!--
+      Two slots, unnamed + named. Older pages put action buttons in the
+      default slot (`<PageHeader ...><button>…</button></PageHeader>`),
+      newer ones use `<template #actions>` which reads better and is
+      Vue's idiomatic pattern. Rendering both lets either work without
+      a cross-cutting refactor, and both collapse onto the same flex
+      row so the visual result is identical.
+    -->
+    <div class="page-header-slot"><slot /><slot name="actions" /></div>
   </div>
 </template>
 

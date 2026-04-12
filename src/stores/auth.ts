@@ -30,6 +30,12 @@ export const useAuthStore = defineStore('auth', () => {
     // The JWT comes back in the response for backwards compat but we
     // deliberately do not store it — the backend has already set the
     // HTTP-only ma_session cookie, which is the real credential now.
+    //
+    // Also proactively wipe any pre-phase-4 AUTH_TOKEN residue. Without
+    // this, a user who logged in before the cookie-auth rollout keeps a
+    // (dead) JWT sitting in localStorage where XSS could still read it —
+    // defeating the whole point of phase 4.
+    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN)
     email.value = data.email
     role.value = data.role || 'viewer'
     name.value = data.name || ''

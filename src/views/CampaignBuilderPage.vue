@@ -419,7 +419,7 @@ function channelOptions() { return ['email', 'sms', 'whatsapp', 'push', 'onsite'
 
 <template>
   <div class="flex h-screen flex-col bg-neutral-50 dark:bg-neutral-950">
-    <PageHeader :title="campaignName || 'Campaign builder'" :subtitle="slug ? `#${slug}` : ''">
+    <PageHeader :title="campaignName || 'Campaign builder'" :description="slug ? `#${slug}` : ''">
       <template #actions>
         <span v-if="dirty" class="text-xs text-amber-700 dark:text-amber-400">● unsaved</span>
         <button @click="router.push(`/campaigns/${route.params.id}/edit`)"

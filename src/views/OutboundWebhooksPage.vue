@@ -197,7 +197,7 @@ function formatDate(s?: string | null): string {
 
 <template>
   <div class="mx-auto max-w-6xl space-y-6 p-6">
-    <PageHeader title="Outbound webhooks" subtitle="HTTP notifications for campaign and consent events.">
+    <PageHeader title="Outbound webhooks" description="HTTP notifications for campaign and consent events.">
       <template #actions>
         <button
           @click="openCreate"
