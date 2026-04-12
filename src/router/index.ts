@@ -46,6 +46,12 @@ const router = createRouter({
       meta: { requiresWrite: true, title: 'Edit Campaign' },
     },
     {
+      path: '/broadcasts',
+      name: 'broadcasts',
+      component: () => import('@/views/BroadcastsPage.vue'),
+      meta: { title: 'Broadcasts' },
+    },
+    {
       path: '/templates',
       name: 'templates',
       component: () => import('@/views/TemplatesPage.vue'),

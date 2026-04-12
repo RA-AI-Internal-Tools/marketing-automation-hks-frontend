@@ -72,6 +72,7 @@ const allSections: NavSection[] = [
     items: [
       { name: 'Overview', to: '/overview', icon: ChartBarIcon },
       { name: 'Campaigns', to: '/campaigns', icon: RocketLaunchIcon },
+      { name: 'Broadcasts', to: '/broadcasts', icon: MegaphoneIcon },
       { name: 'Templates', to: '/templates', icon: DocumentDuplicateIcon },
     ],
   },

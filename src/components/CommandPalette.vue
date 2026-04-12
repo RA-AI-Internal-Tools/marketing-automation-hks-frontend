@@ -38,6 +38,7 @@ const commands = computed<Cmd[]>(() => {
     // Navigate
     { id: 'nav.overview',   title: 'Overview',      section: 'Navigate', icon: ChartBarIcon,                  run: () => router.push('/overview') },
     { id: 'nav.campaigns',  title: 'Campaigns',     section: 'Navigate', icon: RocketLaunchIcon,              run: () => router.push('/campaigns') },
+    { id: 'nav.broadcasts', title: 'Broadcasts',    section: 'Navigate', icon: MegaphoneIcon,                 run: () => router.push('/broadcasts') },
     { id: 'nav.templates',  title: 'Templates',     section: 'Navigate', icon: DocumentDuplicateIcon,         run: () => router.push('/templates') },
     { id: 'nav.enroll',     title: 'Enrollments',   section: 'Navigate', icon: UsersIcon,                     run: () => router.push('/enrollments') },
     { id: 'nav.segments',   title: 'Segments',      section: 'Navigate', icon: AdjustmentsHorizontalIcon,     run: () => router.push('/segments') },
@@ -68,6 +69,7 @@ const commands = computed<Cmd[]>(() => {
 
     // Create
     { id: 'new.campaign',   title: 'New campaign',  section: 'Create',   icon: RocketLaunchIcon,              run: () => router.push('/campaigns/new') },
+    { id: 'new.broadcast',  title: 'New broadcast', section: 'Create',   icon: MegaphoneIcon,                 run: () => router.push('/broadcasts') },
     { id: 'new.template',   title: 'New template',  section: 'Create',   icon: DocumentDuplicateIcon,         run: () => router.push('/templates/new') },
 
     // Settings
