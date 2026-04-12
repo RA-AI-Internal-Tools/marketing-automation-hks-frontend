@@ -1,14 +1,23 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { useReportsStore } from '@/stores/reports'
 import { useAuthStore } from '@/stores/auth'
+import { useToast } from '@/composables/useToast'
 import { runReport } from '@/api/reports'
 import type { ReportSchedule } from '@/api/types'
 
 const store = useReportsStore()
 const auth = useAuthStore()
+const { showToast } = useToast()
+
+const deleteId = ref<number | null>(null)
+const deleteOpen = computed({
+  get: () => deleteId.value !== null,
+  set: (v) => { if (!v) deleteId.value = null },
+})
 
 // Dialog state
 const showDialog = ref(false)
@@ -106,18 +115,26 @@ onMounted(() => store.load())
 async function handleRunNow(id: number) {
   try {
     await runReport(id)
+    showToast('Report run queued', 'success')
     store.load()
   } catch (e: any) {
-    alert(e.response?.data?.error || 'Failed to run report')
+    showToast(e.response?.data?.error || 'Failed to run report', 'error')
   }
 }
 
-async function handleDelete(id: number) {
-  if (!confirm('Are you sure you want to delete this report schedule?')) return
+function handleDelete(id: number) {
+  deleteId.value = id
+}
+
+async function confirmDelete() {
+  if (deleteId.value === null) return
   try {
-    await store.remove(id)
+    await store.remove(deleteId.value)
+    showToast('Report schedule deleted', 'success')
   } catch (e: any) {
-    alert(e.response?.data?.error || 'Failed to delete report')
+    showToast(e.response?.data?.error || 'Failed to delete report', 'error')
+  } finally {
+    deleteId.value = null
   }
 }
 </script>
@@ -268,5 +285,16 @@ async function handleDelete(id: number) {
         </p>
       </div>
     </div>
+
+    <ConfirmDialog
+      :open="deleteOpen"
+      title="Delete report schedule?"
+      message="This stops future runs. Past report artefacts are kept."
+      confirm-text="Delete"
+      cancel-text="Keep"
+      variant="danger"
+      @confirm="confirmDelete"
+      @cancel="deleteId = null"
+    />
   </div>
 </template>

@@ -3,7 +3,9 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useToast } from '@/composables/useToast'
 import {
   PlusIcon,
   PencilSquareIcon,
@@ -25,6 +27,13 @@ import type { Segment, SegmentRequest } from '@/api/types'
 
 const router = useRouter()
 const auth = useAuthStore()
+const { showToast } = useToast()
+
+const deleteTarget = ref<{ slug: string; name: string } | null>(null)
+const deleteOpen = computed({
+  get: () => !!deleteTarget.value,
+  set: (v) => { if (!v) deleteTarget.value = null },
+})
 
 const loading = ref(true)
 const segments = ref<Segment[]>([])
@@ -137,21 +146,30 @@ async function handleSave() {
       await createSegment(payload)
     }
     showModal.value = false
+    showToast(editingSlug.value ? 'Segment updated' : 'Segment created', 'success')
     await load()
   } catch (e: any) {
-    alert(e.response?.data?.error || 'Failed to save segment')
+    showToast(e.response?.data?.error || 'Failed to save segment', 'error')
   } finally {
     saving.value = false
   }
 }
 
-async function handleDelete(slug: string, name: string) {
-  if (!confirm(`Delete segment "${name}"? This cannot be undone.`)) return
+function handleDelete(slug: string, name: string) {
+  deleteTarget.value = { slug, name }
+}
+
+async function confirmDelete() {
+  if (!deleteTarget.value) return
+  const { slug, name } = deleteTarget.value
   try {
     await deleteSegment(slug)
+    showToast(`Deleted segment "${name}"`, 'success')
     await load()
   } catch (e: any) {
-    alert(e.response?.data?.error || 'Failed to delete segment')
+    showToast(e.response?.data?.error || 'Failed to delete segment', 'error')
+  } finally {
+    deleteTarget.value = null
   }
 }
 
@@ -159,10 +177,10 @@ async function handleEvaluate(slug: string) {
   evaluating.value = slug
   try {
     const result = await evaluateSegment(slug)
-    alert(`Evaluation complete: ${result.evaluated} members evaluated.`)
+    showToast(`Evaluation complete: ${result.evaluated} members evaluated.`, 'success')
     await load()
   } catch (e: any) {
-    alert(e.response?.data?.error || 'Failed to evaluate segment')
+    showToast(e.response?.data?.error || 'Failed to evaluate segment', 'error')
   } finally {
     evaluating.value = null
   }
@@ -172,10 +190,10 @@ async function handleEvaluateAll() {
   evaluatingAll.value = true
   try {
     const result = await evaluateAllSegments()
-    alert(`All segments evaluated: ${result.clients_evaluated} clients across ${result.segments_evaluated} segments.`)
+    showToast(`${result.clients_evaluated} clients evaluated across ${result.segments_evaluated} segments.`, 'success', 5000)
     await load()
   } catch (e: any) {
-    alert(e.response?.data?.error || 'Failed to evaluate all segments')
+    showToast(e.response?.data?.error || 'Failed to evaluate all segments', 'error')
   } finally {
     evaluatingAll.value = false
   }
@@ -547,5 +565,16 @@ function formatThreshold(segment: Segment): string {
         </div>
       </div>
     </Teleport>
+
+    <ConfirmDialog
+      :open="deleteOpen"
+      :title="`Delete segment ${deleteTarget?.name || ''}?`"
+      message="Any campaign using this segment will stop targeting it. This cannot be undone."
+      confirm-text="Delete"
+      cancel-text="Keep"
+      variant="danger"
+      @confirm="confirmDelete"
+      @cancel="deleteTarget = null"
+    />
   </div>
 </template>

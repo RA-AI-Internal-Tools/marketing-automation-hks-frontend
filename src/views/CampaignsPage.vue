@@ -1,16 +1,25 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { useCampaignsStore } from '@/stores/campaigns'
 import { useAuthStore } from '@/stores/auth'
+import { useToast } from '@/composables/useToast'
 import { PlusIcon, PencilSquareIcon, TrashIcon, RocketLaunchIcon, DocumentDuplicateIcon } from '@heroicons/vue/24/outline'
 import { cloneCampaign } from '@/api/dashboard'
 
 const router = useRouter()
 const store = useCampaignsStore()
 const auth = useAuthStore()
+const { showToast } = useToast()
+
+const deleteTarget = ref<{ id: number; name: string } | null>(null)
+const deleteOpen = computed({
+  get: () => !!deleteTarget.value,
+  set: (v) => { if (!v) deleteTarget.value = null },
+})
 
 onMounted(() => store.load())
 
@@ -32,21 +41,30 @@ async function handleToggle(id: number) {
   await store.toggle(id)
 }
 
-async function handleDelete(id: number, name: string) {
-  if (!confirm(`Delete campaign "${name}"? This cannot be undone.`)) return
+function handleDelete(id: number, name: string) {
+  deleteTarget.value = { id, name }
+}
+
+async function confirmDelete() {
+  if (!deleteTarget.value) return
+  const { id, name } = deleteTarget.value
   try {
     await store.remove(id)
+    showToast(`Deleted "${name}"`, 'success')
   } catch (e: any) {
-    alert(e.response?.data?.error || 'Failed to delete campaign')
+    showToast(e.response?.data?.error || 'Failed to delete campaign', 'error')
+  } finally {
+    deleteTarget.value = null
   }
 }
 
 async function handleClone(id: number) {
   try {
-    await cloneCampaign(id)
+    const cloned = await cloneCampaign(id)
     await store.load()
+    showToast(`Cloned as "${cloned.name}"`, 'success')
   } catch (e: any) {
-    alert(e.response?.data?.error || 'Failed to clone campaign')
+    showToast(e.response?.data?.error || 'Failed to clone campaign', 'error')
   }
 }
 </script>
@@ -173,5 +191,16 @@ async function handleClone(id: number) {
         </p>
       </div>
     </div>
+
+    <ConfirmDialog
+      :open="deleteOpen"
+      :title="`Delete campaign ${deleteTarget?.name || ''}?`"
+      message="This removes the campaign definition and its step history. Enrollments in flight are cancelled. This cannot be undone."
+      confirm-text="Delete"
+      cancel-text="Keep"
+      variant="danger"
+      @confirm="confirmDelete"
+      @cancel="deleteTarget = null"
+    />
   </div>
 </template>
