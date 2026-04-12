@@ -6,7 +6,8 @@ import StatusBadge from '@/components/StatusBadge.vue'
 import { useTemplatesStore } from '@/stores/templates'
 import { useAuthStore } from '@/stores/auth'
 import TestSendModal from '@/components/TestSendModal.vue'
-import { PlusIcon, PencilSquareIcon, TrashIcon, PaperAirplaneIcon } from '@heroicons/vue/24/outline'
+import { PlusIcon, PencilSquareIcon, TrashIcon, PaperAirplaneIcon, LanguageIcon } from '@heroicons/vue/24/outline'
+import { TEMPLATE_LANGUAGES } from '@/utils/email-template'
 
 const router = useRouter()
 const store = useTemplatesStore()
@@ -29,6 +30,28 @@ async function handleDelete(id: number, name: string) {
     await store.remove(id)
   } catch (e: any) {
     alert(e.response?.data?.error || 'Failed to delete template')
+  }
+}
+
+async function handleCloneVariant(id: number, name: string) {
+  const options = TEMPLATE_LANGUAGES.map((l) => `${l.value} — ${l.label}`).join('\n')
+  const input = prompt(
+    `Create a locale variant of "${name}".\n\n` +
+    `Enter the target locale (e.g. en, ar, ar-iq):\n\n${options}`,
+    'ar-iq',
+  )
+  if (!input) return
+  const locale = input.trim().toLowerCase()
+  if (!/^[a-z]{2}(-[a-z]{2})?$/.test(locale)) {
+    alert(`Invalid locale: ${locale}\nUse format: lang or lang-region (e.g. en, ar-iq).`)
+    return
+  }
+  try {
+    const variant = await store.cloneVariant(id, locale)
+    // Open the new variant in the editor for immediate translation.
+    router.push(`/templates/${variant.id}/edit`)
+  } catch (e: any) {
+    alert(e.response?.data?.error || 'Failed to clone variant')
   }
 }
 
@@ -121,6 +144,13 @@ const channelColors: Record<string, string> = {
                   title="Edit"
                 >
                   <PencilSquareIcon class="h-4 w-4" />
+                </button>
+                <button
+                  @click="handleCloneVariant(tmpl.id, tmpl.name)"
+                  class="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
+                  title="Clone as locale variant"
+                >
+                  <LanguageIcon class="h-4 w-4" />
                 </button>
                 <button
                   @click="handleDelete(tmpl.id, tmpl.name)"

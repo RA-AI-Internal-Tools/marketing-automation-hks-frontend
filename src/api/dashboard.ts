@@ -165,6 +165,13 @@ export async function deleteTemplate(id: number): Promise<void> {
   await api.delete(`/api/templates/${id}`)
 }
 
+// Clone a template into an inactive locale-variant draft. Variant key is
+// derived server-side: `<base>.<locale>` (e.g. "welcome_email.ar-iq").
+export async function cloneTemplateAsVariant(id: number, locale: string): Promise<MessageTemplate> {
+  const { data } = await api.post(`/api/templates/${id}/clone-variant`, { locale })
+  return data
+}
+
 // Clone campaign
 export async function cloneCampaign(id: number): Promise<CampaignDefinition> {
   const { data } = await api.post(`/api/campaigns/${id}/clone`)

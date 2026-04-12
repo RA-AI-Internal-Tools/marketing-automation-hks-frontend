@@ -7,6 +7,7 @@ import {
   createTemplate,
   updateTemplate,
   deleteTemplate,
+  cloneTemplateAsVariant,
 } from '@/api/dashboard'
 
 export const useTemplatesStore = defineStore('templates', () => {
@@ -60,6 +61,18 @@ export const useTemplatesStore = defineStore('templates', () => {
     }
   }
 
+  async function cloneVariant(id: number, locale: string) {
+    error.value = null
+    try {
+      const variant = await cloneTemplateAsVariant(id, locale)
+      templates.value.unshift(variant)
+      return variant
+    } catch (e: any) {
+      error.value = e.response?.data?.error || e.message || 'Failed to clone variant'
+      throw e
+    }
+  }
+
   async function remove(id: number) {
     error.value = null
     try {
@@ -77,5 +90,5 @@ export const useTemplatesStore = defineStore('templates', () => {
     error.value = null
   }
 
-  return { templates, loading, error, load, get, create, update, remove, $reset }
+  return { templates, loading, error, load, get, create, update, cloneVariant, remove, $reset }
 })
