@@ -16,7 +16,7 @@ const filterAction = ref('')
 const filterDateFrom = ref('')
 const filterDateTo = ref('')
 
-const actionOptions = ['create', 'update', 'delete', 'toggle']
+const actionOptions = ['create', 'update', 'delete', 'toggle', 'login', 'logout', 'clone_variant', 'evaluate']
 
 const actionColors: Record<string, string> = {
   create: 'bg-green-100 text-green-700',
