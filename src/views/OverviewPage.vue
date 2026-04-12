@@ -314,6 +314,7 @@ function pctLabel(n: number, total: number): string {
           <span class="section-rule" />
         </div>
         <div class="perf-card">
+          <div class="table-scroll">
           <table class="perf-table num-tabular">
             <thead>
               <tr>
@@ -343,6 +344,7 @@ function pctLabel(n: number, total: number): string {
               </tr>
             </tbody>
           </table>
+          </div>
         </div>
       </section>
     </template>
@@ -400,13 +402,14 @@ function pctLabel(n: number, total: number): string {
 .hero-title {
   font-family: var(--font-display);
   font-weight: 300;
-  font-size: clamp(40px, 5.5vw, 72px);
+  font-size: clamp(32px, 5.5vw, 72px);
   line-height: 1;
   letter-spacing: -0.035em;
   color: var(--color-text-primary);
   font-variation-settings: 'opsz' 144, 'SOFT' 20;
   margin-bottom: 36px;
 }
+@media (max-width: 640px) { .hero-title { margin-bottom: 24px; } }
 .hero-title > span { display: inline-block; }
 .hero-title-comma {
   color: var(--hks-cyan);

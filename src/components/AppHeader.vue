@@ -18,16 +18,18 @@ const emit = defineEmits<{
 const route = useRoute()
 
 // Crumbs: show the section label first, then the page title if they differ.
-// e.g. "Engage  ·  Templates" — gives navigational context without duplicating
-// the giant Fraunces page title right below.
+// e.g. "Engage  ›  Templates" — gives navigational context without duplicating
+// the giant Fraunces page title right below. Keep this map aligned with the
+// sidebar sections in AppSidebar.vue.
 const breadcrumbs = computed<{ section: string | null; title: string }>(() => {
   const title = (route.meta?.title as string) || ''
   const path = route.path
-  // Simple path-to-section map
-  if (/^\/(overview|campaigns|templates)/.test(path))              return { section: 'Engage', title }
+  if (/^\/(overview|campaigns|templates)/.test(path)) return { section: 'Engage', title }
   if (/^\/(enrollments|segments|consents|push-audience)/.test(path)) return { section: 'Audience', title }
-  if (/^\/analytics\/(reports|funnel|journey|campaign-funnel)/.test(path)) return { section: 'Reports', title }
-  if (/^\/analytics/.test(path))                                   return { section: 'Intelligence', title }
+  // Reports subsection covers only /analytics/reports and the standalone
+  // /campaign-funnel — every other /analytics/* page is Intelligence.
+  if (/^\/analytics\/reports/.test(path) || /^\/campaign-funnel/.test(path)) return { section: 'Reports', title }
+  if (/^\/analytics/.test(path)) return { section: 'Intelligence', title }
   if (/^\/(settings|integrations|channels|health|logs|audit-logs|users)/.test(path)) return { section: 'System', title }
   return { section: null, title }
 })

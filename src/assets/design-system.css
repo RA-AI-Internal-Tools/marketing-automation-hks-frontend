@@ -477,6 +477,30 @@ body::before {
 .btn-ghost:hover { background: var(--color-bg-hover); border-color: var(--color-border-strong); }
 
 /* ----------------------------------------------------------
+   10b. RESPONSIVE TABLES
+   Tables inside `.surface` or rendered directly into pages
+   should scroll horizontally on narrow viewports rather than
+   blowing up the layout. Pages wrap their table in
+   `.table-scroll` to opt in.
+   ---------------------------------------------------------- */
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.table-scroll > table { min-width: 680px; }
+
+@media (max-width: 640px) {
+  /* Reduce card padding on phones so content has breathing room */
+  .surface, .surface-soft { border-radius: var(--radius-md); }
+}
+
+/* Pages that render a <main> with large padding should tighten on mobile */
+@media (max-width: 640px) {
+  main { padding-left: 16px !important; padding-right: 16px !important; }
+}
+
+/* ----------------------------------------------------------
    11. STAGGERED FADE — for lists/grids
    ---------------------------------------------------------- */
 .stagger > * {

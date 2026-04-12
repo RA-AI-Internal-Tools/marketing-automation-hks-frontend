@@ -5,7 +5,7 @@ import type { PushAudienceEntry, PushSendResponse } from '@/api/types'
 import { useAuthStore } from '@/stores/auth'
 import { useEnvironmentStore } from '@/stores/environment'
 import { useToast } from '@/composables/useToast'
-import { BellAlertIcon } from '@heroicons/vue/24/outline'
+import PageHeader from '@/components/PageHeader.vue'
 
 const auth = useAuthStore()
 const env = useEnvironmentStore()
@@ -158,14 +158,10 @@ onMounted(load)
 
 <template>
   <div class="page-enter space-y-6">
-    <!-- Header -->
-    <div class="flex items-center gap-3">
-      <BellAlertIcon class="w-7 h-7 text-[#0099db]" />
-      <div>
-        <h1 class="text-2xl font-bold text-[var(--color-text-primary)]">Push Audience</h1>
-        <p class="text-sm text-[var(--color-text-tertiary)]">Browse registered push users and send notifications</p>
-      </div>
-    </div>
+    <PageHeader
+      title="Push audience"
+      description="Browse registered push devices and broadcast notifications to opted-in recipients."
+    />
 
     <!-- Filters -->
     <div class="flex flex-wrap items-end gap-3 bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-4">

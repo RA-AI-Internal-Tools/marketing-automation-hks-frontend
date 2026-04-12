@@ -244,7 +244,7 @@ const channelChip: Record<string, string> = {
       <p class="tpl-empty-sub">Try clearing the search or selecting a different channel.</p>
     </div>
 
-    <div v-else class="tpl-card">
+    <div v-else class="tpl-card table-scroll">
       <table class="tpl-table">
         <thead class="bg-[var(--color-bg-page)] border-b border-[var(--color-border)]">
           <tr>
