@@ -1,5 +1,9 @@
-// Spec for the auth store's role logic + token persistence. Uses a mock for
-// the axios client so login() doesn't hit the network.
+// Spec for the auth store's role logic + session marker persistence. Uses a
+// mock for the axios client so login() doesn't hit the network.
+//
+// Post-phase-4 of cookie-auth: the store no longer tracks the JWT. The JWT
+// lives in an HTTP-only cookie the browser attaches automatically. The only
+// client-side "is logged in" signal is the AUTH_EMAIL marker in localStorage.
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useAuthStore } from './auth'
@@ -21,15 +25,14 @@ describe('auth store', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    localStorage.clear()
   })
 
   it('hydrates from localStorage on init', () => {
-    localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'tok-123')
     localStorage.setItem(STORAGE_KEYS.AUTH_EMAIL, 'x@y.com')
     localStorage.setItem(STORAGE_KEYS.AUTH_ROLE, 'admin')
     localStorage.setItem(STORAGE_KEYS.AUTH_NAME, 'Admin')
     const auth = useAuthStore()
-    expect(auth.token).toBe('tok-123')
     expect(auth.email).toBe('x@y.com')
     expect(auth.isAuthenticated).toBe(true)
     expect(auth.isAdmin).toBe(true)
@@ -50,17 +53,19 @@ describe('auth store', () => {
     expect(auth.canManageUsers).toBe(false)
   })
 
-  it('login persists token + role to localStorage', async () => {
+  it('login persists email/role/name to localStorage but NOT the token', async () => {
     ;(api.post as any).mockResolvedValueOnce({
       data: { token: 'jwt-xyz', email: 'admin@x.com', role: 'admin', name: 'Admin' },
     })
     const auth = useAuthStore()
     await auth.login('admin@x.com', 'pw')
-    expect(auth.token).toBe('jwt-xyz')
+    expect(auth.email).toBe('admin@x.com')
     expect(auth.role).toBe('admin')
     expect(auth.isAdmin).toBe(true)
-    expect(localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)).toBe('jwt-xyz')
+    expect(localStorage.getItem(STORAGE_KEYS.AUTH_EMAIL)).toBe('admin@x.com')
     expect(localStorage.getItem(STORAGE_KEYS.AUTH_ROLE)).toBe('admin')
+    // The JWT is in an HTTP-only cookie set by the server — never localStorage.
+    expect(localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)).toBeNull()
   })
 
   it('login defaults role to viewer when server omits it', async () => {
@@ -73,16 +78,18 @@ describe('auth store', () => {
     expect(auth.isEditor).toBe(false)
   })
 
-  it('logout clears both store state and localStorage', () => {
-    localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'present')
+  it('logout clears store state, localStorage markers, and legacy token', async () => {
+    ;(api.post as any).mockResolvedValueOnce({ data: { status: 'logged_out' } })
     localStorage.setItem(STORAGE_KEYS.AUTH_EMAIL, 'e@e.com')
+    localStorage.setItem(STORAGE_KEYS.AUTH_ROLE, 'admin')
+    // Residue from a pre-phase-4 session — logout should still clean it up.
+    localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'legacy')
     const auth = useAuthStore()
-    auth.logout()
-    expect(auth.token).toBeNull()
+    await auth.logout()
     expect(auth.email).toBeNull()
     expect(auth.isAuthenticated).toBe(false)
-    expect(localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)).toBeNull()
     expect(localStorage.getItem(STORAGE_KEYS.AUTH_EMAIL)).toBeNull()
+    expect(localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)).toBeNull()
   })
 
   it('surfaces server error on login failure', async () => {
@@ -94,6 +101,6 @@ describe('auth store', () => {
       response: { data: { error: 'invalid credentials' } },
     })
     // No state mutation on failure.
-    expect(auth.token).toBeNull()
+    expect(auth.email).toBeNull()
   })
 })

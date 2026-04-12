@@ -32,8 +32,9 @@ export const useDashboardStore = defineStore('dashboard', () => {
     // Prevent duplicate SSE connections
     if (sseCleanup) return
 
-    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
-    if (!token) return
+    // Presence check — JWT moved to HTTP-only cookie, so we gate on the
+    // non-sensitive email marker that mirrors login state in localStorage.
+    if (!localStorage.getItem(STORAGE_KEYS.AUTH_EMAIL)) return
 
     // Reconnect forever with exponential backoff capped at 30s. Giving up
     // (old code: after 5 tries) leaves the dashboard permanently "offline"
@@ -69,8 +70,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
     async function connectWithFreshToken() {
       if (stopped) return
 
-      const authToken = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
-      if (!authToken) return
+      if (!localStorage.getItem(STORAGE_KEYS.AUTH_EMAIL)) return
 
       let sseToken: string
       try {

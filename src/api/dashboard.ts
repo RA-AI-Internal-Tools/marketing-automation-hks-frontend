@@ -48,6 +48,31 @@ export async function fetchCampaign(id: number): Promise<CampaignDefinition> {
   return data
 }
 
+export interface CampaignGraphNode {
+  id: number
+  label: string
+  channel: string
+  condition: string
+  type: 'action' | 'condition' | 'webhook' | 'wait'
+  data?: Record<string, any>
+}
+export interface CampaignGraphEdge {
+  source: number
+  target: number
+  label?: 'true' | 'false' | 'next' | ''
+}
+export interface CampaignGraph {
+  campaign_id: number
+  slug: string
+  name: string
+  nodes: CampaignGraphNode[]
+  edges: CampaignGraphEdge[]
+}
+export async function fetchCampaignGraph(id: number): Promise<CampaignGraph> {
+  const { data } = await api.get<CampaignGraph>(`/api/campaigns/${id}/graph`)
+  return data
+}
+
 export async function createCampaign(req: CampaignRequest): Promise<CampaignDefinition> {
   const { data } = await api.post('/api/campaigns', req)
   return data

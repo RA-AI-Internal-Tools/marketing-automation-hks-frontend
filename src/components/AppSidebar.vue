@@ -34,6 +34,7 @@ import {
   ExclamationTriangleIcon,
   MapIcon,
   AdjustmentsHorizontalIcon,
+  BoltIcon,
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps<{
@@ -119,6 +120,7 @@ const allSections: NavSection[] = [
     items: [
       { name: 'Settings', to: '/settings', icon: Cog6ToothIcon },
       { name: 'Integrations', to: '/integrations', icon: LinkIcon },
+      { name: 'Outbound webhooks', to: '/outbound-webhooks', icon: BoltIcon, adminOnly: true },
       { name: 'Channels', to: '/channels', icon: MegaphoneIcon },
       { name: 'Health', to: '/health', icon: HeartIcon },
       { name: 'Logs', to: '/logs', icon: DocumentTextIcon },

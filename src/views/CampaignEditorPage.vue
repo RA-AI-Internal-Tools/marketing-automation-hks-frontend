@@ -478,6 +478,15 @@ async function handleSubmit() {
         >
           Cancel
         </button>
+        <button
+          v-if="isEdit"
+          type="button"
+          @click="router.push(`/campaigns/${route.params.id}/builder`)"
+          class="ml-auto px-4 py-2.5 bg-[var(--color-bg-card)] text-[var(--color-text-primary)] text-sm font-medium rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-page)] transition-colors"
+          title="Open visual flow preview"
+        >
+          View flow →
+        </button>
       </div>
     </form>
   </div>

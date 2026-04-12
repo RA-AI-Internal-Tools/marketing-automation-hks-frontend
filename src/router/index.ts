@@ -46,6 +46,12 @@ const router = createRouter({
       meta: { requiresWrite: true, title: 'Edit Campaign' },
     },
     {
+      path: '/campaigns/:id/builder',
+      name: 'campaign-builder',
+      component: () => import('@/views/CampaignBuilderPage.vue'),
+      meta: { title: 'Campaign Flow' },
+    },
+    {
       path: '/broadcasts',
       name: 'broadcasts',
       component: () => import('@/views/BroadcastsPage.vue'),
@@ -144,6 +150,12 @@ const router = createRouter({
     {
       path: '/campaigns/slug/:slug/funnel',
       redirect: (to) => ({ path: '/campaign-funnel', query: { slug: to.params.slug as string } }),
+    },
+    {
+      path: '/outbound-webhooks',
+      name: 'outbound-webhooks',
+      component: () => import('@/views/OutboundWebhooksPage.vue'),
+      meta: { requiresAdmin: true, title: 'Outbound webhooks' },
     },
     {
       path: '/audit-logs',
@@ -248,13 +260,17 @@ const router = createRouter({
 // Navigation guard: redirect unauthenticated users to login
 router.beforeEach((to) => {
   const isPublic = to.meta.public === true
-  const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
+  // Cookie-auth: the JWT is no longer readable from JS. We use the
+  // AUTH_EMAIL marker as a client-side "probably logged in" signal —
+  // the server is still the source of truth and will 401 if the cookie
+  // is actually absent/expired, which our axios 401 interceptor handles.
+  const loggedIn = !!localStorage.getItem(STORAGE_KEYS.AUTH_EMAIL)
   const role = localStorage.getItem(STORAGE_KEYS.AUTH_ROLE)
 
-  if (!isPublic && !token) {
+  if (!isPublic && !loggedIn) {
     return { name: 'login' }
   }
-  if (to.name === 'login' && token) {
+  if (to.name === 'login' && loggedIn) {
     return { name: 'overview' }
   }
   // Admin-only routes
