@@ -87,8 +87,7 @@ const buildId = 'MA · build ' + (new Date().getFullYear())
         <div class="rule-dot" style="margin-bottom: 36px;">Sign in</div>
 
         <h2 class="login-form-title">
-          <span>Welcome</span>
-          <span class="accent-serif">back.</span>
+          Welcome <span class="accent-serif">back.</span>
         </h2>
         <p class="login-form-sub">
           Use your AR-PAY credentials to continue.

@@ -48,28 +48,38 @@ function stripLocale(key: string): { base: string; locale: string } {
 interface GroupRow { base: MessageTemplate; variants: MessageTemplate[]; locales: Set<string> }
 
 // Group templates by base key: { welcome_email, [welcome_email.ar-iq, welcome_email.fr] }
+// Two-pass — backend may return rows in any order (newer-first by default),
+// so we can't assume the base arrives before its variants.
 const grouped = computed<GroupRow[]>(() => {
   const bases: Record<string, GroupRow> = {}
-  const orphans: MessageTemplate[] = []
+
+  // Pass 1: collect all bases (no locale suffix).
   for (const t of store.templates) {
-    const { base, locale } = stripLocale(t.template_key)
+    const { locale } = stripLocale(t.template_key)
     if (!locale) {
-      const existing = bases[t.template_key]
-      bases[t.template_key] = existing ? { ...existing, base: t } : { base: t, variants: [], locales: new Set() }
-    } else {
-      const parent = bases[base]
-      if (!parent) {
-        orphans.push(t)
-        continue
-      }
-      parent.variants.push(t)
-      parent.locales.add(locale)
+      bases[t.template_key] = { base: t, variants: [], locales: new Set() }
     }
   }
-  // Promote orphan variants to their own rows so they're still reachable/editable
-  for (const o of orphans) {
-    bases[o.template_key] = { base: o, variants: [], locales: new Set() }
+
+  // Pass 2: attach variants to their base, or orphan-promote if the base is absent.
+  for (const t of store.templates) {
+    const { base, locale } = stripLocale(t.template_key)
+    if (!locale) continue
+    const parent = bases[base]
+    if (parent) {
+      parent.variants.push(t)
+      parent.locales.add(locale)
+    } else {
+      // No base for this variant — show it as its own row so it's still editable.
+      bases[t.template_key] = { base: t, variants: [], locales: new Set() }
+    }
   }
+
+  // Sort variants inside each group by locale for stable display.
+  for (const g of Object.values(bases)) {
+    g.variants.sort((a, b) => a.template_key.localeCompare(b.template_key))
+  }
+
   return Object.values(bases).sort((a, b) =>
     a.base.template_key.localeCompare(b.base.template_key),
   )

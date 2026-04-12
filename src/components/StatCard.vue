@@ -114,7 +114,7 @@ function formatValue(v: string | number): string {
   transition: background var(--transition-fast), height var(--transition-fast);
 }
 .stat-card:hover .stat-card-rule { height: 2px; }
-.stat-card-rule[data-accent="default"] { background: var(--hks-deep-blue); opacity: 0; }
+.stat-card-rule[data-accent="default"] { background: var(--hks-deep-blue); opacity: 0.18; }
 .stat-card:hover .stat-card-rule[data-accent="default"] { opacity: 1; }
 .stat-card-rule[data-accent="emerald"] { background: var(--color-success); opacity: 0.35; }
 .stat-card-rule[data-accent="amber"]   { background: var(--color-warning); opacity: 0.35; }
