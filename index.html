@@ -6,16 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AR-PAY · Marketing Automation</title>
 
-    <!-- Editorial-precision type pairing:
-         Fraunces      — variable serif, display/hero numerals
-         IBM Plex Sans — interface body, fintech-grade legibility
-         IBM Plex Mono — template keys, data cells, monospace -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    >
+    <!-- Editorial-precision type pairing, bundled via @fontsource so the
+         strict CSP (style-src 'self') stays intact. No Google Fonts dep.
+           - Fraunces (variable):    display serif, hero numerals
+           - IBM Plex Sans (3-700):  interface body
+           - IBM Plex Mono (4-600):  data cells, template keys -->
   </head>
   <body>
     <div id="app"></div>

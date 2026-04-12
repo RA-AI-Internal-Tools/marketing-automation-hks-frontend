@@ -4,6 +4,7 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 
+import './assets/fonts'       // self-hosted Fraunces + IBM Plex (CSP-safe)
 import './assets/main.css'
 import { initTheme } from './composables/useTheme'
 
