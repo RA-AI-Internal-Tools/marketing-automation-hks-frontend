@@ -34,9 +34,9 @@ const breadcrumbs = computed<{ section: string | null; title: string }>(() => {
 </script>
 
 <template>
-  <!-- Desktop header -->
+  <!-- Desktop header — shown ≥ lg (1024px), hidden below -->
   <header
-    class="ma-header hidden lg:flex layout-transition"
+    class="ma-header layout-transition hidden lg:flex"
     :style="{ left: sidebarCollapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)' }"
   >
     <div class="ma-header-left">
@@ -63,8 +63,8 @@ const breadcrumbs = computed<{ section: string | null; title: string }>(() => {
     </div>
   </header>
 
-  <!-- Mobile header -->
-  <header class="ma-header-mobile lg:hidden">
+  <!-- Mobile header — shown < lg, hidden ≥ lg -->
+  <header class="ma-header-mobile flex lg:hidden">
     <div class="flex items-center gap-3">
       <button @click="emit('toggle-mobile')" class="ma-header-toggle" aria-label="Open menu">
         <Bars3Icon class="h-5 w-5" />
@@ -91,10 +91,12 @@ const breadcrumbs = computed<{ section: string | null; title: string }>(() => {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--color-divider);
-  display: flex;
   align-items: center;
   justify-content: space-between;
   transition: left var(--transition-slow), background var(--transition-fast);
+  /* display is owned by Tailwind's `hidden lg:flex` on the element — do
+     not set `display: flex` here, or scoped specificity wins over the
+     utility and the header renders at every viewport width. */
 }
 [data-theme="dark"] .ma-header {
   background: rgba(12, 15, 24, 0.85);
@@ -172,9 +174,9 @@ const breadcrumbs = computed<{ section: string | null; title: string }>(() => {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--color-divider);
-  display: flex;
   align-items: center;
   justify-content: space-between;
+  /* display owned by Tailwind's `lg:hidden` utility — see note above. */
 }
 [data-theme="dark"] .ma-header-mobile {
   background: rgba(12, 15, 24, 0.92);
