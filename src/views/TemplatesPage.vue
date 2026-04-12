@@ -112,6 +112,21 @@ const totalVariants = computed(() =>
   grouped.value.reduce((acc, g) => acc + g.variants.length, 0),
 )
 
+// Filter-aware counts for the toolbar meta. When any filter is active the
+// counter reflects the visible subset; when none are active it falls back to
+// the global totals so the overall catalogue size is still discoverable.
+const visibleVariants = computed(() =>
+  visible.value.reduce((acc, g) => {
+    // If a locale filter is set, only count variants that match it;
+    // otherwise count all variants on the visible bases.
+    const lf = localeFilter.value
+    return acc + (lf ? (g.locales.has(lf) ? 1 : 0) : g.variants.length)
+  }, 0),
+)
+const isFiltered = computed(() =>
+  !!localeFilter.value || !!search.value.trim() || !!channelFilter.value,
+)
+
 function toggle(key: string) {
   const next = new Set(expanded.value)
   if (next.has(key)) next.delete(key)
@@ -224,9 +239,18 @@ const channelChip: Record<string, string> = {
 
       <div class="tpl-meta">
         <span class="tpl-meta-count">
-          <strong class="num-tabular">{{ grouped.length }}</strong> base
-          <span class="tpl-meta-sep">·</span>
-          <strong class="num-tabular">{{ totalVariants }}</strong> variant{{ totalVariants === 1 ? '' : 's' }}
+          <template v-if="isFiltered">
+            <strong class="num-tabular">{{ visible.length }}</strong>
+            <span class="tpl-meta-faint"> of </span>
+            <strong class="num-tabular">{{ grouped.length }}</strong> base
+            <span class="tpl-meta-sep">·</span>
+            <strong class="num-tabular">{{ visibleVariants }}</strong> variant{{ visibleVariants === 1 ? '' : 's' }}
+          </template>
+          <template v-else>
+            <strong class="num-tabular">{{ grouped.length }}</strong> base
+            <span class="tpl-meta-sep">·</span>
+            <strong class="num-tabular">{{ totalVariants }}</strong> variant{{ totalVariants === 1 ? '' : 's' }}
+          </template>
         </span>
         <button v-if="totalVariants > 0" @click="expandAll" class="tpl-meta-link">Expand</button>
         <button v-if="totalVariants > 0" @click="collapseAll" class="tpl-meta-link">Collapse</button>
@@ -493,6 +517,11 @@ const channelChip: Record<string, string> = {
 .tpl-meta-sep {
   color: var(--color-border-strong);
   margin: 0 4px;
+}
+.tpl-meta-faint {
+  color: var(--color-text-muted);
+  font-weight: 400;
+  padding: 0 2px;
 }
 .tpl-meta-link {
   font-family: var(--font-sans);
