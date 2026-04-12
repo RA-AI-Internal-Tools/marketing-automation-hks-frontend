@@ -35,22 +35,34 @@ export const useDashboardStore = defineStore('dashboard', () => {
     const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
     if (!token) return
 
-    const MAX_RETRIES = 5
-    const BACKOFF_MS = 2000
+    // Reconnect forever with exponential backoff capped at 30s. Giving up
+    // (old code: after 5 tries) leaves the dashboard permanently "offline"
+    // the first time someone closes their laptop lid over lunch. The cost
+    // of polling every 30s is trivial; the cost of thinking the dashboard
+    // is broken isn't.
+    const BACKOFF_INITIAL_MS = 1000
+    const BACKOFF_MAX_MS     = 30_000
     let reconnectAttempts = 0
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null
     let currentDisconnect: (() => void) | null = null
     let stopCurrentWatch: (() => void) | null = null
     let stopped = false
 
+    function nextBackoff(): number {
+      const exp = BACKOFF_INITIAL_MS * 2 ** Math.min(reconnectAttempts, 5)
+      const capped = Math.min(exp, BACKOFF_MAX_MS)
+      // ±20% jitter to stop a herd of clients hammering after a deploy
+      return Math.max(250, capped * (0.8 + Math.random() * 0.4))
+    }
+
     function handleSSEError() {
       sseConnected.value = false
       currentDisconnect?.()
       currentDisconnect = null
 
-      if (!stopped && reconnectAttempts < MAX_RETRIES) {
+      if (!stopped) {
         reconnectAttempts++
-        reconnectTimer = setTimeout(connectWithFreshToken, BACKOFF_MS)
+        reconnectTimer = setTimeout(connectWithFreshToken, nextBackoff())
       }
     }
 

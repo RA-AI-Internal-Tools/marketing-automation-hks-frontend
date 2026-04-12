@@ -20,6 +20,7 @@ import {
 } from '@/api/dashboard'
 import type { OverviewStats, DailyVolume, CampaignPerformance } from '@/api/types'
 import { useDashboardStore } from '@/stores/dashboard'
+import { useSortable } from '@/composables/useSortable'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
 
@@ -106,6 +107,14 @@ const chartData = computed(() => ({
     },
   ],
 }))
+
+// Column-sort on the campaign performance table — click a header to sort,
+// click again to flip direction.
+const { sorted: sortedCampaigns, key: sortKey, dir: sortDir, toggle: toggleSort } =
+  useSortable<CampaignPerformance, keyof CampaignPerformance>(campaigns, {
+    defaultKey: 'total_sent',
+    defaultDir: 'desc',
+  })
 
 const chartOptions = {
   responsive: true,
@@ -318,17 +327,30 @@ function pctLabel(n: number, total: number): string {
           <table class="perf-table num-tabular">
             <thead>
               <tr>
-                <th class="perf-col-name">Campaign</th>
-                <th>Sent</th>
-                <th>Failed</th>
-                <th>Skipped</th>
-                <th>Enrollments</th>
-                <th>Completions</th>
+                <th class="perf-col-name perf-th-sort" @click="toggleSort('campaign_slug')">
+                  Campaign
+                  <span v-if="sortKey === 'campaign_slug'" class="perf-sort-ind">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+                </th>
+                <th class="perf-th-sort" @click="toggleSort('total_sent')">
+                  Sent <span v-if="sortKey === 'total_sent'" class="perf-sort-ind">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+                </th>
+                <th class="perf-th-sort" @click="toggleSort('total_failed')">
+                  Failed <span v-if="sortKey === 'total_failed'" class="perf-sort-ind">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+                </th>
+                <th class="perf-th-sort" @click="toggleSort('total_skipped')">
+                  Skipped <span v-if="sortKey === 'total_skipped'" class="perf-sort-ind">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+                </th>
+                <th class="perf-th-sort" @click="toggleSort('enrollments')">
+                  Enrollments <span v-if="sortKey === 'enrollments'" class="perf-sort-ind">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+                </th>
+                <th class="perf-th-sort" @click="toggleSort('completions')">
+                  Completions <span v-if="sortKey === 'completions'" class="perf-sort-ind">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+                </th>
                 <th>Completion rate</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="c in campaigns" :key="c.campaign_slug">
+              <tr v-for="c in sortedCampaigns" :key="c.campaign_slug">
                 <td class="perf-col-name">
                   <span class="perf-slug">{{ c.campaign_slug }}</span>
                 </td>
@@ -683,6 +705,18 @@ function pctLabel(n: number, total: number): string {
   border-bottom: 1px solid var(--color-border);
 }
 .perf-table thead th.perf-col-name { text-align: left; }
+.perf-th-sort {
+  cursor: pointer;
+  user-select: none;
+  transition: color var(--transition-fast);
+}
+.perf-th-sort:hover { color: var(--color-text-primary); }
+.perf-sort-ind {
+  margin-left: 4px;
+  color: var(--hks-cyan);
+  font-size: 11px;
+  letter-spacing: 0;
+}
 .perf-table tbody td {
   padding: 14px 20px;
   text-align: right;

@@ -181,6 +181,13 @@ function removeVariant(stepIndex: number, variantIndex: number) {
   }
 }
 
+// Sum of variant weights on a step. Used by both the template hint row
+// (shown on save) and the form guard below.
+function variantWeightSum(step: Step): number {
+  if (!step.variants || step.variants.length === 0) return 100
+  return step.variants.reduce((acc, v) => acc + (Number(v.weight) || 0), 0)
+}
+
 async function handleSubmit() {
   error.value = ''
 
@@ -194,6 +201,24 @@ async function handleSubmit() {
     if (step.delay_minutes < 0) {
       error.value = `Step ${i + 1}: Delay must be non-negative`
       return
+    }
+    // A/B variant weights MUST sum to 100. Prior builds silently accepted
+    // weights that didn't — the executor then under-/over-dispatched one
+    // variant because the weighted-random formula assumed 100 as the total.
+    if (step.variants && step.variants.length > 0) {
+      const sum = variantWeightSum(step)
+      if (sum !== 100) {
+        error.value = `Step ${i + 1}: A/B variant weights must sum to 100 (currently ${sum}). ` +
+          `Adjust the weights on each variant to total exactly 100.`
+        return
+      }
+      for (let v = 0; v < step.variants.length; v++) {
+        const variant = step.variants[v]!
+        if (!variant.template_key || variant.template_key.trim() === '') {
+          error.value = `Step ${i + 1}, variant ${variant.id || v + 1}: template key is required`
+          return
+        }
+      }
     }
   }
 
@@ -345,6 +370,17 @@ async function handleSubmit() {
             <div class="flex items-center justify-between mb-2">
               <span class="text-xs font-medium text-[var(--color-text-tertiary)] flex items-center gap-1">
                 <BeakerIcon class="h-3.5 w-3.5" /> A/B Variants
+                <!-- Live weight-sum badge: green at 100, red otherwise. -->
+                <span
+                  v-if="step.variants && step.variants.length > 0"
+                  class="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium"
+                  :class="variantWeightSum(step) === 100
+                    ? 'bg-[var(--color-success-bg)] text-[var(--color-success-text)] border border-[var(--color-success-border)]'
+                    : 'bg-[var(--color-error-bg)] text-[var(--color-error-text)] border border-[var(--color-error-border)]'"
+                  :title="variantWeightSum(step) === 100 ? 'Weights sum to 100' : 'Weights must sum to 100 before save'"
+                >
+                  Σ {{ variantWeightSum(step) }}
+                </span>
               </span>
               <button type="button" @click="addVariant(i)" class="text-xs text-[#020288] hover:text-[#0d35d7]">
                 + Add Variant
