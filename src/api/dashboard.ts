@@ -89,6 +89,10 @@ export interface CampaignStepPayload {
   webhook_url?: string
   webhook_method?: string
   webhook_headers?: Record<string, string>
+  // Builder-only metadata — preserved by the backend in the steps JSON
+  // column but ignored at runtime. Omit for auto-layout.
+  position_x?: number
+  position_y?: number
 }
 
 export async function replaceCampaignSteps(id: number, steps: CampaignStepPayload[]) {

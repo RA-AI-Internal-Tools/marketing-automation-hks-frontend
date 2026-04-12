@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import DOMPurify from 'dompurify'
 import { renderTemplate } from '@/utils/email-template'
 import {
@@ -24,15 +24,34 @@ const iframeHeight = ref(400)
 const renderedSubject = computed(() => renderTemplate(props.subject, props.sampleData))
 const renderedPreheader = computed(() => renderTemplate(props.preheader, props.sampleData))
 
-const renderedHtml = computed(() => {
-  if (!props.html.trim()) return ''
+// Rendered HTML is debounced 250ms so keystrokes in the Code tab don't
+// fire a full renderTemplate + DOMPurify.sanitize pass on every character.
+// On a ~20KB template those two together can push well past one frame and
+// make typing feel laggy. 250ms is invisible on deliberate pauses and
+// eliminates the per-keystroke work.
+const renderedHtml = ref<string>('')
+const previewStale = ref(false)
+let debounceTimer: ReturnType<typeof setTimeout> | null = null
+
+function recomputePreview() {
+  previewStale.value = false
+  if (!props.html.trim()) {
+    renderedHtml.value = ''
+    return
+  }
   const rendered = renderTemplate(props.html, props.sampleData)
-  return DOMPurify.sanitize(rendered, {
+  renderedHtml.value = DOMPurify.sanitize(rendered, {
     WHOLE_DOCUMENT: true,
     ADD_TAGS: ['style', 'link'],
     ADD_ATTR: ['target', 'align', 'valign', 'bgcolor', 'cellpadding', 'cellspacing', 'border', 'width', 'height'],
   })
-})
+}
+
+watch(() => [props.html, props.sampleData] as const, () => {
+  previewStale.value = true
+  if (debounceTimer) clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(recomputePreview, 250)
+}, { immediate: true, deep: true })
 
 const iframeWidth = computed(() => (viewMode.value === 'mobile' ? '375px' : '100%'))
 
@@ -62,6 +81,8 @@ function handleIframeLoad(e: Event) {
             viewMode === 'desktop' ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-text-tertiary)] hover:bg-[var(--color-bg-muted)]',
           ]"
           title="Desktop preview"
+          aria-label="Switch to desktop preview"
+          :aria-pressed="viewMode === 'desktop'"
         >
           <ComputerDesktopIcon class="h-[18px] w-[18px]" />
         </button>
@@ -72,20 +93,27 @@ function handleIframeLoad(e: Event) {
             viewMode === 'mobile' ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-text-tertiary)] hover:bg-[var(--color-bg-muted)]',
           ]"
           title="Mobile preview"
+          aria-label="Switch to mobile preview"
+          :aria-pressed="viewMode === 'mobile'"
         >
           <DevicePhoneMobileIcon class="h-[18px] w-[18px]" />
         </button>
-        <div class="w-px h-5 bg-[var(--color-border)] mx-1.5"></div>
+        <div class="w-px h-5 bg-[var(--color-border)] mx-1.5" aria-hidden="true"></div>
         <button
           @click="darkBg = !darkBg"
           class="p-2 rounded-lg text-[var(--color-text-tertiary)] hover:bg-[var(--color-bg-muted)] transition-colors"
           :title="darkBg ? 'Light background' : 'Dark background'"
+          :aria-label="darkBg ? 'Use light preview background' : 'Use dark preview background'"
+          :aria-pressed="darkBg"
         >
           <MoonIcon v-if="!darkBg" class="h-[18px] w-[18px]" />
           <SunIcon v-else class="h-[18px] w-[18px]" />
         </button>
       </div>
-      <span class="text-xs text-[var(--color-text-muted)]">{{ viewMode === 'mobile' ? '375px' : 'Full width' }}</span>
+      <div class="flex items-center gap-2 text-xs text-[var(--color-text-muted)]" role="status" aria-live="polite">
+        <span v-if="previewStale" class="text-amber-600 dark:text-amber-400">updating…</span>
+        <span>{{ viewMode === 'mobile' ? '375px' : 'Full width' }}</span>
+      </div>
     </div>
 
     <!-- Subject & Preheader Preview -->

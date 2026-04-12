@@ -46,6 +46,12 @@ const router = createRouter({
       meta: { requiresWrite: true, title: 'Edit Campaign' },
     },
     {
+      path: '/clients/:id/journey',
+      name: 'client-journey',
+      component: () => import('@/views/ClientJourneyPage.vue'),
+      meta: { title: 'Client Journey' },
+    },
+    {
       path: '/campaigns/:id/builder',
       name: 'campaign-builder',
       component: () => import('@/views/CampaignBuilderPage.vue'),

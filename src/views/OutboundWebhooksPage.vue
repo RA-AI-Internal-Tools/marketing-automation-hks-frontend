@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { useToast } from '@/composables/useToast'
+import { useAction } from '@/composables/useAction'
 import {
   listOutboundWebhooks, createOutboundWebhook, updateOutboundWebhook,
   deleteOutboundWebhook, fireTestWebhook, listWebhookDeliveries,
@@ -120,13 +121,16 @@ async function save() {
   }
 }
 
+// Wrapped in useAction: a rapid-click on "Test" (icon-only button, no
+// visible pending state) could enqueue a duplicate test delivery. The
+// composable's in-flight guard short-circuits the second call.
+const fireTestAction = useAction(async (w: OutboundWebhook) => {
+  const resp = await fireTestWebhook(w.id)
+  showToast(`Test ${resp.event_type} queued`, 'success')
+})
 async function fireTest(w: OutboundWebhook) {
-  try {
-    const resp = await fireTestWebhook(w.id)
-    showToast(`Test ${resp.event_type} queued`, 'success')
-  } catch {
-    showToast('Test fire failed', 'error')
-  }
+  try { await fireTestAction.execute(w) }
+  catch { showToast('Test fire failed', 'error') }
 }
 
 async function openDeliveries(w: OutboundWebhook) {

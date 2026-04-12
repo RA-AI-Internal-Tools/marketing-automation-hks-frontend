@@ -180,8 +180,13 @@ function pctLabel(n: number, total: number): string {
     <header class="hero">
       <div class="hero-top">
         <span class="rule-dot">Overview · Realtime</span>
-        <div class="hero-status" :class="{ 'is-live': dashboardStore.sseConnected }">
-          <span class="hero-status-dot" />
+        <div
+          class="hero-status"
+          :class="{ 'is-live': dashboardStore.sseConnected }"
+          role="status"
+          aria-live="polite"
+        >
+          <span class="hero-status-dot" aria-hidden="true" />
           {{ dashboardStore.sseConnected ? 'Stream connected' : 'Stream offline' }}
         </div>
       </div>

@@ -10,6 +10,7 @@ export function useSSE(url: string, onError?: () => void) {
   const lastEvent = ref<SSEEvent | null>(null)
   let eventSource: EventSource | null = null
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null
+  let disposed = false
   const listeners: Array<(evt: SSEEvent) => void> = []
 
   // Exponential backoff with ±25% jitter. Fixed 5s was OK for a single
@@ -52,6 +53,10 @@ export function useSSE(url: string, onError?: () => void) {
     eventSource.onerror = () => {
       connected.value = false
       eventSource?.close()
+      // Don't reconnect if the caller already tore us down — disconnect()
+      // closing the EventSource fires one last onerror, which would
+      // otherwise schedule a zombie reconnect.
+      if (disposed) return
       if (onError) {
         onError()
       } else {
@@ -66,6 +71,7 @@ export function useSSE(url: string, onError?: () => void) {
   }
 
   function disconnect() {
+    disposed = true
     if (reconnectTimer) clearTimeout(reconnectTimer)
     eventSource?.close()
     eventSource = null

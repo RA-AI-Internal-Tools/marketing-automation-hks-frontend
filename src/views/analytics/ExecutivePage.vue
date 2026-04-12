@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import AnalyticsLayout from '@/components/AnalyticsLayout.vue'
 import MetricCard from '@/components/MetricCard.vue'
 import { useAnalyticsStore } from '@/stores/analytics'
 import { fetchExecutiveOverview } from '@/api/analytics'
 import type { ExecutiveOverview } from '@/api/types'
+import { useCachedFetch } from '@/composables/useCache'
 import { Line } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -21,23 +22,24 @@ import {
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
 
 const analytics = useAnalyticsStore()
-const data = ref<ExecutiveOverview | null>(null)
-const loading = ref(true)
-const error = ref('')
 
-async function load() {
-  loading.value = true
-  error.value = ''
-  try {
-    data.value = await fetchExecutiveOverview(analytics.since, analytics.until)
-  } catch (e: any) {
-    error.value = e.response?.data?.error || 'Failed to load executive data'
-  } finally {
-    loading.value = false
-  }
-}
+// 60s TTL on the executive dashboard — it's the heaviest of the analytics
+// endpoints (4-5s backend per live QA) and operators often bounce between
+// tabs in under a minute. Cache key includes the date range so different
+// windows don't pollute each other.
+const cacheKey = computed(() => `analytics:executive:${analytics.since}:${analytics.until}`)
+const { data, loading, error, load: runLoad } = useCachedFetch<ExecutiveOverview>(
+  cacheKey.value,
+  () => fetchExecutiveOverview(analytics.since, analytics.until),
+  60_000,
+)
+
+async function load() { await runLoad() }
 
 onMounted(load)
+// Date range change = different cache key = different underlying fetcher.
+// Re-call load so the new key is hydrated (first call primes, second
+// serves cache).
 watch(() => analytics.queryParams, load)
 
 function fmt(n: number): string {

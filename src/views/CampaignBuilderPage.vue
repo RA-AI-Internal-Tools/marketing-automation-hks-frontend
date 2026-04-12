@@ -11,11 +11,12 @@
  *   - Client-side lint: at least one start, no orphans, condition nodes need
  *     both true + false branches wired
  *
- * Deferred (explicitly scoped out — see docs/specs/vue-flow-campaign-builder.md):
- *   - Position persistence on the server. On reload we auto-layout by BFS
- *     depth from start nodes. Your manual positions are forgotten across
- *     reloads. The alternative (adding a `position` field to Step) is
- *     additive to the model and can come later without breaking this build.
+ * Ships (v2): Position persistence. Dragged positions round-trip through
+ * `steps[i].position_x/y` on save, so the next load keeps the layout the
+ * user left. BFS auto-layout is now a fallback for steps that still have
+ * null positions (freshly-authored campaigns pre-persistence).
+ *
+ * Still deferred (see docs/specs/vue-flow-campaign-builder.md):
  *   - Undo/redo
  *   - Multi-select operations
  */
@@ -117,11 +118,18 @@ async function load() {
 
     // Deserialize. Node type maps from graph.type → our custom types.
     // Action nodes (from backend) become "send" unless they have webhook_url.
+    //
+    // Position strategy: if the node has saved position_x/y, honour it
+    // exactly — the user placed it there and reshuffling on reload is
+    // infuriating. Otherwise fall back to BFS auto-layout so freshly
+    // created steps don't stack at 0,0.
     const layouted = layoutBFS(g.nodes, g.edges)
     nodes.value = g.nodes.map((n, idx) => ({
       id: String(n.id),
       type: mapType(n),
-      position: layouted[idx] || { x: 400, y: 80 + idx * 140 },
+      position: (n.data?.position_x != null && n.data?.position_y != null)
+        ? { x: Number(n.data.position_x), y: Number(n.data.position_y) }
+        : layouted[idx] || { x: 400, y: 80 + idx * 140 },
       data: {
         channel:                n.channel,
         template_key:           n.data?.template_key || '',
@@ -360,6 +368,14 @@ function serialize(): { steps: CampaignStepPayload[]; error?: string } {
       channel:       String(n.data.channel || ''),
       template_key:  String(n.data.template_key || ''),
       condition:     String(n.data.condition || ''),
+    }
+
+    // Persist canvas position so the next load opens to the layout the
+    // user left. Stored as plain numbers on the step record; runtime
+    // executor ignores them.
+    if (n.position) {
+      step.position_x = Number(n.position.x)
+      step.position_y = Number(n.position.y)
     }
 
     if (n.type === 'wait') {
