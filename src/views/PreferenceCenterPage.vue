@@ -127,7 +127,7 @@ onMounted(loadPreferences)
       <!-- Header -->
       <div class="text-center mb-8">
         <h1 class="text-2xl font-bold text-[var(--color-text-primary)]">Notification Preferences</h1>
-        <p class="mt-2 text-[var(--color-text-secondary)]">Manage how DueGate communicates with you</p>
+        <p class="mt-2 text-[var(--color-text-secondary)]">Manage how AR-PAY communicates with you</p>
       </div>
 
       <!-- Error -->

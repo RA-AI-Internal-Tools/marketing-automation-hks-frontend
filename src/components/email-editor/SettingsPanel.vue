@@ -158,7 +158,7 @@ const labelClass = 'block text-xs font-medium text-[var(--color-text-secondary)]
           :value="fromName"
           @input="emit('update:fromName', ($event.target as HTMLInputElement).value)"
           :class="inputClass"
-          placeholder="e.g. HKS Global"
+          placeholder="e.g. AR-PAY"
         />
       </div>
       <div>

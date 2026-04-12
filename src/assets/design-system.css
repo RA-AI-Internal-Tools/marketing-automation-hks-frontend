@@ -1,5 +1,5 @@
 /* ============================================================
-   DESIGN SYSTEM — Marketing Automation (HKS Global)
+   DESIGN SYSTEM — Marketing Automation (AR-PAY)
    ============================================================
    Single source of truth for colors, spacing, typography,
    and shared component styles across the application.
@@ -9,7 +9,7 @@
    1. DESIGN TOKENS (CSS Custom Properties)
    ---------------------------------------------------------- */
 :root {
-  /* ---- Brand Palette (HKS Global) ---- */
+  /* ---- Brand Palette (AR-PAY) ---- */
   --hks-deep-blue: #020288;
   --hks-royal-blue: #0d35d7;
   --hks-cyan: #0099db;

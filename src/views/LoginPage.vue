@@ -36,9 +36,9 @@ async function handleSubmit() {
       <div class="bg-white/[0.97] backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-8">
         <!-- Brand -->
         <div class="text-center mb-8">
-          <img :src="hksLogo" alt="HKS Global" class="h-10 mx-auto mb-4 invert" />
+          <img :src="hksLogo" alt="AR-PAY" class="h-10 mx-auto mb-4 invert" />
           <h1 class="text-xl font-bold tracking-tight text-[var(--color-text-primary)]">Marketing Automation</h1>
-          <p class="text-sm text-[#0099db] font-medium mt-1">HKS Global Growth Engine</p>
+          <p class="text-sm text-[#0099db] font-medium mt-1">AR-PAY Growth Engine</p>
         </div>
 
         <form @submit.prevent="handleSubmit" class="space-y-4">
@@ -80,7 +80,7 @@ async function handleSubmit() {
         </form>
       </div>
 
-      <p class="text-center text-xs text-white/30 mt-6">&copy; HKS Global Group</p>
+      <p class="text-center text-xs text-white/30 mt-6">&copy; AR-PAY</p>
     </div>
   </div>
 </template>

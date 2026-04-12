@@ -180,7 +180,7 @@ function handleNavClick() {
   >
     <!-- Brand section -->
     <div class="p-4 border-b border-[var(--sidebar-border)] flex items-center" :class="collapsed && !mobileOpen ? 'justify-center' : 'gap-3'">
-      <img :src="hksLogo" alt="HKS Global" class="h-7 shrink-0" />
+      <img :src="hksLogo" alt="AR-PAY" class="h-7 shrink-0" />
       <template v-if="!collapsed || mobileOpen">
         <div class="flex-1 min-w-0">
           <p class="text-[11px] font-medium text-[var(--color-accent)] tracking-wider uppercase">Growth Engine</p>

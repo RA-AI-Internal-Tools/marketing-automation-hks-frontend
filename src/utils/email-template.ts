@@ -109,7 +109,7 @@ export const VARIABLE_CATEGORIES: VariableCategory[] = [
     key: 'company',
     label: 'Company',
     variables: [
-      { name: 'company_name', label: 'Company Name', token: '{{company_name}}', description: 'Sender company name', sampleValue: 'HKS Global', category: 'company', required: false },
+      { name: 'company_name', label: 'Company Name', token: '{{company_name}}', description: 'Sender company name', sampleValue: 'AR-PAY', category: 'company', required: false },
       { name: 'support_email', label: 'Support Email', token: '{{support_email}}', description: 'Customer support email', sampleValue: 'support@hks.com', category: 'company', required: false },
       { name: 'company_address', label: 'Company Address', token: '{{company_address}}', description: 'Physical mailing address', sampleValue: '123 Main St, London, UK', category: 'company', required: false },
     ],
