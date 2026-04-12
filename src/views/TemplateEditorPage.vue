@@ -5,6 +5,7 @@ import PageHeader from '@/components/PageHeader.vue'
 import EmailTemplateEditor from '@/components/email-editor/EmailTemplateEditor.vue'
 import { useTemplatesStore } from '@/stores/templates'
 import type { MessageTemplate, TemplateRequest } from '@/api/types'
+import { TEMPLATE_LANGUAGES, buildLocalizedTemplateKey } from '@/utils/email-template'
 
 const route = useRoute()
 const router = useRouter()
@@ -27,6 +28,20 @@ const subject = ref('')
 const body = ref('')
 const variablesInput = ref('')
 const isActive = ref(true)
+// Locale-variant composer helper (not persisted for non-email channels — it
+// drives the template_key naming convention the MA executor resolves at send
+// time). WhatsApp is a special case: language is handled on Meta's side, so
+// we keep the base key unchanged.
+const language = ref('')
+const localizedKey = computed(() =>
+  buildLocalizedTemplateKey(templateKey.value, language.value),
+)
+const needsLocaleSuffix = computed(() =>
+  !!language.value && !!templateKey.value && localizedKey.value !== templateKey.value,
+)
+function applyLocaleSuffix() {
+  if (needsLocaleSuffix.value) templateKey.value = localizedKey.value
+}
 
 const saving = ref(false)
 const error = ref('')
@@ -177,6 +192,37 @@ const inputClass = 'w-full px-3 py-2 border border-[var(--color-border)] rounded
           >
             {{ channel }}
           </span>
+        </div>
+
+        <!-- Language / locale-variant helper -->
+        <div>
+          <label class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Language</label>
+          <select v-model="language" :class="inputClass">
+            <option value="">— Select —</option>
+            <option v-for="l in TEMPLATE_LANGUAGES" :key="l.value" :value="l.value">{{ l.label }}</option>
+          </select>
+
+          <!-- WhatsApp: Meta owns language selection; don't suffix the key -->
+          <p v-if="channel === 'whatsapp' && language" class="text-[11px] mt-1 text-[var(--color-text-muted)]">
+            WhatsApp templates are resolved by Meta using <code class="px-1 py-[1px] rounded bg-[var(--color-bg-muted)]">(template_name, language_code)</code>.
+            Keep the template key as the <strong>base name</strong> and register each language version on Meta Business Console.
+            The recipient's locale is passed automatically at send time.
+          </p>
+
+          <!-- SMS / Push: same key.locale convention as email -->
+          <p v-else-if="language && templateKey" class="text-[11px] mt-1 text-[var(--color-text-muted)]">
+            Sends as
+            <code class="px-1 py-[1px] rounded bg-[var(--color-bg-muted)] text-[var(--color-text-secondary)]">{{ localizedKey }}</code>
+            — recipients with matching locale get this variant; others fall back to the base key.
+            <button
+              v-if="needsLocaleSuffix"
+              type="button"
+              @click="applyLocaleSuffix"
+              class="ml-1 underline text-[var(--color-primary)] hover:text-[var(--color-primary-hover)]"
+            >
+              Apply to key
+            </button>
+          </p>
         </div>
 
         <div>
