@@ -203,11 +203,9 @@ export async function cloneCampaign(id: number): Promise<CampaignDefinition> {
   return data
 }
 
-// Campaign graph
-export async function fetchCampaignGraph(id: number): Promise<any> {
-  const { data } = await api.get(`/api/campaigns/${id}/graph`)
-  return data
-}
+// Campaign graph — typed fetcher is defined earlier in this file (line 71).
+// The old `any`-typed version used to live here; keeping the comment so
+// nobody re-adds it from a stale reference.
 
 // Client journey
 export async function fetchClientJourney(clientId: number): Promise<any> {

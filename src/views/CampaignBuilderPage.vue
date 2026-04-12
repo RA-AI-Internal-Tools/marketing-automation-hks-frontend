@@ -284,7 +284,7 @@ const transform = computed(() => `translate(${panX.value}px, ${panY.value}px) sc
                       :y="(e.from.y + e.to.y) / 2 - 6"
                       text-anchor="middle"
                       class="fill-current font-mono text-[10px] uppercase"
-                      :style="{ fill: { true: '#059669', false: '#dc2626', loop: '#9333ea' }[e.kind] || '#64748b' }">
+                      :style="{ fill: ({ next: '#64748b', true: '#059669', false: '#dc2626', loop: '#9333ea' } as Record<string,string>)[e.kind] || '#64748b' }">
                   {{ e.label }}
                 </text>
               </g>

@@ -493,7 +493,7 @@ func verify(rawBody []byte, h http.Header, secret string) bool {
     </div>
 
     <ConfirmDialog
-      :open="deleteOpen" @update:open="v => !v && (deleteTarget = null)"
+      :open="deleteOpen" @update:open="(v: boolean) => !v && (deleteTarget = null)"
       title="Delete webhook?" :message="`Permanently remove «${deleteTarget?.name}»? Deliveries in flight will be buried as failed.`"
       confirm-label="Delete" confirm-variant="danger" @confirm="confirmDelete"
     />
