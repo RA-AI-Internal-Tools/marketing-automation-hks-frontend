@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
@@ -16,19 +16,22 @@ import {
 import type { MessageTemplate } from '@/api/types'
 
 const router = useRouter()
+const route = useRoute()
 const store = useTemplatesStore()
 const auth = useAuthStore()
 const { showToast } = useToast()
 
-const channelFilter = ref('')
-const localeFilter = ref('')
-const search = ref('')
+// Filters are URL-synced so bookmarks, refresh and back-navigation preserve
+// the view. Query params: ?channel=email&locale=ar-iq&q=welcome
+const channelFilter = ref((route.query.channel as string) || '')
+const localeFilter = ref((route.query.locale as string) || '')
+const search = ref((route.query.q as string) || '')
 const expanded = ref<Set<string>>(new Set())
 const testSendOpen = ref(false)
 
 const channels = ['', 'email', 'sms', 'whatsapp', 'push']
 
-onMounted(() => store.load())
+onMounted(() => store.load(channelFilter.value || undefined))
 
 async function filterByChannel(ch: string) {
   channelFilter.value = ch
@@ -36,6 +39,34 @@ async function filterByChannel(ch: string) {
   // Reset local filters when channel changes
   localeFilter.value = ''
   search.value = ''
+}
+
+// Write filter state back to the URL (replace, not push, so back button
+// still takes users to the previous page rather than walking through each keystroke).
+watch([channelFilter, localeFilter, search], () => {
+  const q: Record<string, string> = {}
+  if (channelFilter.value) q.channel = channelFilter.value
+  if (localeFilter.value) q.locale = localeFilter.value
+  if (search.value.trim()) q.q = search.value.trim()
+  router.replace({ query: q }).catch(() => { /* duplicate navigation */ })
+})
+
+function clearFilters() {
+  channelFilter.value = ''
+  localeFilter.value = ''
+  search.value = ''
+  store.load()
+}
+
+async function copyKey(key: string, evt?: MouseEvent) {
+  evt?.preventDefault()
+  evt?.stopPropagation()
+  try {
+    await navigator.clipboard.writeText(key)
+    showToast(`Copied "${key}"`, 'success', 1800)
+  } catch {
+    showToast('Could not access clipboard', 'error')
+  }
 }
 
 const LOCALE_SUFFIX_RE = /\.([a-z]{2}(-[a-z]{2})?)$/i
@@ -265,7 +296,10 @@ const channelChip: Record<string, string> = {
 
     <div v-else-if="visible.length === 0" class="tpl-empty">
       <p class="tpl-empty-headline">No templates match these filters.</p>
-      <p class="tpl-empty-sub">Try clearing the search or selecting a different channel.</p>
+      <p class="tpl-empty-sub">Try a different channel, locale, or search term.</p>
+      <button v-if="isFiltered" type="button" @click="clearFilters" class="btn btn-ghost" style="margin-top: 18px;">
+        Clear filters
+      </button>
     </div>
 
     <div v-else class="tpl-card table-scroll">
@@ -305,7 +339,11 @@ const channelChip: Record<string, string> = {
                 </div>
               </td>
               <td class="tpl-td">
-                <code class="tpl-key">{{ g.base.template_key }}</code>
+                <code
+                  class="tpl-key tpl-key-copyable"
+                  :title="`Copy ${g.base.template_key}`"
+                  @click="copyKey(g.base.template_key, $event)"
+                >{{ g.base.template_key }}</code>
               </td>
               <td class="tpl-td">
                 <span class="tpl-chip" :class="channelChip[g.base.channel]">
@@ -359,7 +397,11 @@ const channelChip: Record<string, string> = {
                   <span class="tpl-variant-name">{{ v.name }}</span>
                 </td>
                 <td class="tpl-td">
-                  <code class="tpl-key tpl-key-sm">{{ v.template_key }}</code>
+                  <code
+                    class="tpl-key tpl-key-sm tpl-key-copyable"
+                    :title="`Copy ${v.template_key}`"
+                    @click="copyKey(v.template_key, $event)"
+                  >{{ v.template_key }}</code>
                 </td>
                 <td class="tpl-td">
                   <span class="tpl-loc tpl-loc-active tpl-loc-inline">{{ stripLocale(v.template_key).locale }}</span>
@@ -667,6 +709,19 @@ const channelChip: Record<string, string> = {
   border: 1px solid var(--color-border-muted);
 }
 .tpl-key-sm { font-size: 10.5px; padding: 1px 6px; }
+.tpl-key-copyable {
+  cursor: copy;
+  transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+}
+.tpl-key-copyable:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-hover);
+  border-color: var(--color-border-strong);
+}
+.tpl-key-copyable:active {
+  color: var(--hks-cyan);
+  border-color: var(--color-accent-light);
+}
 
 /* ─── Channel chip ─── */
 .tpl-chip {

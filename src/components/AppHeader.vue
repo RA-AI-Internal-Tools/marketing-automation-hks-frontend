@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { Bars3Icon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon } from '@heroicons/vue/24/outline'
+import { Bars3Icon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
 import EnvironmentSwitcher from './EnvironmentSwitcher.vue'
 import EnvironmentBadge from './EnvironmentBadge.vue'
 
@@ -21,18 +21,37 @@ const route = useRoute()
 // e.g. "Engage  ›  Templates" — gives navigational context without duplicating
 // the giant Fraunces page title right below. Keep this map aligned with the
 // sidebar sections in AppSidebar.vue.
-const breadcrumbs = computed<{ section: string | null; title: string }>(() => {
+// Section label → first page in that section, used to make the breadcrumb
+// clickable ("Engage" → /overview, "Audience" → /enrollments, etc.)
+const SECTION_FIRST: Record<string, string> = {
+  Engage: '/overview',
+  Audience: '/enrollments',
+  Intelligence: '/analytics/executive',
+  Reports: '/analytics/reports',
+  System: '/settings',
+}
+
+const breadcrumbs = computed<{ section: string | null; sectionHref: string | null; title: string }>(() => {
   const title = (route.meta?.title as string) || ''
   const path = route.path
-  if (/^\/(overview|campaigns|templates)/.test(path)) return { section: 'Engage', title }
-  if (/^\/(enrollments|segments|consents|push-audience)/.test(path)) return { section: 'Audience', title }
-  // Reports subsection covers only /analytics/reports and the standalone
-  // /campaign-funnel — every other /analytics/* page is Intelligence.
-  if (/^\/analytics\/reports/.test(path) || /^\/campaign-funnel/.test(path)) return { section: 'Reports', title }
-  if (/^\/analytics/.test(path)) return { section: 'Intelligence', title }
-  if (/^\/(settings|integrations|channels|health|logs|audit-logs|users)/.test(path)) return { section: 'System', title }
-  return { section: null, title }
+  let section: string | null = null
+  if (/^\/(overview|campaigns|templates)/.test(path)) section = 'Engage'
+  else if (/^\/(enrollments|segments|consents|push-audience)/.test(path)) section = 'Audience'
+  else if (/^\/analytics\/reports/.test(path) || /^\/campaign-funnel/.test(path)) section = 'Reports'
+  else if (/^\/analytics/.test(path)) section = 'Intelligence'
+  else if (/^\/(settings|integrations|channels|health|logs|audit-logs|users)/.test(path)) section = 'System'
+  return {
+    section,
+    sectionHref: section ? SECTION_FIRST[section] || null : null,
+    title,
+  }
 })
+
+const macMeta = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
+function openPalette() {
+  // Fire a synthetic ⌘K so CommandPalette's own handler opens the modal.
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: macMeta, ctrlKey: !macMeta, bubbles: true }))
+}
 </script>
 
 <template>
@@ -52,14 +71,29 @@ const breadcrumbs = computed<{ section: string | null; title: string }>(() => {
         <ChevronDoubleLeftIcon v-else class="h-4 w-4" />
       </button>
 
-      <!-- Breadcrumb: section › title in light, typographic trail. No big heading — the page owns that. -->
+      <!-- Breadcrumb: section › title. Section label links to first page in section. -->
       <nav class="ma-crumbs" aria-label="Breadcrumb">
-        <span v-if="breadcrumbs.section" class="ma-crumb-section">{{ breadcrumbs.section }}</span>
+        <router-link
+          v-if="breadcrumbs.sectionHref"
+          :to="breadcrumbs.sectionHref"
+          class="ma-crumb-section ma-crumb-section-link"
+        >{{ breadcrumbs.section }}</router-link>
+        <span v-else-if="breadcrumbs.section" class="ma-crumb-section">{{ breadcrumbs.section }}</span>
         <span v-if="breadcrumbs.section && breadcrumbs.title" class="ma-crumb-sep">›</span>
         <span class="ma-crumb-title">{{ breadcrumbs.title }}</span>
       </nav>
     </div>
     <div class="ma-header-right">
+      <button
+        type="button"
+        class="ma-search-hint"
+        @click="openPalette"
+        :title="`Command palette (${macMeta ? '⌘K' : 'Ctrl+K'})`"
+      >
+        <MagnifyingGlassIcon class="h-3.5 w-3.5" />
+        <span class="ma-search-hint-label">Search</span>
+        <kbd class="ma-search-hint-kbd">{{ macMeta ? '⌘K' : 'Ctrl K' }}</kbd>
+      </button>
       <EnvironmentSwitcher />
       <EnvironmentBadge />
     </div>
@@ -150,6 +184,48 @@ const breadcrumbs = computed<{ section: string | null; title: string }>(() => {
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--color-text-tertiary);
+  text-decoration: none;
+}
+.ma-crumb-section-link {
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+.ma-crumb-section-link:hover { color: var(--hks-cyan); }
+
+/* ─── Search hint / palette opener ─── */
+.ma-search-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px 4px 10px;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  color: var(--color-text-tertiary);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
+}
+.ma-search-hint:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-border-strong);
+  background: var(--color-bg-card);
+}
+.ma-search-hint-label {
+  font-weight: 450;
+  letter-spacing: -0.005em;
+}
+.ma-search-hint-kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 1px 5px;
+  color: var(--color-text-muted);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  margin-left: 2px;
 }
 .ma-crumb-sep {
   color: var(--color-text-muted);

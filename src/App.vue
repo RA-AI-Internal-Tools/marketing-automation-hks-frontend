@@ -11,6 +11,7 @@ import { useEnvironmentStore } from '@/stores/environment'
 import { useIntegrationsStore } from '@/stores/integrations'
 import AppSidebar from '@/components/AppSidebar.vue'
 import AppHeader from '@/components/AppHeader.vue'
+import CommandPalette from '@/components/CommandPalette.vue'
 import ErrorBoundary from '@/components/ErrorBoundary.vue'
 import ProductionGuard from '@/components/ProductionGuard.vue'
 
@@ -86,6 +87,9 @@ function handleLogout() {
 
   <!-- Global production guard (store-driven, for router-level protection) -->
   <ProductionGuard />
+
+  <!-- Command palette — ⌘K / Ctrl+K to open anywhere in the app -->
+  <CommandPalette v-if="!route.meta.public" />
 
   <ErrorBoundary>
   <!-- Public pages: no sidebar -->
