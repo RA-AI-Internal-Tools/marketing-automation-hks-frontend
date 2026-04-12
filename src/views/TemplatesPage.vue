@@ -150,216 +150,201 @@ async function confirmClone(locale: string) {
   }
 }
 
-const channelColors: Record<string, string> = {
-  email: 'bg-blue-100 text-blue-800',
-  sms: 'bg-purple-100 text-purple-800',
-  whatsapp: 'bg-green-100 text-green-800',
-  push: 'bg-orange-100 text-orange-800',
+// Channel-tinted chip classes — restrained palette consistent with editorial tone
+const channelChip: Record<string, string> = {
+  email: 'chip-email',
+  sms: 'chip-sms',
+  whatsapp: 'chip-whatsapp',
+  push: 'chip-push',
 }
 </script>
 
 <template>
   <div class="page-enter">
-    <div class="flex items-center justify-between mb-6 gap-4 flex-wrap">
-      <PageHeader title="Templates" description="Message templates for each channel, with per-locale variants resolved at send time" />
-      <div class="flex items-center gap-2">
-        <button
-          v-if="auth.canWrite"
-          @click="testSendOpen = true"
-          class="flex items-center gap-2 px-4 py-2 bg-[var(--color-bg-card)] text-[var(--color-text-secondary)] text-sm font-medium rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-hover)] transition-colors"
-        >
-          <PaperAirplaneIcon class="h-4 w-4" /> Test send
-        </button>
-        <button
-          v-if="auth.canWrite"
-          @click="router.push('/templates/new')"
-          class="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors shadow-sm"
-        >
-          <PlusIcon class="h-4 w-4" /> New template
-        </button>
-      </div>
-    </div>
+    <PageHeader
+      kicker="Catalogue"
+      title="Templates"
+      description="Every channel and every supported locale, resolved per recipient at send time."
+    >
+      <button
+        v-if="auth.canWrite"
+        @click="testSendOpen = true"
+        class="btn btn-ghost"
+      >
+        <PaperAirplaneIcon class="h-4 w-4" /> Test send
+      </button>
+      <button
+        v-if="auth.canWrite"
+        @click="router.push('/templates/new')"
+        class="btn btn-primary"
+      >
+        <PlusIcon class="h-4 w-4" /> New template
+      </button>
+    </PageHeader>
 
-    <!-- Filter toolbar -->
-    <div class="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-xl p-3 mb-4 flex flex-wrap items-center gap-2">
-      <div class="flex gap-1.5">
+    <!-- Editorial toolbar -->
+    <div class="tpl-toolbar">
+      <div class="tpl-tabs">
         <button
           v-for="ch in channels"
           :key="ch"
           @click="filterByChannel(ch)"
-          :class="[
-            'px-3 py-1.5 text-xs font-medium rounded-lg transition-colors',
-            channelFilter === ch
-              ? 'bg-[var(--color-primary)] text-white shadow-sm'
-              : 'text-[var(--color-text-secondary)] bg-[var(--color-bg-page)] hover:bg-[var(--color-bg-hover)]',
-          ]"
+          :class="['tpl-tab', { 'tpl-tab-active': channelFilter === ch }]"
         >
-          {{ ch || 'All channels' }}
+          {{ ch || 'All' }}
         </button>
       </div>
 
-      <div class="h-5 w-px bg-[var(--color-border)] mx-1 hidden sm:block" />
+      <span class="tpl-sep" />
 
-      <!-- Locale filter -->
-      <select
-        v-model="localeFilter"
-        class="px-2.5 py-1.5 text-xs border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-page)] text-[var(--color-text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30"
-      >
-        <option value="">Any locale</option>
-        <option v-for="l in localeChoices" :key="l" :value="l">Has {{ l }} variant</option>
+      <select v-model="localeFilter" class="tpl-select">
+        <option value="">All locales</option>
+        <option v-for="l in localeChoices" :key="l" :value="l">Has {{ l }}</option>
       </select>
 
-      <!-- Search -->
-      <div class="relative flex-1 min-w-[200px] max-w-sm">
-        <MagnifyingGlassIcon class="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-text-muted)]" />
+      <div class="tpl-search">
+        <MagnifyingGlassIcon class="tpl-search-icon" />
         <input
           v-model="search"
           type="search"
-          placeholder="Search by name or key…"
-          class="w-full pl-8 pr-3 py-1.5 text-xs border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-page)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30"
+          placeholder="Search name or key…"
+          class="tpl-search-input"
         />
       </div>
 
-      <div class="ml-auto flex items-center gap-3 text-[11px] text-[var(--color-text-muted)]">
-        <span>{{ grouped.length }} base · {{ totalVariants }} variant{{ totalVariants === 1 ? '' : 's' }}</span>
-        <button v-if="totalVariants > 0" @click="expandAll" class="text-[var(--color-primary)] hover:underline">Expand all</button>
-        <button v-if="totalVariants > 0" @click="collapseAll" class="text-[var(--color-primary)] hover:underline">Collapse all</button>
+      <div class="tpl-meta">
+        <span class="tpl-meta-count">
+          <strong class="num-tabular">{{ grouped.length }}</strong> base
+          <span class="tpl-meta-sep">·</span>
+          <strong class="num-tabular">{{ totalVariants }}</strong> variant{{ totalVariants === 1 ? '' : 's' }}
+        </span>
+        <button v-if="totalVariants > 0" @click="expandAll" class="tpl-meta-link">Expand</button>
+        <button v-if="totalVariants > 0" @click="collapseAll" class="tpl-meta-link">Collapse</button>
       </div>
     </div>
 
     <!-- Body -->
-    <div v-if="store.loading" class="text-center py-16">
-      <div class="inline-block h-8 w-8 border-2 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin" />
-      <p class="mt-3 text-sm text-[var(--color-text-muted)]">Loading templates…</p>
+    <div v-if="store.loading" class="tpl-loading">
+      <div class="tpl-spinner" />
+      <p>Loading catalogue…</p>
     </div>
 
-    <div
-      v-else-if="visible.length === 0"
-      class="text-center py-16 bg-[var(--color-bg-card)] rounded-xl border border-dashed border-[var(--color-border)]"
-    >
-      <p class="text-sm font-medium text-[var(--color-text-secondary)]">No templates match the current filters.</p>
-      <p class="mt-1 text-xs text-[var(--color-text-muted)]">Try clearing the search or selecting a different channel.</p>
+    <div v-else-if="visible.length === 0" class="tpl-empty">
+      <p class="tpl-empty-headline">No templates match these filters.</p>
+      <p class="tpl-empty-sub">Try clearing the search or selecting a different channel.</p>
     </div>
 
-    <div v-else class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden">
-      <table class="w-full text-sm">
+    <div v-else class="tpl-card">
+      <table class="tpl-table">
         <thead class="bg-[var(--color-bg-page)] border-b border-[var(--color-border)]">
           <tr>
-            <th class="text-left px-4 py-3 font-medium text-[var(--color-text-tertiary)] w-6"></th>
-            <th class="text-left px-4 py-3 font-medium text-[var(--color-text-tertiary)]">Name</th>
-            <th class="text-left px-4 py-3 font-medium text-[var(--color-text-tertiary)]">Key</th>
-            <th class="text-left px-4 py-3 font-medium text-[var(--color-text-tertiary)]">Channel</th>
-            <th class="text-left px-4 py-3 font-medium text-[var(--color-text-tertiary)]">Locales</th>
-            <th class="text-left px-4 py-3 font-medium text-[var(--color-text-tertiary)]">Status</th>
-            <th class="text-right px-4 py-3 font-medium text-[var(--color-text-tertiary)]">Actions</th>
+            <th class="tpl-th tpl-th-toggle"></th>
+            <th class="tpl-th">Template</th>
+            <th class="tpl-th tpl-th-key">Key</th>
+            <th class="tpl-th">Channel</th>
+            <th class="tpl-th">Variants</th>
+            <th class="tpl-th">Status</th>
+            <th class="tpl-th tpl-th-right">Actions</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-[var(--color-border-muted)]">
+        <tbody>
           <template v-for="g in visible" :key="g.base.id">
-            <!-- Base row -->
-            <tr class="hover:bg-[var(--color-bg-hover)] transition-colors">
-              <td class="px-4 py-3 align-middle">
+            <tr class="tpl-row" :class="{ 'tpl-row-expanded': expanded.has(g.base.template_key) }">
+              <td class="tpl-td tpl-td-toggle">
                 <button
                   v-if="g.variants.length > 0"
                   @click="toggle(g.base.template_key)"
-                  class="p-0.5 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
+                  class="tpl-chevron"
                   :aria-label="expanded.has(g.base.template_key) ? 'Collapse' : 'Expand'"
                 >
                   <ChevronRightIcon
-                    class="h-4 w-4 transition-transform"
+                    class="h-3.5 w-3.5 transition-transform"
                     :class="{ 'rotate-90': expanded.has(g.base.template_key) }"
                   />
                 </button>
               </td>
-              <td class="px-4 py-3 font-medium text-[var(--color-text-primary)]">{{ g.base.name }}</td>
-              <td class="px-4 py-3 text-[var(--color-text-tertiary)]">
-                <code class="bg-[var(--color-bg-subtle)] px-1.5 py-0.5 rounded text-xs">{{ g.base.template_key }}</code>
+              <td class="tpl-td">
+                <div class="tpl-name">{{ g.base.name }}</div>
+                <div class="tpl-name-meta" v-if="g.variants.length">
+                  <span class="num-tabular">{{ g.variants.length }}</span>
+                  {{ g.variants.length === 1 ? 'variant' : 'variants' }}
+                </div>
               </td>
-              <td class="px-4 py-3">
-                <span
-                  class="text-xs font-medium inline-block px-1.5 py-0.5 rounded"
-                  :class="channelColors[g.base.channel] || 'bg-[var(--color-bg-subtle)] text-[var(--color-text-primary)]'"
-                >
+              <td class="tpl-td">
+                <code class="tpl-key">{{ g.base.template_key }}</code>
+              </td>
+              <td class="tpl-td">
+                <span class="tpl-chip" :class="channelChip[g.base.channel]">
+                  <span class="tpl-chip-dot" />
                   {{ g.base.channel }}
                 </span>
               </td>
-              <td class="px-4 py-3">
-                <div v-if="g.variants.length" class="flex flex-wrap gap-1">
+              <td class="tpl-td">
+                <div v-if="g.variants.length" class="tpl-locales">
                   <span
                     v-for="v in g.variants"
                     :key="v.id"
-                    :class="[
-                      'text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded border',
-                      v.is_active
-                        ? 'bg-[var(--color-info-bg)] text-[var(--color-primary)] border-[var(--color-primary-border)]'
-                        : 'bg-[var(--color-bg-subtle)] text-[var(--color-text-muted)] border-[var(--color-border)]',
-                    ]"
-                    :title="v.is_active ? 'Active variant' : 'Draft variant (inactive)'"
+                    :class="['tpl-loc', v.is_active ? 'tpl-loc-active' : 'tpl-loc-draft']"
+                    :title="v.is_active ? 'Active variant' : 'Draft (inactive)'"
                   >
                     {{ stripLocale(v.template_key).locale }}
                   </span>
                 </div>
-                <span v-else class="text-[11px] text-[var(--color-text-muted)] italic">No variants</span>
+                <span v-else class="tpl-empty-inline">—</span>
               </td>
-              <td class="px-4 py-3">
-                <StatusBadge :status="g.base.is_active ? 'active' : 'inactive'" />
+              <td class="tpl-td">
+                <span class="tpl-status" :data-active="g.base.is_active">
+                  <span class="tpl-status-dot" />
+                  {{ g.base.is_active ? 'Active' : 'Paused' }}
+                </span>
               </td>
-              <td class="px-4 py-3 text-right">
-                <div v-if="auth.canWrite" class="flex items-center justify-end gap-1">
-                  <button
-                    @click="router.push(`/templates/${g.base.id}/edit`)"
-                    class="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
-                    title="Edit"
-                  ><PencilSquareIcon class="h-4 w-4" /></button>
-                  <button
-                    @click="cloneSource = g"
-                    class="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
-                    title="Clone as locale variant"
-                  ><LanguageIcon class="h-4 w-4" /></button>
-                  <button
-                    @click="deleteTarget = g.base"
-                    class="p-1.5 text-[var(--color-text-muted)] hover:text-red-600 transition-colors"
-                    title="Delete"
-                  ><TrashIcon class="h-4 w-4" /></button>
+              <td class="tpl-td tpl-td-right">
+                <div v-if="auth.canWrite" class="tpl-actions">
+                  <button @click="router.push(`/templates/${g.base.id}/edit`)" class="tpl-action" title="Edit">
+                    <PencilSquareIcon class="h-4 w-4" />
+                  </button>
+                  <button @click="cloneSource = g" class="tpl-action" title="Clone as locale variant">
+                    <LanguageIcon class="h-4 w-4" />
+                  </button>
+                  <button @click="deleteTarget = g.base" class="tpl-action tpl-action-danger" title="Delete">
+                    <TrashIcon class="h-4 w-4" />
+                  </button>
                 </div>
               </td>
             </tr>
 
-            <!-- Variant child rows -->
             <template v-if="expanded.has(g.base.template_key)">
               <tr
                 v-for="v in g.variants"
                 :key="v.id"
-                class="bg-[var(--color-bg-page)] hover:bg-[var(--color-bg-hover)] transition-colors"
+                class="tpl-row tpl-row-variant"
               >
-                <td class="px-4 py-2 align-middle"></td>
-                <td class="px-4 py-2 pl-8 text-[var(--color-text-secondary)] text-[13px]">
-                  <span class="text-[var(--color-text-muted)]">↳</span> {{ v.name }}
+                <td class="tpl-td tpl-td-toggle"></td>
+                <td class="tpl-td tpl-td-variant-name">
+                  <span class="tpl-variant-arrow">└</span>
+                  <span class="tpl-variant-name">{{ v.name }}</span>
                 </td>
-                <td class="px-4 py-2 text-[var(--color-text-tertiary)]">
-                  <code class="bg-[var(--color-bg-subtle)] px-1.5 py-0.5 rounded text-[11px]">{{ v.template_key }}</code>
+                <td class="tpl-td">
+                  <code class="tpl-key tpl-key-sm">{{ v.template_key }}</code>
                 </td>
-                <td class="px-4 py-2 text-[11px] text-[var(--color-text-muted)]">{{ v.channel }}</td>
-                <td class="px-4 py-2">
-                  <span class="text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded bg-[var(--color-info-bg)] text-[var(--color-primary)]">
-                    {{ stripLocale(v.template_key).locale }}
+                <td class="tpl-td">
+                  <span class="tpl-loc tpl-loc-active tpl-loc-inline">{{ stripLocale(v.template_key).locale }}</span>
+                </td>
+                <td class="tpl-td"></td>
+                <td class="tpl-td">
+                  <span class="tpl-status" :data-active="v.is_active">
+                    <span class="tpl-status-dot" />
+                    {{ v.is_active ? 'Active' : 'Draft' }}
                   </span>
                 </td>
-                <td class="px-4 py-2">
-                  <StatusBadge :status="v.is_active ? 'active' : 'inactive'" />
-                </td>
-                <td class="px-4 py-2 text-right">
-                  <div v-if="auth.canWrite" class="flex items-center justify-end gap-1">
-                    <button
-                      @click="router.push(`/templates/${v.id}/edit`)"
-                      class="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
-                      title="Edit variant"
-                    ><PencilSquareIcon class="h-3.5 w-3.5" /></button>
-                    <button
-                      @click="deleteTarget = v"
-                      class="p-1.5 text-[var(--color-text-muted)] hover:text-red-600 transition-colors"
-                      title="Delete variant"
-                    ><TrashIcon class="h-3.5 w-3.5" /></button>
+                <td class="tpl-td tpl-td-right">
+                  <div v-if="auth.canWrite" class="tpl-actions">
+                    <button @click="router.push(`/templates/${v.id}/edit`)" class="tpl-action" title="Edit variant">
+                      <PencilSquareIcon class="h-3.5 w-3.5" />
+                    </button>
+                    <button @click="deleteTarget = v" class="tpl-action tpl-action-danger" title="Delete variant">
+                      <TrashIcon class="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -393,3 +378,392 @@ const channelColors: Record<string, string> = {
     />
   </div>
 </template>
+
+<style scoped>
+/* ─────────── Toolbar ─────────── */
+.tpl-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 6px;
+  margin-bottom: 18px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.tpl-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--color-bg-subtle);
+  border-radius: var(--radius-md);
+}
+.tpl-tab {
+  padding: 5px 12px;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--color-text-tertiary);
+  background: transparent;
+  border: none;
+  border-radius: calc(var(--radius-md) - 2px);
+  cursor: pointer;
+  text-transform: capitalize;
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+.tpl-tab:hover { color: var(--color-text-secondary); }
+.tpl-tab-active {
+  color: var(--color-text-primary);
+  background: var(--color-bg-card);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.tpl-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--color-border);
+  margin: 0 2px;
+}
+
+.tpl-select, .tpl-search-input {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-page);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 5px 10px;
+  transition: border-color var(--transition-fast);
+}
+.tpl-select:hover, .tpl-search-input:hover { border-color: var(--color-border-strong); }
+.tpl-select:focus, .tpl-search-input:focus {
+  outline: none;
+  border-color: var(--hks-cyan);
+  box-shadow: 0 0 0 2px var(--color-accent-light);
+}
+
+.tpl-search {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+  max-width: 340px;
+}
+.tpl-search-icon {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+.tpl-search-input {
+  width: 100%;
+  padding-left: 28px;
+}
+
+.tpl-meta {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.02em;
+}
+.tpl-meta-count strong {
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+.tpl-meta-sep {
+  color: var(--color-border-strong);
+  margin: 0 4px;
+}
+.tpl-meta-link {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--hks-cyan);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.tpl-meta-link:hover { text-decoration: underline; }
+
+/* ─────────── States ─────────── */
+.tpl-loading {
+  padding: 96px 20px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+.tpl-spinner {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--hks-cyan);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin-bottom: 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.tpl-empty {
+  padding: 88px 24px;
+  text-align: center;
+  background: var(--color-bg-card);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+}
+.tpl-empty-headline {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  letter-spacing: -0.01em;
+  font-variation-settings: 'opsz' 72;
+}
+.tpl-empty-sub {
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--color-text-muted);
+}
+
+/* ─────────── Table ─────────── */
+.tpl-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.tpl-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-sans);
+}
+
+.tpl-th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  background: var(--color-bg-table-header);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+.tpl-th-toggle { width: 36px; padding-left: 16px; padding-right: 0; }
+.tpl-th-right { text-align: right; }
+.tpl-th-key { width: 30%; }
+
+.tpl-row { transition: background var(--transition-fast); }
+.tpl-row:hover { background: var(--color-bg-subtle); }
+.tpl-row-expanded { background: var(--color-bg-subtle); }
+
+.tpl-td {
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-divider);
+  vertical-align: middle;
+}
+.tpl-row:last-child .tpl-td { border-bottom: 0; }
+.tpl-td-toggle { width: 36px; padding-right: 0; }
+.tpl-td-right { text-align: right; }
+
+.tpl-chevron {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+}
+.tpl-chevron:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-muted);
+  border-color: var(--color-border);
+}
+
+.tpl-name {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 13.5px;
+  color: var(--color-text-primary);
+  letter-spacing: -0.005em;
+}
+.tpl-name-meta {
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.02em;
+}
+.tpl-name-meta strong { color: var(--color-text-tertiary); font-weight: 500; }
+
+.tpl-key {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--color-text-tertiary);
+  letter-spacing: -0.005em;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-muted);
+}
+.tpl-key-sm { font-size: 10.5px; padding: 1px 6px; }
+
+/* ─── Channel chip ─── */
+.tpl-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 9px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: capitalize;
+  border-radius: var(--radius-full);
+  border: 1px solid;
+}
+.tpl-chip-dot { width: 5px; height: 5px; border-radius: 50%; }
+.chip-email    { color: #1e3a8a; background: #e8eefd; border-color: #c8d5f5; }
+.chip-email .tpl-chip-dot { background: #1e3a8a; }
+.chip-sms      { color: #5b2d8c; background: #ede5fa; border-color: #d6c8f0; }
+.chip-sms .tpl-chip-dot { background: #5b2d8c; }
+.chip-whatsapp { color: #0b5334; background: #e8f5ee; border-color: #b6dac5; }
+.chip-whatsapp .tpl-chip-dot { background: #0b5334; }
+.chip-push     { color: #7a3e00; background: #fbeddb; border-color: #edd0a4; }
+.chip-push .tpl-chip-dot { background: #7a3e00; }
+
+[data-theme="dark"] .chip-email    { color: #93b4ff; background: rgba(147, 180, 255, 0.1); border-color: rgba(147, 180, 255, 0.3); }
+[data-theme="dark"] .chip-email .tpl-chip-dot { background: #93b4ff; }
+[data-theme="dark"] .chip-sms      { color: #c79cf5; background: rgba(199, 156, 245, 0.1); border-color: rgba(199, 156, 245, 0.3); }
+[data-theme="dark"] .chip-sms .tpl-chip-dot { background: #c79cf5; }
+[data-theme="dark"] .chip-whatsapp { color: #7cd9a9; background: rgba(124, 217, 169, 0.1); border-color: rgba(124, 217, 169, 0.3); }
+[data-theme="dark"] .chip-whatsapp .tpl-chip-dot { background: #7cd9a9; }
+[data-theme="dark"] .chip-push     { color: #f0b879; background: rgba(240, 184, 121, 0.1); border-color: rgba(240, 184, 121, 0.3); }
+[data-theme="dark"] .chip-push .tpl-chip-dot { background: #f0b879; }
+
+/* ─── Locale badges ─── */
+.tpl-locales {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.tpl-loc {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  border: 1px solid;
+}
+.tpl-loc-active {
+  color: var(--hks-cyan);
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent-light);
+}
+.tpl-loc-draft {
+  color: var(--color-text-muted);
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border);
+  font-style: italic;
+}
+.tpl-loc-inline { display: inline-block; }
+
+.tpl-empty-inline {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+}
+
+/* ─── Status ─── */
+.tpl-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+}
+.tpl-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+}
+.tpl-status[data-active="true"] { color: var(--color-success); }
+.tpl-status[data-active="true"] .tpl-status-dot {
+  background: var(--color-success);
+  box-shadow: 0 0 0 2px rgba(11, 122, 75, 0.15);
+}
+
+/* ─── Actions ─── */
+.tpl-actions {
+  display: inline-flex;
+  gap: 2px;
+}
+.tpl-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+}
+.tpl-action:hover {
+  color: var(--hks-deep-blue);
+  background: var(--color-bg-card);
+  border-color: var(--color-border);
+}
+.tpl-action-danger:hover {
+  color: var(--color-error);
+  border-color: var(--color-error-border);
+}
+
+/* ─── Variant rows (nested) ─── */
+.tpl-row-variant {
+  background: var(--color-bg-subtle);
+}
+.tpl-row-variant .tpl-td { padding-top: 10px; padding-bottom: 10px; }
+.tpl-td-variant-name {
+  padding-left: 28px !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tpl-variant-arrow {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.tpl-variant-name {
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+}
+</style>

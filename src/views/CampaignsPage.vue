@@ -72,7 +72,11 @@ async function handleClone(id: number) {
 <template>
   <div class="page-enter">
     <div class="flex items-center justify-between mb-6">
-      <PageHeader title="Campaigns" description="Campaign definitions and workflow steps" />
+      <PageHeader
+        kicker="Orchestration"
+        title="Campaigns"
+        description="Definitions, workflow steps and live delivery across every channel."
+      />
       <button
         v-if="auth.canWrite"
         @click="router.push('/campaigns/new')"

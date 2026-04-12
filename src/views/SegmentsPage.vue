@@ -234,7 +234,11 @@ function formatThreshold(segment: Segment): string {
 <template>
   <div class="page-enter">
     <div class="flex items-center justify-between mb-6">
-      <PageHeader title="Segments" description="Define audience segments by behavioral rules" />
+      <PageHeader
+        kicker="Audience"
+        title="Segments"
+        description="Compose audiences from behavioural rules, attributes, and engagement history."
+      />
       <div class="flex items-center gap-2">
         <button
           v-if="auth.canWrite"
