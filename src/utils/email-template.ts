@@ -204,9 +204,28 @@ export const TEMPLATE_CATEGORIES = [
 export const TEMPLATE_LANGUAGES = [
   { value: 'en', label: 'English' },
   { value: 'ar', label: 'Arabic' },
+  { value: 'ar-iq', label: 'Arabic (Iraq)' },
   { value: 'fr', label: 'French' },
   { value: 'de', label: 'German' },
   { value: 'es', label: 'Spanish' },
   { value: 'pt', label: 'Portuguese' },
   { value: 'tr', label: 'Turkish' },
 ] as const
+
+/**
+ * Build the localized template key the MA backend looks up at send time.
+ * Convention mirrors internal/locale/resolver.go TemplateCandidates:
+ *
+ *   "welcome"       + "ar-iq" → "welcome.ar-iq"
+ *   "welcome"       + "ar"    → "welcome.ar"
+ *   "welcome.ar-iq" + "ar"    → "welcome.ar"   (replaces existing suffix)
+ *   any key         + ""      → key unchanged
+ */
+export function buildLocalizedTemplateKey(baseKey: string, locale: string): string {
+  const trimmed = (baseKey || '').trim()
+  const loc = (locale || '').trim().toLowerCase()
+  if (!trimmed) return ''
+  if (!loc) return trimmed
+  const root = trimmed.replace(/\.([a-z]{2}(-[a-z]{2})?)$/i, '')
+  return `${root}.${loc}`
+}

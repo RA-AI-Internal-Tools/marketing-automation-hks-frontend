@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { TEMPLATE_CATEGORIES, TEMPLATE_LANGUAGES } from '@/utils/email-template'
+import { ref, watch, computed } from 'vue'
+import { TEMPLATE_CATEGORIES, TEMPLATE_LANGUAGES, buildLocalizedTemplateKey } from '@/utils/email-template'
 
 const props = defineProps<{
   name: string
@@ -64,6 +64,21 @@ watch(() => props.name, (val) => {
 
 function onKeyManualEdit() {
   autoKey.value = false
+}
+
+// Locale-variant helper: backend resolver tries key.locale → key.region → key.
+// Show the target key and offer a one-click rename to match the convention.
+const localizedKey = computed(() =>
+  buildLocalizedTemplateKey(props.templateKey, props.language),
+)
+const needsLocaleSuffix = computed(() =>
+  !!props.language && !!props.templateKey && localizedKey.value !== props.templateKey,
+)
+function applyLocaleSuffix() {
+  if (needsLocaleSuffix.value) {
+    autoKey.value = false
+    emit('update:templateKey', localizedKey.value)
+  }
 }
 
 const inputClass = 'w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm bg-[var(--color-bg-input)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)] transition-shadow placeholder:text-[var(--color-text-muted)]'
@@ -194,6 +209,19 @@ const labelClass = 'block text-xs font-medium text-[var(--color-text-secondary)]
           <option value="">— Select —</option>
           <option v-for="l in TEMPLATE_LANGUAGES" :key="l.value" :value="l.value">{{ l.label }}</option>
         </select>
+        <p v-if="language && templateKey" class="text-[11px] mt-1 text-[var(--color-text-muted)]">
+          Sends as
+          <code class="px-1 py-[1px] rounded bg-[var(--color-bg-muted)] text-[var(--color-text-secondary)]">{{ localizedKey }}</code>
+          — recipients with matching locale get this variant; others fall back to the base key.
+          <button
+            v-if="needsLocaleSuffix"
+            type="button"
+            @click="applyLocaleSuffix"
+            class="ml-1 underline text-[var(--color-primary)] hover:text-[var(--color-primary-hover)]"
+          >
+            Apply to key
+          </button>
+        </p>
       </div>
     </div>
 
