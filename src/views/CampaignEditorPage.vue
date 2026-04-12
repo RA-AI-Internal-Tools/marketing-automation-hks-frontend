@@ -33,8 +33,29 @@ const channels = ['email', 'sms', 'whatsapp', 'push']
 const conditions = ['always', 'has_ordered_since', 'not_ordered_since', 'kyc_level_gte', 'spend_gte']
 const segments = ['all', 'high_value', 'new_user', 'dormant']
 
+// Locale variants use a "key.locale" suffix (e.g. welcome.ar-iq). The MA
+// executor resolves them per-recipient at send time, so campaign steps
+// should reference the BASE key — otherwise a step is pinned to one locale.
+// This regex mirrors internal/locale/resolver.go TemplateCandidates.
+const LOCALE_SUFFIX_RE = /\.([a-z]{2}(-[a-z]{2})?)$/i
+function stripLocaleSuffix(key: string): string {
+  return key.replace(LOCALE_SUFFIX_RE, '')
+}
+
 function templatesForChannel(ch: string) {
-  return templatesStore.templates.filter((t) => t.channel === ch)
+  const all = templatesStore.templates.filter((t) => t.channel === ch)
+  // Collect the set of base keys present (templates without a locale suffix).
+  const baseKeys = new Set(
+    all.filter((t) => !LOCALE_SUFFIX_RE.test(t.template_key)).map((t) => t.template_key),
+  )
+  // Hide locale variants when their base key also exists — authors should
+  // pick the base and let the engine resolve the variant. If only variants
+  // exist (no base), keep them visible so the user isn't stuck.
+  return all.filter((t) => {
+    const base = stripLocaleSuffix(t.template_key)
+    if (base === t.template_key) return true
+    return !baseKeys.has(base)
+  })
 }
 
 onMounted(async () => {
@@ -262,6 +283,13 @@ async function handleSubmit() {
             <PlusIcon class="h-4 w-4" /> Add Step
           </button>
         </div>
+        <p class="text-[11px] text-[var(--color-text-muted)] -mt-2">
+          Pick the <strong>base template key</strong> for each step. At send time the engine resolves the recipient's locale
+          and tries <code class="px-1 py-[1px] rounded bg-[var(--color-bg-muted)]">key.ar-iq</code>
+          → <code class="px-1 py-[1px] rounded bg-[var(--color-bg-muted)]">key.ar</code>
+          → <code class="px-1 py-[1px] rounded bg-[var(--color-bg-muted)]">key</code>.
+          WhatsApp is special: the base key is always used and the language is passed to Meta as a separate field.
+        </p>
 
         <div v-for="(step, i) in steps" :key="i" class="border border-[var(--color-border)] rounded-lg p-4 space-y-3">
           <div class="flex items-center justify-between">
