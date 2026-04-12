@@ -12,6 +12,21 @@ export function useSSE(url: string, onError?: () => void) {
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null
   const listeners: Array<(evt: SSEEvent) => void> = []
 
+  // Exponential backoff with ±25% jitter. Fixed 5s was OK for a single
+  // client, but mass-reconnect after a deploy would thunder-herd the
+  // /api/sse/token endpoint. Resets to 1s on every successful onopen so
+  // a brief transient doesn't poison the backoff for the whole session.
+  const INITIAL_MS = 1_000
+  const MAX_MS = 30_000
+  let attempt = 0
+
+  function nextBackoffMs(): number {
+    const base = Math.min(INITIAL_MS * 2 ** attempt, MAX_MS)
+    const jitter = base * (0.75 + Math.random() * 0.5) // [0.75×, 1.25×]
+    attempt++
+    return Math.round(jitter)
+  }
+
   function connect() {
     if (eventSource) {
       eventSource.close()
@@ -21,6 +36,7 @@ export function useSSE(url: string, onError?: () => void) {
 
     eventSource.onopen = () => {
       connected.value = true
+      attempt = 0 // successful connect — reset backoff for next disconnect
     }
 
     eventSource.onmessage = (event) => {
@@ -39,8 +55,8 @@ export function useSSE(url: string, onError?: () => void) {
       if (onError) {
         onError()
       } else {
-        // Default auto-reconnect after 5 seconds
-        reconnectTimer = setTimeout(connect, 5000)
+        // Default auto-reconnect with exponential backoff + jitter.
+        reconnectTimer = setTimeout(connect, nextBackoffMs())
       }
     }
   }
