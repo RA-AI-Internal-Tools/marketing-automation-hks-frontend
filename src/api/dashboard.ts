@@ -73,6 +73,29 @@ export async function fetchCampaignGraph(id: number): Promise<CampaignGraph> {
   return data
 }
 
+// Shape of a Step the PUT endpoint expects. Mirrors internal/model Step —
+// only fields the builder actually writes are required here; unknown fields
+// are dropped by the backend JSON unmarshal as usual.
+export interface CampaignStepPayload {
+  delay_minutes: number
+  channel: string
+  template_key: string
+  condition: string
+  condition_params?: Record<string, unknown>
+  true_next?: number | null
+  false_next?: number | null
+  wait_for_event?: string
+  wait_for_event_timeout?: number
+  webhook_url?: string
+  webhook_method?: string
+  webhook_headers?: Record<string, string>
+}
+
+export async function replaceCampaignSteps(id: number, steps: CampaignStepPayload[]) {
+  const { data } = await api.put(`/api/campaigns/${id}/steps`, { steps })
+  return data
+}
+
 export async function createCampaign(req: CampaignRequest): Promise<CampaignDefinition> {
   const { data } = await api.post('/api/campaigns', req)
   return data
