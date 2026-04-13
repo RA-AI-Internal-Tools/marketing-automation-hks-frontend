@@ -39,8 +39,14 @@ async function load() {
       fetchRevenueAttributionOverview(days.value, model.value),
       fetchRevenueAttribution(days.value, model.value),
     ])
+    // Defensive ?? — Go nil slices serialise as JSON null; keep the
+    // template's for-of iterations safe even when a future handler
+    // regresses to returning null instead of [].
     overview.value = ov
-    rows.value = rv.rows
+    if (overview.value && !overview.value.daily_series) {
+      overview.value.daily_series = []
+    }
+    rows.value = rv.rows ?? []
   } catch (e: any) {
     error.value = e?.response?.data?.error || 'Failed to load attribution'
   } finally {
