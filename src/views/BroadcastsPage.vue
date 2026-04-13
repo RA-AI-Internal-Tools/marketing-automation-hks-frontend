@@ -2,6 +2,8 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import EmptyState from '@/components/EmptyState.vue'
+import SkeletonTable from '@/components/SkeletonTable.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useTemplatesStore } from '@/stores/templates'
 import { useToast } from '@/composables/useToast'
@@ -195,18 +197,20 @@ const channelChip: Record<string, string> = {
       <span class="bc-meta">{{ total }} total</span>
     </div>
 
-    <div v-if="loading" class="bc-loading">
-      <div class="bc-spinner" /><p>Loading broadcasts…</p>
-    </div>
+    <SkeletonTable v-if="loading" :rows="5" :columns="4" />
 
-    <div v-else-if="rows.length === 0" class="bc-empty">
-      <MegaphoneIcon class="bc-empty-icon" />
-      <p class="bc-empty-title">No broadcasts yet.</p>
-      <p class="bc-empty-sub">Send a one-off blast — newsletter, promo, product launch — to any segment on any channel.</p>
-      <button v-if="auth.canWrite" @click="openNew" class="btn btn-primary" style="margin-top: 20px;">
-        <PlusIcon class="h-4 w-4" /> Create your first broadcast
-      </button>
-    </div>
+    <EmptyState
+      v-else-if="rows.length === 0"
+      :icon="MegaphoneIcon"
+      title="No broadcasts yet."
+      description="Send a one-off blast — newsletter, promo, product launch — to any segment on any channel."
+    >
+      <template v-if="auth.canWrite" #action>
+        <button @click="openNew" class="btn btn-primary">
+          <PlusIcon class="h-4 w-4" /> Create your first broadcast
+        </button>
+      </template>
+    </EmptyState>
 
     <div v-else class="bc-list">
       <div v-for="b in rows" :key="b.id" class="bc-row" :data-status="b.status">
@@ -358,31 +362,7 @@ const channelChip: Record<string, string> = {
   color: var(--color-text-muted); margin-left: auto;
 }
 
-/* ─── States ─── */
-.bc-loading { text-align: center; padding: 96px 20px; color: var(--color-text-muted); font-size: 13px; }
-.bc-spinner {
-  display: inline-block; width: 24px; height: 24px;
-  border: 2px solid var(--color-border); border-top-color: var(--hks-cyan);
-  border-radius: 50%; animation: spin .7s linear infinite; margin-bottom: 12px;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.bc-empty {
-  text-align: center; padding: 80px 32px;
-  background: var(--color-bg-card);
-  border: 1px dashed var(--color-border-strong);
-  border-radius: var(--radius-md);
-}
-.bc-empty-icon {
-  width: 36px; height: 36px;
-  color: var(--color-text-muted); margin: 0 auto 14px;
-}
-.bc-empty-title {
-  font-family: var(--font-display); font-size: 22px; font-weight: 400;
-  color: var(--color-text-primary); letter-spacing: -0.01em;
-  font-variation-settings: 'opsz' 72;
-}
-.bc-empty-sub { margin-top: 8px; font-size: 13px; color: var(--color-text-tertiary); max-width: 44ch; margin-left: auto; margin-right: auto; }
+/* Loading + empty state styles moved to <SkeletonTable> / <EmptyState>. */
 
 /* ─── List rows ─── */
 .bc-list { display: flex; flex-direction: column; gap: 10px; }
