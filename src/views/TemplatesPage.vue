@@ -364,13 +364,28 @@ async function confirmClone(locale: string) {
               </td>
               <td class="tpl-td tpl-td-right">
                 <div v-if="auth.canWrite" class="tpl-actions">
-                  <button @click="router.push(`/templates/${g.base.id}/edit`)" class="tpl-action" title="Edit">
+                  <button
+                    @click="router.push(`/templates/${g.base.id}/edit`)"
+                    class="tpl-action"
+                    :aria-label="`Edit template ${g.base.name}`"
+                    title="Edit"
+                  >
                     <PencilSquareIcon class="h-4 w-4" />
                   </button>
-                  <button @click="cloneSource = g" class="tpl-action" title="Clone as locale variant">
+                  <button
+                    @click="cloneSource = g"
+                    class="tpl-action"
+                    :aria-label="`Clone ${g.base.name} as locale variant`"
+                    title="Clone as locale variant"
+                  >
                     <LanguageIcon class="h-4 w-4" />
                   </button>
-                  <button @click="deleteTarget = g.base" class="tpl-action tpl-action-danger" title="Delete">
+                  <button
+                    @click="deleteTarget = g.base"
+                    class="tpl-action tpl-action-danger"
+                    :aria-label="`Delete template ${g.base.name}`"
+                    title="Delete"
+                  >
                     <TrashIcon class="h-4 w-4" />
                   </button>
                 </div>
@@ -407,10 +422,20 @@ async function confirmClone(locale: string) {
                 </td>
                 <td class="tpl-td tpl-td-right">
                   <div v-if="auth.canWrite" class="tpl-actions">
-                    <button @click="router.push(`/templates/${v.id}/edit`)" class="tpl-action" title="Edit variant">
+                    <button
+                      @click="router.push(`/templates/${v.id}/edit`)"
+                      class="tpl-action"
+                      :aria-label="`Edit ${v.name} variant`"
+                      title="Edit variant"
+                    >
                       <PencilSquareIcon class="h-3.5 w-3.5" />
                     </button>
-                    <button @click="deleteTarget = v" class="tpl-action tpl-action-danger" title="Delete variant">
+                    <button
+                      @click="deleteTarget = v"
+                      class="tpl-action tpl-action-danger"
+                      :aria-label="`Delete ${v.name} variant`"
+                      title="Delete variant"
+                    >
                       <TrashIcon class="h-3.5 w-3.5" />
                     </button>
                   </div>

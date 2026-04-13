@@ -31,18 +31,55 @@ const SECTION_FIRST: Record<string, string> = {
   System: '/settings',
 }
 
-const breadcrumbs = computed<{ section: string | null; sectionHref: string | null; title: string }>(() => {
+// Maps the section's "list" route to a label users will recognise. The
+// breadcrumb walks: section → list page → contextual leaf (Edit, New,
+// detail). Without this, /campaigns/42/edit reads as "Engage › Edit
+// Campaign" with no link back to the list view, which buries navigation.
+const LIST_ROUTES: Record<string, { label: string; href: string }> = {
+  '/campaigns':  { label: 'Campaigns',  href: '/campaigns' },
+  '/templates':  { label: 'Templates',  href: '/templates' },
+  '/segments':   { label: 'Segments',   href: '/segments' },
+  '/broadcasts': { label: 'Broadcasts', href: '/broadcasts' },
+  '/clients':    { label: 'Clients',    href: '/enrollments' }, // no /clients list yet
+}
+
+interface Crumb { label: string; href?: string }
+interface Breadcrumbs {
+  section: string | null
+  sectionHref: string | null
+  // Mid-level crumb pointing at the containing list view, when we're
+  // on a detail/edit/new page. Null on top-level pages.
+  parent: Crumb | null
+  title: string
+}
+
+const breadcrumbs = computed<Breadcrumbs>(() => {
   const title = (route.meta?.title as string) || ''
   const path = route.path
+
   let section: string | null = null
-  if (/^\/(overview|campaigns|templates)/.test(path)) section = 'Engage'
-  else if (/^\/(enrollments|segments|consents|push-audience)/.test(path)) section = 'Audience'
+  if (/^\/(overview|campaigns|templates|broadcasts|template-library)/.test(path)) section = 'Engage'
+  else if (/^\/(enrollments|segments|consents|push-audience|clients)/.test(path)) section = 'Audience'
   else if (/^\/analytics\/reports/.test(path) || /^\/campaign-funnel/.test(path)) section = 'Reports'
   else if (/^\/analytics/.test(path)) section = 'Intelligence'
-  else if (/^\/(settings|integrations|channels|health|logs|audit-logs|users)/.test(path)) section = 'System'
+  else if (/^\/(settings|integrations|channels|health|logs|audit-logs|users|outbound-webhooks|catalog|cart-activity)/.test(path)) section = 'System'
+
+  // Detect detail/edit/new pages and resolve the parent list crumb.
+  // Pattern: /<resource>/[anything beyond] indicates a sub-route.
+  let parent: Crumb | null = null
+  const segments = path.split('/').filter(Boolean)
+  if (segments.length >= 2) {
+    const listKey = '/' + segments[0]
+    const listInfo = LIST_ROUTES[listKey]
+    if (listInfo && '/' + segments[0] !== path) {
+      parent = { label: listInfo.label, href: listInfo.href }
+    }
+  }
+
   return {
     section,
     sectionHref: section ? SECTION_FIRST[section] || null : null,
+    parent,
     title,
   }
 })
@@ -71,7 +108,7 @@ function openPalette() {
         <ChevronDoubleLeftIcon v-else class="h-4 w-4" />
       </button>
 
-      <!-- Breadcrumb: section › title. Section label links to first page in section. -->
+      <!-- Breadcrumb: section › [parent list] › title. -->
       <nav class="ma-crumbs" aria-label="Breadcrumb">
         <router-link
           v-if="breadcrumbs.sectionHref"
@@ -79,7 +116,16 @@ function openPalette() {
           class="ma-crumb-section ma-crumb-section-link"
         >{{ breadcrumbs.section }}</router-link>
         <span v-else-if="breadcrumbs.section" class="ma-crumb-section">{{ breadcrumbs.section }}</span>
-        <span v-if="breadcrumbs.section && breadcrumbs.title" class="ma-crumb-sep">›</span>
+
+        <template v-if="breadcrumbs.parent">
+          <span class="ma-crumb-sep">›</span>
+          <router-link
+            :to="breadcrumbs.parent.href!"
+            class="ma-crumb-parent"
+          >{{ breadcrumbs.parent.label }}</router-link>
+        </template>
+
+        <span v-if="(breadcrumbs.section || breadcrumbs.parent) && breadcrumbs.title" class="ma-crumb-sep">›</span>
         <span class="ma-crumb-title">{{ breadcrumbs.title }}</span>
       </nav>
     </div>
@@ -191,6 +237,17 @@ function openPalette() {
   transition: color var(--transition-fast);
 }
 .ma-crumb-section-link:hover { color: var(--hks-cyan); }
+
+.ma-crumb-parent {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  text-decoration: none;
+  letter-spacing: -0.005em;
+  transition: color var(--transition-fast);
+}
+.ma-crumb-parent:hover { color: var(--hks-cyan); }
 
 /* ─── Search hint / palette opener ─── */
 .ma-search-hint {
