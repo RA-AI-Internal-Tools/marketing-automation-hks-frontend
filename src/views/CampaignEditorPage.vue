@@ -91,7 +91,24 @@ const conditions = [
   'cart_contains_category',
   'rfm_segment',
 ]
-const segments = ['all', 'high_value', 'new_user', 'dormant']
+// Segments loaded dynamically from the backend. 'all' is the universal
+// implicit bucket and always first — the stored list contains only
+// operator-managed segments (includes RFM categories once the nightly
+// job populates client_rfm_scores).
+//
+// Fallback list used if the fetch fails — matches the slugs the seeded
+// segments carry so a transient API hiccup still produces a usable
+// editor. Fetched list overwrites on success.
+const FALLBACK_SEGMENTS = ['all','high_value','new_user','dormant','at_risk','loyal','churned','vip']
+const segments = ref<string[]>([...FALLBACK_SEGMENTS])
+// Fire once — the segments catalogue rarely changes mid-session.
+import('@/api/client').then(async ({ default: api }) => {
+  try {
+    const { data } = await api.get<Array<{ slug: string }>>('/api/segments')
+    const slugs = Array.isArray(data) ? data.map(s => s.slug).filter(Boolean) : []
+    if (slugs.length) segments.value = ['all', ...slugs]
+  } catch { /* stay on fallback */ }
+})
 
 // Locale variants use a "key.locale" suffix (e.g. welcome.ar-iq). The MA
 // executor resolves them per-recipient at send time, so campaign steps

@@ -93,13 +93,23 @@ function formatDate(d?: string): string {
         class="rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm"
       />
       <select v-model="filterStatus" class="rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm bg-[var(--color-bg-card)]">
+        <!-- Full LogStatus vocabulary from internal/model/campaign.go.
+             Keep synced so operators can filter to every terminal state
+             the executor emits (bounced/opened/clicked/complaint/
+             quiet_hour_deferred were missing and hid events). -->
         <option value="">All statuses</option>
         <option value="sent">Sent</option>
+        <option value="delivered">Delivered</option>
+        <option value="opened">Opened</option>
+        <option value="clicked">Clicked</option>
+        <option value="bounced">Bounced</option>
         <option value="failed">Failed</option>
+        <option value="complaint">Complaint</option>
         <option value="skipped">Skipped</option>
         <option value="frequency_capped">Frequency Capped</option>
         <option value="no_consent">No Consent</option>
         <option value="condition_not_met">Condition Not Met</option>
+        <option value="quiet_hour_deferred">Quiet Hour Deferred</option>
       </select>
       <select v-model="filterChannel" class="rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm bg-[var(--color-bg-card)]">
         <option value="">All channels</option>

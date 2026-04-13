@@ -87,8 +87,13 @@ function formatDate(d?: string): string {
     <!-- Filters -->
     <div class="flex flex-wrap gap-3 mb-6">
       <select v-model="filterStatus" class="rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm bg-[var(--color-bg-card)]">
+        <!-- Keep synced with EnrollmentStatus* constants in
+             internal/model/campaign.go. 'waiting' covers G6
+             wait-for-event enrollments paused until an external event
+             fires — previously hidden from the filter dropdown. -->
         <option value="">All statuses</option>
         <option value="active">Active</option>
+        <option value="waiting">Waiting</option>
         <option value="completed">Completed</option>
         <option value="cancelled">Cancelled</option>
         <option value="expired">Expired</option>

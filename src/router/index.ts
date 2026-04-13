@@ -121,7 +121,11 @@ const router = createRouter({
       path: '/catalog',
       name: 'catalog',
       component: () => import('@/views/CatalogPage.vue'),
-      meta: { title: 'Catalog' },
+      // Catalog touches data that's read-only for viewers but the UI
+      // shows product-mutation controls inside. requiresWrite gates
+      // the whole page so a viewer never sees half-disabled UI; the
+      // page's in-page buttons also guard defensively below.
+      meta: { requiresWrite: true, title: 'Catalog' },
     },
     {
       path: '/cart-activity',
