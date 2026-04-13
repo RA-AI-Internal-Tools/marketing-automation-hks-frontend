@@ -75,6 +75,7 @@ const allSections: NavSection[] = [
       { name: 'Campaigns', to: '/campaigns', icon: RocketLaunchIcon },
       { name: 'Broadcasts', to: '/broadcasts', icon: MegaphoneIcon },
       { name: 'Templates', to: '/templates', icon: DocumentDuplicateIcon },
+      { name: 'Catalog', to: '/catalog', icon: CubeIcon },
     ],
   },
   {
@@ -92,6 +93,7 @@ const allSections: NavSection[] = [
     defaultOpen: false,
     items: [
       { name: 'Executive', to: '/analytics/executive', icon: PresentationChartBarIcon },
+      { name: 'Cart activity', to: '/cart-activity', icon: ShoppingCartIcon },
       { name: 'Acquisition', to: '/analytics/acquisition', icon: GlobeAltIcon },
       { name: 'Funnel', to: '/analytics/funnel', icon: FunnelIcon },
       { name: 'Users', to: '/analytics/users', icon: UserGroupIcon },

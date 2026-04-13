@@ -126,6 +126,29 @@ export const VARIABLE_CATEGORIES: VariableCategory[] = [
     ],
   },
   {
+    // Cart variables populated by the /internal/events/cart ingestion path
+    // (checkout_started fires a NATS trigger that injects cart_items +
+    // cart_total into the campaign context; the renderer exposes them as
+    // Handlebars-shim iterables — see template_render.go).
+    key: 'cart',
+    label: 'Cart',
+    variables: [
+      { name: 'cart_total', label: 'Cart Total', token: '{{cart_total}}', description: 'Current cart total amount', sampleValue: '49.90', category: 'cart', required: false },
+      { name: 'cart_currency', label: 'Cart Currency', token: '{{cart_currency}}', description: 'Cart currency code', sampleValue: 'USD', category: 'cart', required: false },
+      { name: 'cart_items', label: 'Cart Items (loop)', token: '{{#each cart_items}}{{this.name}} x{{this.quantity}}{{/each}}', description: 'Iterate cart items — use inside {{#each}}...{{/each}}', sampleValue: '[{"name":"Hoodie","quantity":2}]', category: 'cart', required: false },
+    ],
+  },
+  {
+    // Products & recommendations — injected by the executor when a client
+    // has computed recommendations (see engine.GetRecommendations). Author
+    // use: {{#each recommended_products}}...{{/each}}.
+    key: 'products',
+    label: 'Products & Recommendations',
+    variables: [
+      { name: 'recommended_products', label: 'Recommended Products (loop)', token: '{{#each recommended_products}}{{this.name}}{{/each}}', description: 'Personalised product recommendations from the collaborative-filtering engine', sampleValue: '[{"name":"Related Widget","price":29.90}]', category: 'products', required: false },
+    ],
+  },
+  {
     key: 'custom',
     label: 'Custom',
     variables: [

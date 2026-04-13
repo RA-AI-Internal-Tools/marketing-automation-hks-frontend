@@ -112,6 +112,18 @@ const router = createRouter({
       meta: { title: 'Segment Detail' },
     },
     {
+      path: '/catalog',
+      name: 'catalog',
+      component: () => import('@/views/CatalogPage.vue'),
+      meta: { title: 'Catalog' },
+    },
+    {
+      path: '/cart-activity',
+      name: 'cart-activity',
+      component: () => import('@/views/CartActivityPage.vue'),
+      meta: { title: 'Cart Activity' },
+    },
+    {
       path: '/integrations',
       name: 'integrations',
       component: () => import('@/views/IntegrationsPage.vue'),

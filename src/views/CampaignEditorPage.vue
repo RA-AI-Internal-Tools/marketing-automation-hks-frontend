@@ -30,7 +30,22 @@ const loading = ref(false)
 const nextVariantId = ref(0)
 
 const channels = ['email', 'sms', 'whatsapp', 'push']
-const conditions = ['always', 'has_ordered_since', 'not_ordered_since', 'kyc_level_gte', 'spend_gte']
+// Keep this list in lockstep with internal/condition/condition.go's
+// Registry. A stale option here would render in the dropdown but fail at
+// runtime with "unknown condition: X".
+const conditions = [
+  'always_true',
+  'no_purchase_since_enrollment',
+  'kyc_not_completed',
+  'no_order_in_days',
+  'message_opened',
+  'message_clicked',
+  'cart_value_gte',
+  'cart_value_lte',
+  'viewed_product_category',
+  'viewed_product_count_gte',
+  'cart_contains_category',
+]
 const segments = ['all', 'high_value', 'new_user', 'dormant']
 
 // Locale variants use a "key.locale" suffix (e.g. welcome.ar-iq). The MA
