@@ -1,14 +1,21 @@
 <script setup lang="ts">
-defineProps<{
+const props = defineProps<{
   title: string
   value: string | number
   subtitle?: string
   trend?: 'up' | 'down' | 'flat'
   accent?: 'default' | 'emerald' | 'amber' | 'rose' | 'cyan'
+  // Optional formatter for the numeric value. 'currency' renders with
+  // Intl NumberFormat at 0 decimals (dashboards don't need cents); plain
+  // numbers fall through to locale grouping. String values pass through.
+  format?: 'number' | 'currency'
 }>()
 
 function formatValue(v: string | number): string {
   if (typeof v === 'number' && Number.isFinite(v)) {
+    if (props.format === 'currency') {
+      return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v)
+    }
     return v.toLocaleString()
   }
   return String(v)

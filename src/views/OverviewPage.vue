@@ -24,23 +24,31 @@ import { useSortable } from '@/composables/useSortable'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
 
+import { fetchRevenueAttributionOverview, type RevenueAttributionOverview } from '@/api/revenue_attribution'
+
 const dashboardStore = useDashboardStore()
 const stats = ref<OverviewStats | null>(null)
 const volume = ref<DailyVolume[]>([])
 const campaigns = ref<CampaignPerformance[]>([])
+const revenueOverview = ref<RevenueAttributionOverview | null>(null)
 const loading = ref(true)
 const error = ref('')
 
 onMounted(async () => {
   try {
-    const [s, v, c] = await Promise.all([
+    const [s, v, c, rev] = await Promise.all([
       fetchOverviewStats(),
       fetchDailyVolume(30),
       fetchCampaignPerformance(),
+      // Revenue tile uses the last-7-days last-touch window so it
+      // matches the 'last 7 days' label in the section head. Failure
+      // here shouldn't blank the whole dashboard — tile just hides.
+      fetchRevenueAttributionOverview(7, 'last_touch').catch(() => null),
     ])
     stats.value = s
     volume.value = v
     campaigns.value = c
+    revenueOverview.value = rev
   } catch (e: any) {
     error.value = e.response?.data?.error || 'Failed to load dashboard data'
   } finally {
@@ -248,6 +256,32 @@ function pctLabel(n: number, total: number): string {
     </div>
 
     <template v-else>
+      <!-- ─────────── Revenue tiles (Phase 4) ─────────── -->
+      <section v-if="revenueOverview" class="stat-section">
+        <div class="section-head">
+          <span class="rule-dot">Revenue · last 7 days</span>
+          <span class="section-rule" />
+        </div>
+        <div class="stat-grid stagger">
+          <StatCard
+            title="Attributed revenue"
+            :value="revenueOverview.total_revenue"
+            accent="emerald"
+            format="currency"
+          />
+          <StatCard
+            title="Attributed sends"
+            :value="revenueOverview.total_sends"
+            accent="cyan"
+          />
+          <StatCard
+            title="Revenue per send"
+            :value="revenueOverview.revenue_per_send"
+            format="currency"
+          />
+        </div>
+      </section>
+
       <!-- ─────────── Stat grid ─────────── -->
       <section class="stat-section">
         <div class="section-head">
