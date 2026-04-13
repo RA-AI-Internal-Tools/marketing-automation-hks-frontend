@@ -12,6 +12,8 @@ import {
 } from '@heroicons/vue/24/outline'
 import { cloneCampaign } from '@/api/dashboard'
 import BlueprintPickerModal from '@/components/BlueprintPickerModal.vue'
+import ChannelChip from '@/components/ChannelChip.vue'
+import EmptyState from '@/components/EmptyState.vue'
 
 const router = useRouter()
 const store = useCampaignsStore()
@@ -103,11 +105,21 @@ const totalActive = computed(() => store.campaigns.filter(c => c.is_active).leng
     </div>
 
     <!-- Empty -->
-    <div v-else-if="store.campaigns.length === 0" class="camp-empty">
-      <RocketLaunchIcon class="camp-empty-icon" />
-      <p class="camp-empty-title">No campaigns yet.</p>
-      <p class="camp-empty-sub">Start from a blueprint or compose your own.</p>
-    </div>
+    <EmptyState
+      v-else-if="store.campaigns.length === 0"
+      :icon="RocketLaunchIcon"
+      title="No campaigns yet."
+      description="Start from a blueprint or compose your own — automated journeys begin here."
+    >
+      <template v-if="auth.canWrite" #action>
+        <button @click="blueprintOpen = true" class="btn btn-ghost">
+          <SparklesIcon class="h-4 w-4" /> From blueprint
+        </button>
+        <button @click="router.push('/campaigns/new')" class="btn btn-primary">
+          <PlusIcon class="h-4 w-4" /> New campaign
+        </button>
+      </template>
+    </EmptyState>
 
     <!-- Campaign cards -->
     <div v-else class="camp-list stagger">
@@ -146,13 +158,28 @@ const totalActive = computed(() => store.campaigns.filter(c => c.is_active).leng
             </label>
 
             <div v-if="auth.canWrite" class="camp-actions">
-              <button @click="handleClone(campaign.id)" class="camp-action" title="Clone">
+              <button
+                @click="handleClone(campaign.id)"
+                class="camp-action"
+                :aria-label="`Clone campaign ${campaign.name}`"
+                title="Clone"
+              >
                 <DocumentDuplicateIcon class="h-4 w-4" />
               </button>
-              <button @click="router.push(`/campaigns/${campaign.id}/edit`)" class="camp-action" title="Edit">
+              <button
+                @click="router.push(`/campaigns/${campaign.id}/edit`)"
+                class="camp-action"
+                :aria-label="`Edit campaign ${campaign.name}`"
+                title="Edit"
+              >
                 <PencilSquareIcon class="h-4 w-4" />
               </button>
-              <button @click="handleDelete(campaign.id, campaign.name)" class="camp-action camp-action-danger" title="Delete">
+              <button
+                @click="handleDelete(campaign.id, campaign.name)"
+                class="camp-action camp-action-danger"
+                :aria-label="`Delete campaign ${campaign.name}`"
+                title="Delete"
+              >
                 <TrashIcon class="h-4 w-4" />
               </button>
             </div>
@@ -165,9 +192,7 @@ const totalActive = computed(() => store.campaigns.filter(c => c.is_active).leng
             <div class="camp-step">
               <div class="camp-step-idx num-tabular">{{ String(i + 1).padStart(2, '0') }}</div>
               <div class="camp-step-body">
-                <span class="camp-chip" :data-ch="step.channel">
-                  <span class="camp-chip-dot" />{{ step.channel }}
-                </span>
+                <ChannelChip :channel="step.channel" />
                 <p class="camp-step-delay">after <strong class="num-tabular">{{ formatDelay(step.delay_minutes) }}</strong></p>
                 <p class="camp-step-tpl" :title="step.template_key">{{ step.template_key }}</p>
               </div>
@@ -468,38 +493,8 @@ const totalActive = computed(() => store.campaigns.filter(c => c.is_active).leng
   flex-shrink: 0;
 }
 
-/* ── Channel chip (shared vocabulary with TemplatesPage) ── */
-.camp-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 2px 9px 2px 8px;
-  font-family: var(--font-sans);
-  font-size: 10.5px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: capitalize;
-  border-radius: var(--radius-full);
-  border: 1px solid;
-}
-.camp-chip-dot { width: 5px; height: 5px; border-radius: 50%; }
-.camp-chip[data-ch="email"]    { color: #1e3a8a; background: #e8eefd; border-color: #c8d5f5; }
-.camp-chip[data-ch="email"] .camp-chip-dot { background: #1e3a8a; }
-.camp-chip[data-ch="sms"]      { color: #5b2d8c; background: #ede5fa; border-color: #d6c8f0; }
-.camp-chip[data-ch="sms"] .camp-chip-dot { background: #5b2d8c; }
-.camp-chip[data-ch="whatsapp"] { color: #0b5334; background: #e8f5ee; border-color: #b6dac5; }
-.camp-chip[data-ch="whatsapp"] .camp-chip-dot { background: #0b5334; }
-.camp-chip[data-ch="push"]     { color: #7a3e00; background: #fbeddb; border-color: #edd0a4; }
-.camp-chip[data-ch="push"] .camp-chip-dot { background: #7a3e00; }
-
-[data-theme="dark"] .camp-chip[data-ch="email"]    { color: #93b4ff; background: rgba(147,180,255,0.1); border-color: rgba(147,180,255,0.3); }
-[data-theme="dark"] .camp-chip[data-ch="email"] .camp-chip-dot { background: #93b4ff; }
-[data-theme="dark"] .camp-chip[data-ch="sms"]      { color: #c79cf5; background: rgba(199,156,245,0.1); border-color: rgba(199,156,245,0.3); }
-[data-theme="dark"] .camp-chip[data-ch="sms"] .camp-chip-dot { background: #c79cf5; }
-[data-theme="dark"] .camp-chip[data-ch="whatsapp"] { color: #7cd9a9; background: rgba(124,217,169,0.1); border-color: rgba(124,217,169,0.3); }
-[data-theme="dark"] .camp-chip[data-ch="whatsapp"] .camp-chip-dot { background: #7cd9a9; }
-[data-theme="dark"] .camp-chip[data-ch="push"]     { color: #f0b879; background: rgba(240,184,121,0.1); border-color: rgba(240,184,121,0.3); }
-[data-theme="dark"] .camp-chip[data-ch="push"] .camp-chip-dot { background: #f0b879; }
+/* Channel chips moved to <ChannelChip> — single source of truth in
+ * src/components/ChannelChip.vue. */
 
 /* ── Footer ── */
 .camp-foot {
@@ -534,27 +529,5 @@ const totalActive = computed(() => store.campaigns.filter(c => c.is_active).leng
   padding: 0;
 }
 
-/* ── Empty ── */
-.camp-empty {
-  padding: 96px 24px;
-  text-align: center;
-  background: var(--color-bg-card);
-  border: 1px dashed var(--color-border-strong);
-  border-radius: var(--radius-lg);
-}
-.camp-empty-icon {
-  width: 42px; height: 42px;
-  color: var(--color-text-muted);
-  margin: 0 auto 16px;
-  opacity: 0.6;
-}
-.camp-empty-title {
-  font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 400;
-  color: var(--color-text-secondary);
-  letter-spacing: -0.01em;
-  font-variation-settings: 'opsz' 72;
-}
-.camp-empty-sub { margin-top: 6px; font-size: 12.5px; color: var(--color-text-muted); }
+/* Empty state moved to <EmptyState> — single source of truth. */
 </style>

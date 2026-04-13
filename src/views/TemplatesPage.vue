@@ -6,6 +6,7 @@ import StatusBadge from '@/components/StatusBadge.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import CloneVariantDialog from '@/components/CloneVariantDialog.vue'
 import TestSendModal from '@/components/TestSendModal.vue'
+import ChannelChip from '@/components/ChannelChip.vue'
 import { useTemplatesStore } from '@/stores/templates'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
@@ -206,13 +207,7 @@ async function confirmClone(locale: string) {
   }
 }
 
-// Channel-tinted chip classes — restrained palette consistent with editorial tone
-const channelChip: Record<string, string> = {
-  email: 'chip-email',
-  sms: 'chip-sms',
-  whatsapp: 'chip-whatsapp',
-  push: 'chip-push',
-}
+// Channel chip styling moved to <ChannelChip>.
 </script>
 
 <template>
@@ -346,10 +341,7 @@ const channelChip: Record<string, string> = {
                 >{{ g.base.template_key }}</code>
               </td>
               <td class="tpl-td">
-                <span class="tpl-chip" :class="channelChip[g.base.channel]">
-                  <span class="tpl-chip-dot" />
-                  {{ g.base.channel }}
-                </span>
+                <ChannelChip :channel="g.base.channel" />
               </td>
               <td class="tpl-td">
                 <div v-if="g.variants.length" class="tpl-locales">
@@ -723,38 +715,7 @@ const channelChip: Record<string, string> = {
   border-color: var(--color-accent-light);
 }
 
-/* ─── Channel chip ─── */
-.tpl-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 10px 3px 9px;
-  font-family: var(--font-sans);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  text-transform: capitalize;
-  border-radius: var(--radius-full);
-  border: 1px solid;
-}
-.tpl-chip-dot { width: 5px; height: 5px; border-radius: 50%; }
-.chip-email    { color: #1e3a8a; background: #e8eefd; border-color: #c8d5f5; }
-.chip-email .tpl-chip-dot { background: #1e3a8a; }
-.chip-sms      { color: #5b2d8c; background: #ede5fa; border-color: #d6c8f0; }
-.chip-sms .tpl-chip-dot { background: #5b2d8c; }
-.chip-whatsapp { color: #0b5334; background: #e8f5ee; border-color: #b6dac5; }
-.chip-whatsapp .tpl-chip-dot { background: #0b5334; }
-.chip-push     { color: #7a3e00; background: #fbeddb; border-color: #edd0a4; }
-.chip-push .tpl-chip-dot { background: #7a3e00; }
-
-[data-theme="dark"] .chip-email    { color: #93b4ff; background: rgba(147, 180, 255, 0.1); border-color: rgba(147, 180, 255, 0.3); }
-[data-theme="dark"] .chip-email .tpl-chip-dot { background: #93b4ff; }
-[data-theme="dark"] .chip-sms      { color: #c79cf5; background: rgba(199, 156, 245, 0.1); border-color: rgba(199, 156, 245, 0.3); }
-[data-theme="dark"] .chip-sms .tpl-chip-dot { background: #c79cf5; }
-[data-theme="dark"] .chip-whatsapp { color: #7cd9a9; background: rgba(124, 217, 169, 0.1); border-color: rgba(124, 217, 169, 0.3); }
-[data-theme="dark"] .chip-whatsapp .tpl-chip-dot { background: #7cd9a9; }
-[data-theme="dark"] .chip-push     { color: #f0b879; background: rgba(240, 184, 121, 0.1); border-color: rgba(240, 184, 121, 0.3); }
-[data-theme="dark"] .chip-push .tpl-chip-dot { background: #f0b879; }
+/* Channel chip styles moved to <ChannelChip>. */
 
 /* ─── Locale badges ─── */
 .tpl-locales {

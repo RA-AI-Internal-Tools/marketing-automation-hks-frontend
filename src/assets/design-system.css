@@ -501,6 +501,34 @@ body::before {
 }
 
 /* ----------------------------------------------------------
+   10c. TABLE ROW HOVER — shared interaction for tabular data.
+   Applied to <tr> elements that need a clickable feel + hover
+   feedback. Keeps the timing and tint identical across pages
+   (CampaignsPage, TemplatesPage, LogsPage, AuditLogsPage etc.)
+   instead of each page re-defining its own row hover.
+   ---------------------------------------------------------- */
+.table-row-interactive {
+  transition: background var(--transition-fast);
+  cursor: pointer;
+}
+.table-row-interactive:hover {
+  background: var(--color-bg-subtle);
+}
+
+/* ----------------------------------------------------------
+   10d. BUTTON — danger variant
+   Pairs with .btn / .btn-primary / .btn-ghost. Used by
+   destructive confirm dialogs + the action menus on rows.
+   ---------------------------------------------------------- */
+.btn-danger {
+  background: var(--color-error);
+  color: #fff;
+  border: 1px solid var(--color-error);
+}
+.btn-danger:hover { background: var(--color-error-text); border-color: var(--color-error-text); }
+.btn-danger:focus-visible { outline-color: var(--color-error); }
+
+/* ----------------------------------------------------------
    11. STAGGERED FADE — for lists/grids
    ---------------------------------------------------------- */
 .stagger > * {

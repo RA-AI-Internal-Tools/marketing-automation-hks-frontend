@@ -25,6 +25,7 @@ import { useSortable } from '@/composables/useSortable'
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
 
 import { fetchRevenueAttributionOverview, type RevenueAttributionOverview } from '@/api/revenue_attribution'
+import { chartPalette, alpha } from '@/utils/chartColors'
 
 const dashboardStore = useDashboardStore()
 const stats = ref<OverviewStats | null>(null)
@@ -82,39 +83,44 @@ const weeklyFailed = computed(() => {
   return volume.value.slice(Math.max(0, n - 7)).reduce((a, d) => a + d.failed, 0)
 })
 
-const chartData = computed(() => ({
-  labels: volume.value.map((d) => d.date.slice(5)),
-  datasets: [
-    {
-      label: 'Sent',
-      data: volume.value.map((d) => d.sent),
-      borderColor: '#020288',
-      backgroundColor: 'rgba(2, 2, 136, 0.18)',
-      fill: true,
-      tension: 0.35,
-      borderWidth: 2.25,
-      pointRadius: 0,
-      pointHoverRadius: 5,
-      pointHoverBackgroundColor: '#020288',
-      pointHoverBorderColor: '#fff',
-      pointHoverBorderWidth: 2,
-    },
-    {
-      label: 'Failed',
-      data: volume.value.map((d) => d.failed),
-      borderColor: '#b4281e',
-      backgroundColor: 'rgba(180, 40, 30, 0.14)',
-      fill: true,
-      tension: 0.35,
-      borderWidth: 2,
-      pointRadius: 0,
-      pointHoverRadius: 5,
-      pointHoverBackgroundColor: '#b4281e',
-      pointHoverBorderColor: '#fff',
-      pointHoverBorderWidth: 2,
-    },
-  ],
-}))
+const chartData = computed(() => {
+  // Read live design-system tokens so the chart inherits dark-mode +
+  // brand updates without a manual hex sync.
+  const p = chartPalette()
+  return {
+    labels: volume.value.map((d) => d.date.slice(5)),
+    datasets: [
+      {
+        label: 'Sent',
+        data: volume.value.map((d) => d.sent),
+        borderColor: p.primary,
+        backgroundColor: alpha(p.primary, 0.18),
+        fill: true,
+        tension: 0.35,
+        borderWidth: 2.25,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: p.primary,
+        pointHoverBorderColor: '#fff',
+        pointHoverBorderWidth: 2,
+      },
+      {
+        label: 'Failed',
+        data: volume.value.map((d) => d.failed),
+        borderColor: p.error,
+        backgroundColor: alpha(p.error, 0.14),
+        fill: true,
+        tension: 0.35,
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: p.error,
+        pointHoverBorderColor: '#fff',
+        pointHoverBorderWidth: 2,
+      },
+    ],
+  }
+})
 
 // Column-sort on the campaign performance table — click a header to sort,
 // click again to flip direction.
