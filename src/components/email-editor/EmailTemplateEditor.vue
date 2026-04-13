@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTemplatesStore } from '@/stores/templates'
 import { useVariableParser } from '@/composables/useVariableParser'
@@ -16,6 +16,9 @@ import type { MessageTemplate, EmailTemplateRequest } from '@/api/types'
 import EditorTabs from './EditorTabs.vue'
 import CodeEditor from './CodeEditor.vue'
 import EmailPreview from './EmailPreview.vue'
+// Visual editor is lazy so the ~400KB GrapesJS + MJML bundle only loads
+// when someone actually opens the Visual tab.
+const VisualEditor = defineAsyncComponent(() => import('./VisualEditor.vue'))
 import VariablePanel from './VariablePanel.vue'
 import SettingsPanel from './SettingsPanel.vue'
 import ValidationPanel from './ValidationPanel.vue'
@@ -47,6 +50,10 @@ const replyTo = ref('')
 const category = ref('')
 const language = ref('')
 const tags = ref<string[]>([])
+// mjmlSource is the author-side MJML persisted alongside the compiled
+// HTML body. Populated by the Visual tab's <VisualEditor>; left empty
+// for templates authored purely in Code mode.
+const mjmlSource = ref('')
 const isActive = ref(true)
 const sampleData = ref<Record<string, any>>(getDefaultSampleData())
 
@@ -89,6 +96,7 @@ function populateFromTemplate(tmpl: MessageTemplate) {
 
   // Extended fields (may not exist on older templates)
   const ext = tmpl as any
+  mjmlSource.value = ext.mjml_source || ''
   preheader.value = ext.preheader || ''
   fromName.value = ext.from_name || ''
   fromEmail.value = ext.from_email || ''
@@ -150,6 +158,7 @@ async function handleSave() {
       name: name.value,
       subject: subject.value || null,
       body: body.value,
+      mjml_source: mjmlSource.value || undefined,
       variables: variables.length > 0 ? variables : undefined,
       is_active: isActive.value,
       preheader: preheader.value || null,
@@ -322,6 +331,19 @@ function handleKeydown(e: KeyboardEvent) {
       <div class="flex flex-1 min-h-0">
         <!-- Left: Editor / Preview / Settings -->
         <div class="flex-1 flex flex-col min-w-0">
+          <!-- Visual Tab — GrapesJS + MJML drag-and-drop. v-model is
+               mjmlSource; @update-html syncs the compiled HTML into
+               body so the runtime renderer keeps using the same field.
+               v-if (not v-show) so the editor only initialises when
+               the tab is actually active — GrapesJS is heavy. -->
+          <div v-if="activeTab === 'visual'" class="flex-1 flex flex-col min-h-0">
+            <VisualEditor
+              v-model="mjmlSource"
+              :initial-html="body"
+              @update-html="(html) => (body = html)"
+            />
+          </div>
+
           <!-- Code Tab -->
           <div v-show="activeTab === 'code'" class="flex-1 p-4 overflow-auto">
             <CodeEditor

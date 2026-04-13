@@ -4,6 +4,7 @@ import {
   EyeIcon,
   Cog6ToothIcon,
   BeakerIcon,
+  Squares2X2Icon,
 } from '@heroicons/vue/24/outline'
 
 defineProps<{
@@ -16,11 +17,15 @@ const emit = defineEmits<{
   'update:activeTab': [tab: string]
 }>()
 
+// "Visual" comes first — it's the new-user default. "Code" stays for
+// power users who want raw HTML control (and for templates authored
+// before the WYSIWYG ships).
 const tabs = [
-  { key: 'code', label: 'Code', icon: CodeBracketIcon },
-  { key: 'preview', label: 'Preview', icon: EyeIcon },
-  { key: 'settings', label: 'Settings', icon: Cog6ToothIcon },
-  { key: 'test', label: 'Test Send', icon: BeakerIcon },
+  { key: 'visual',   label: 'Visual',    icon: Squares2X2Icon },
+  { key: 'code',     label: 'Code',      icon: CodeBracketIcon },
+  { key: 'preview',  label: 'Preview',   icon: EyeIcon },
+  { key: 'settings', label: 'Settings',  icon: Cog6ToothIcon },
+  { key: 'test',     label: 'Test Send', icon: BeakerIcon },
 ]
 </script>
 

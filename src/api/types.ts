@@ -132,6 +132,10 @@ export interface TemplateRequest {
   name: string
   subject?: string | null
   body: string
+  // Optional MJML source for templates authored in the Visual editor.
+  // Compiled HTML lives in `body`; this is kept only so the editor can
+  // re-hydrate the visual tree on reload.
+  mjml_source?: string
   variables?: string[]
   is_active: boolean
 }
