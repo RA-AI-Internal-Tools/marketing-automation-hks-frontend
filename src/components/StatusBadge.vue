@@ -6,12 +6,29 @@ const statusConfig: Record<string, { bg: string; text: string; dot: string }> = 
   completed: { bg: 'bg-[var(--color-info-bg)]', text: 'text-[var(--color-info-text)]', dot: 'bg-[var(--color-info)]' },
   cancelled: { bg: 'bg-[var(--color-bg-subtle)]', text: 'text-[var(--color-text-tertiary)]', dot: 'bg-[var(--color-text-muted)]' },
   expired: { bg: 'bg-[var(--color-warning-bg)]', text: 'text-[var(--color-warning-text)]', dot: 'bg-[var(--color-warning)]' },
+  // ─── LogStatus* — must stay in sync with internal/model/campaign.go ───
+  // Lifecycle progression: sent → delivered → opened → clicked. Each step
+  // gets its own colour so a glance at the table immediately shows where
+  // value lands. Bounced/complaint/failed are negative terminal states and
+  // get error red so they can't be confused with the muted-grey "skipped"
+  // class.
   sent: { bg: 'bg-[var(--color-success-bg)]', text: 'text-[var(--color-success-text)]', dot: 'bg-[var(--color-success)]' },
+  delivered: { bg: 'bg-[var(--color-success-bg)]', text: 'text-[var(--color-success-text)]', dot: 'bg-[var(--color-success)]' },
+  opened: { bg: 'bg-[var(--color-info-bg)]', text: 'text-[var(--color-info-text)]', dot: 'bg-[var(--color-info)]' },
+  clicked: { bg: 'bg-[var(--color-info-bg)]', text: 'text-[var(--color-info-text)]', dot: 'bg-[var(--color-info)]' },
+  bounced: { bg: 'bg-[var(--color-error-bg)]', text: 'text-[var(--color-error-text)]', dot: 'bg-[var(--color-error)]' },
+  complaint: { bg: 'bg-[var(--color-error-bg)]', text: 'text-[var(--color-error-text)]', dot: 'bg-[var(--color-error)]' },
   failed: { bg: 'bg-[var(--color-error-bg)]', text: 'text-[var(--color-error-text)]', dot: 'bg-[var(--color-error)]' },
+  // ─── Skip / deferred variants ─────────────────────────────────────────
+  // Distinct from terminal failures: nothing was sent and nothing went
+  // wrong; either policy or environment held the message back.
   skipped: { bg: 'bg-[var(--color-bg-subtle)]', text: 'text-[var(--color-text-tertiary)]', dot: 'bg-[var(--color-text-muted)]' },
   frequency_capped: { bg: 'bg-[var(--color-warning-bg)]', text: 'text-[var(--color-warning-text)]', dot: 'bg-[var(--color-warning)]' },
   no_consent: { bg: 'bg-[var(--color-warning-bg)]', text: 'text-[var(--color-warning-text)]', dot: 'bg-[var(--color-warning)]' },
   condition_not_met: { bg: 'bg-[var(--color-bg-subtle)]', text: 'text-[var(--color-text-tertiary)]', dot: 'bg-[var(--color-text-muted)]' },
+  quiet_hour_deferred: { bg: 'bg-[var(--color-warning-bg)]', text: 'text-[var(--color-warning-text)]', dot: 'bg-[var(--color-warning)]' },
+  // ─── EnrollmentStatus — `waiting` covers G6 wait-for-event holds ─────
+  waiting: { bg: 'bg-[var(--color-info-bg)]', text: 'text-[var(--color-info-text)]', dot: 'bg-[var(--color-info)]' },
   up: { bg: 'bg-[var(--color-success-bg)]', text: 'text-[var(--color-success-text)]', dot: 'bg-[var(--color-success)]' },
   down: { bg: 'bg-[var(--color-error-bg)]', text: 'text-[var(--color-error-text)]', dot: 'bg-[var(--color-error)]' },
   degraded: { bg: 'bg-[var(--color-warning-bg)]', text: 'text-[var(--color-warning-text)]', dot: 'bg-[var(--color-warning)]' },
