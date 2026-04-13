@@ -35,6 +35,7 @@ import {
   MapIcon,
   AdjustmentsHorizontalIcon,
   BoltIcon,
+  SparklesIcon,
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps<{
@@ -75,6 +76,7 @@ const allSections: NavSection[] = [
       { name: 'Campaigns', to: '/campaigns', icon: RocketLaunchIcon },
       { name: 'Broadcasts', to: '/broadcasts', icon: MegaphoneIcon },
       { name: 'Templates', to: '/templates', icon: DocumentDuplicateIcon },
+      { name: 'Template library', to: '/template-library', icon: SparklesIcon },
       { name: 'Catalog', to: '/catalog', icon: CubeIcon },
     ],
   },

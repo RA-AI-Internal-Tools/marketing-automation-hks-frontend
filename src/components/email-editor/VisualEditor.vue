@@ -80,6 +80,40 @@ const PRODUCT_LOOP_BLOCK = `
 </mj-section>
 `.trim()
 
+// Dynamic Content: content that renders only when a condition is truthy.
+// Uses the Handlebars-shim {{#if}}, so operators can gate a block on any
+// context variable the engine injects (e.g. has_high_cart_value,
+// is_loyalty_tier_gold). For condition-based segment gating, the backend
+// is the source of truth — this block is the author-side placeholder.
+const DYNAMIC_CONTENT_BLOCK = `
+<mj-section background-color="#fff7ed">
+  <mj-column>
+    <mj-raw>{{#if show_vip_offer}}</mj-raw>
+    <mj-text font-size="14px" color="#9a3412" font-weight="600">VIP members — early access</mj-text>
+    <mj-text>Your exclusive 20% discount is waiting. Code <strong>{{vip_code}}</strong>.</mj-text>
+    <mj-button background-color="#9a3412" href="{{vip_url}}">Shop early</mj-button>
+    <mj-raw>{{/if}}</mj-raw>
+  </mj-column>
+</mj-section>
+`.trim()
+
+const RECOMMENDED_PRODUCTS_BLOCK = `
+<mj-section>
+  <mj-column>
+    <mj-text font-weight="bold" font-size="16px">Picks for you</mj-text>
+    <mj-raw>{{#each recommended_products}}</mj-raw>
+    <mj-section padding="6px 0">
+      <mj-column width="30%"><mj-image src="{{this.image_url}}" alt="{{this.name}}" /></mj-column>
+      <mj-column width="70%">
+        <mj-text font-weight="600">{{this.name}}</mj-text>
+        <mj-text color="#555555">{{this.price}}</mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-raw>{{/each}}</mj-raw>
+  </mj-column>
+</mj-section>
+`.trim()
+
 onMounted(() => {
   if (!container.value) return
 
@@ -108,7 +142,9 @@ onMounted(() => {
     : DEFAULT_MJML
   editor.setComponents(initial)
 
-  // Register the cart-loop block in the MJML plugin's category.
+  // Register MA-specific blocks in the Dynamic category so they sit
+  // together in the palette. Icons are tiny inline SVG to avoid another
+  // asset pipeline.
   editor.BlockManager.add('ma-product-loop', {
     label: 'Cart items loop',
     category: 'Dynamic',
@@ -117,6 +153,27 @@ onMounted(() => {
               <path d="M3 3h2l2 14h11l3-9H7.5"/>
               <circle cx="10" cy="20" r="1.5"/>
               <circle cx="17" cy="20" r="1.5"/>
+            </svg>`,
+  })
+  editor.BlockManager.add('ma-dynamic-content', {
+    label: 'Conditional content',
+    category: 'Dynamic',
+    content: DYNAMIC_CONTENT_BLOCK,
+    media: `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="28" height="28">
+              <path d="M12 2l2.4 5 5.6.8-4 3.9.9 5.6L12 14.8 7.1 17.3 8 11.7 4 7.8l5.6-.8z"/>
+            </svg>`,
+  })
+  editor.BlockManager.add('ma-recommended-products', {
+    label: 'Recommended products',
+    category: 'Dynamic',
+    content: RECOMMENDED_PRODUCTS_BLOCK,
+    media: `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="28" height="28">
+              <rect x="3" y="4" width="6" height="6"/>
+              <rect x="11" y="4" width="10" height="2"/>
+              <rect x="11" y="8" width="8" height="2"/>
+              <rect x="3" y="14" width="6" height="6"/>
+              <rect x="11" y="14" width="10" height="2"/>
+              <rect x="11" y="18" width="8" height="2"/>
             </svg>`,
   })
 

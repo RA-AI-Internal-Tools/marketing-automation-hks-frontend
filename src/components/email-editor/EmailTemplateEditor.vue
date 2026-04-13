@@ -58,7 +58,30 @@ const isActive = ref(true)
 const sampleData = ref<Record<string, any>>(getDefaultSampleData())
 
 // UI state
+// Default to 'visual' for brand-new templates (friendlier for non-coders),
+// but keep 'code' for existing templates — which may be hand-HTML and
+// don't round-trip cleanly into MJML. The heuristic: if mjmlSource is
+// set, open Visual; otherwise open Code.
 const activeTab = ref('code')
+
+// Code ↔ Visual bridge: when the user switches from Code (raw HTML in
+// body) into Visual, we wrap the HTML in an mj-raw block so the Visual
+// editor at least has something to show. This is deliberately lossy —
+// arbitrary HTML won't decompose into MJML components — but it's better
+// than a blank canvas and honest about the trade-off. A banner in the
+// editor tells the user what just happened so they're not surprised.
+const codeToVisualNotice = ref(false)
+function onTabChange(next: string) {
+  if (activeTab.value === 'code' && next === 'visual' && !mjmlSource.value && body.value.trim()) {
+    // Wrap the hand-authored HTML so GrapesJS can load it. mj-raw
+    // preserves the markup verbatim during compile; the user loses
+    // drag-edit on that block but keeps rendering.
+    mjmlSource.value = `<mjml><mj-body><mj-section><mj-column><mj-raw>${body.value}</mj-raw></mj-column></mj-section></mj-body></mjml>`
+    codeToVisualNotice.value = true
+    setTimeout(() => { codeToVisualNotice.value = false }, 8000)
+  }
+  activeTab.value = next
+}
 const loading = ref(false)
 const saving = ref(false)
 const error = ref('')
@@ -97,6 +120,8 @@ function populateFromTemplate(tmpl: MessageTemplate) {
   // Extended fields (may not exist on older templates)
   const ext = tmpl as any
   mjmlSource.value = ext.mjml_source || ''
+  // If the loaded template has MJML, open on Visual; else Code.
+  activeTab.value = mjmlSource.value ? 'visual' : 'code'
   preheader.value = ext.preheader || ''
   fromName.value = ext.from_name || ''
   fromEmail.value = ext.from_email || ''
@@ -301,7 +326,8 @@ function handleKeydown(e: KeyboardEvent) {
       <div class="flex items-center justify-between px-4 py-2.5 bg-white border-b border-gray-200">
         <div class="flex items-center gap-3">
           <EditorTabs
-            v-model:activeTab="activeTab"
+            :active-tab="activeTab"
+            @update:active-tab="onTabChange"
             :error-count="errorCount"
             :warning-count="warningCount"
           />
@@ -331,6 +357,13 @@ function handleKeydown(e: KeyboardEvent) {
       <div class="flex flex-1 min-h-0">
         <!-- Left: Editor / Preview / Settings -->
         <div class="flex-1 flex flex-col min-w-0">
+          <!-- One-shot notice after Code→Visual wrap. Fades after 8s. -->
+          <div v-if="codeToVisualNotice && activeTab === 'visual'"
+               class="mx-3 mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
+               role="status" aria-live="polite">
+            Your hand-written HTML is wrapped in a raw block — it still renders, but drag-edit is limited. For full Visual editing, replace it with MJML components from the palette.
+          </div>
+
           <!-- Visual Tab — GrapesJS + MJML drag-and-drop. v-model is
                mjmlSource; @update-html syncs the compiled HTML into
                body so the runtime renderer keeps using the same field.

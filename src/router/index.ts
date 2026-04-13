@@ -70,6 +70,12 @@ const router = createRouter({
       meta: { title: 'Templates' },
     },
     {
+      path: '/template-library',
+      name: 'template-library',
+      component: () => import('@/views/TemplateLibraryPage.vue'),
+      meta: { requiresWrite: true, title: 'Template Library' },
+    },
+    {
       path: '/templates/new',
       name: 'template-new',
       component: () => import('@/views/TemplateEditorPage.vue'),
