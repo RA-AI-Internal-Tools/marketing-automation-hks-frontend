@@ -172,6 +172,9 @@ export interface CampaignRequest {
   segment_filter: string
   cancellation_event?: string | null
   is_active: boolean
+  // Phase 3 — Send Time Optimization. When true, 0-delay steps fire at
+  // each recipient's learned optimal hour (see client_send_preferences).
+  use_sto?: boolean
 }
 
 // Analytics types

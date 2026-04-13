@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import PageHeader from '@/components/PageHeader.vue'
+import CampaignSimulateModal from '@/components/CampaignSimulateModal.vue'
 import { useCampaignsStore } from '@/stores/campaigns'
 import type { Step, StepVariant, CampaignRequest } from '@/api/types'
 import { useTemplatesStore } from '@/stores/templates'
@@ -22,6 +23,16 @@ const triggerEvent = ref('')
 const cancellationEvent = ref('')
 const segmentFilter = ref('all')
 const isActive = ref(true)
+// Phase 3 — Send Time Optimization. When true, 0-delay sends defer to
+// the recipient's next optimal hour (from client_send_preferences,
+// refreshed nightly). Only meaningful on steps with DelayMinutes = 0;
+// deliberately not a per-step toggle — same campaign either uses STO
+// end-to-end or it doesn't, to keep author UX focused.
+const useSTO = ref(false)
+
+// Simulate modal open state. Only reachable in edit mode (unsaved
+// campaigns don't yet have an id to simulate against).
+const simulateOpen = ref(false)
 const steps = ref<Step[]>([{ delay_minutes: 0, channel: 'email', template_key: '', condition: 'always', condition_params: {} }])
 
 const saving = ref(false)
@@ -85,6 +96,7 @@ onMounted(async () => {
       cancellationEvent.value = campaign.cancellation_event || ''
       segmentFilter.value = campaign.segment_filter
       isActive.value = campaign.is_active
+      useSTO.value = (campaign as any).use_sto === true
       steps.value = campaign.steps.length > 0 ? campaign.steps : [{ delay_minutes: 0, channel: 'email', template_key: '', condition: 'always' }]
     } catch {
       error.value = 'Failed to load campaign'
@@ -247,6 +259,7 @@ async function handleSubmit() {
       segment_filter: segmentFilter.value,
       cancellation_event: cancellationEvent.value || null,
       is_active: isActive.value,
+      use_sto: useSTO.value,
     }
 
     if (isEdit.value) {
@@ -268,6 +281,20 @@ async function handleSubmit() {
     <PageHeader
       :title="isEdit ? 'Edit Campaign' : 'New Campaign'"
       :description="isEdit ? 'Modify campaign configuration and steps' : 'Create a new campaign workflow'"
+    >
+      <template v-if="isEdit" #actions>
+        <button type="button" @click="simulateOpen = true"
+                class="inline-flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800">
+          <BeakerIcon class="h-4 w-4" aria-hidden="true" /> Simulate
+        </button>
+      </template>
+    </PageHeader>
+
+    <CampaignSimulateModal
+      v-if="isEdit"
+      :open="simulateOpen"
+      :campaign-id="campaignId"
+      @update:open="simulateOpen = $event"
     />
 
     <div v-if="loading" class="space-y-6 max-w-3xl">
@@ -307,11 +334,28 @@ async function handleSubmit() {
           </div>
           <div class="flex items-center gap-3 pt-6">
             <label class="relative inline-flex items-center cursor-pointer">
-              <input v-model="isActive" type="checkbox" class="sr-only peer" />
+              <input v-model="isActive" type="checkbox" class="sr-only peer" aria-label="Campaign active" />
               <div class="w-9 h-5 bg-[var(--color-border)] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[var(--color-accent)]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-[var(--color-primary)] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
             </label>
             <span class="text-sm text-[var(--color-text-secondary)]">Active</span>
           </div>
+        </div>
+
+        <!-- Send Time Optimization toggle — spans full width under the grid
+             so the explanatory text has room to breathe. -->
+        <div class="mt-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-subtle)] p-3">
+          <label class="flex items-start gap-3 cursor-pointer">
+            <span class="relative inline-flex items-center mt-0.5">
+              <input v-model="useSTO" type="checkbox" class="sr-only peer" aria-label="Send Time Optimization" />
+              <span class="w-9 h-5 bg-[var(--color-border)] peer-focus:ring-2 peer-focus:ring-[var(--color-accent)]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-[var(--color-primary)] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></span>
+            </span>
+            <span class="flex-1">
+              <span class="block text-sm font-medium text-[var(--color-text-primary)]">Send Time Optimization</span>
+              <span class="mt-0.5 block text-xs text-[var(--color-text-tertiary)]">
+                When enabled, 0-delay steps are delivered at each recipient's optimal engagement hour based on their historical open patterns. Recipients with &lt; 10 sends fall through to immediate delivery.
+              </span>
+            </span>
+          </label>
         </div>
       </div>
 
