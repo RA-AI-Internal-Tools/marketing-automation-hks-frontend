@@ -33,6 +33,18 @@ const useSTO = ref(false)
 // Simulate modal open state. Only reachable in edit mode (unsaved
 // campaigns don't yet have an id to simulate against).
 const simulateOpen = ref(false)
+
+// Phase 5.1 — per-campaign quiet hours. Stored as an object in the
+// editor; serialised only at save time, and only when both start+end
+// are filled. Absent fields = no override, block sent as null.
+const quietHours = ref<{ start: string; end: string; timezone: string }>({
+  start: '', end: '', timezone: 'UTC',
+})
+const commonTimezones = [
+  'UTC', 'Europe/London', 'Europe/Paris', 'Europe/Istanbul',
+  'America/New_York', 'America/Los_Angeles', 'America/Sao_Paulo',
+  'Asia/Dubai', 'Asia/Singapore', 'Asia/Tokyo', 'Australia/Sydney',
+]
 const steps = ref<Step[]>([{ delay_minutes: 0, channel: 'email', template_key: '', condition: 'always', condition_params: {} }])
 
 const saving = ref(false)
@@ -97,6 +109,14 @@ onMounted(async () => {
       segmentFilter.value = campaign.segment_filter
       isActive.value = campaign.is_active
       useSTO.value = (campaign as any).use_sto === true
+      const qh = (campaign as any).quiet_hours
+      if (qh && typeof qh === 'object') {
+        quietHours.value = {
+          start: qh.start || '',
+          end: qh.end || '',
+          timezone: qh.timezone || 'UTC',
+        }
+      }
       steps.value = campaign.steps.length > 0 ? campaign.steps : [{ delay_minutes: 0, channel: 'email', template_key: '', condition: 'always' }]
     } catch {
       error.value = 'Failed to load campaign'
@@ -260,6 +280,9 @@ async function handleSubmit() {
       cancellation_event: cancellationEvent.value || null,
       is_active: isActive.value,
       use_sto: useSTO.value,
+      quiet_hours: (quietHours.value.start && quietHours.value.end)
+        ? quietHours.value
+        : undefined,
     }
 
     if (isEdit.value) {
@@ -356,6 +379,38 @@ async function handleSubmit() {
               </span>
             </span>
           </label>
+        </div>
+
+        <!-- Quiet hours — per-campaign override. Leave blank to defer to the
+             global policy configured in Settings. -->
+        <div class="mt-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-subtle)] p-3">
+          <div class="mb-2 flex items-center justify-between">
+            <span class="text-sm font-medium text-[var(--color-text-primary)]">Quiet hours</span>
+            <span class="text-[11px] text-[var(--color-text-tertiary)]">Leave empty to use the global policy</span>
+          </div>
+          <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <label class="block">
+              <span class="block text-xs uppercase tracking-wide text-[var(--color-text-tertiary)]">Start</span>
+              <input v-model="quietHours.start" type="time"
+                     class="mt-1 w-full rounded border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1.5 font-mono text-sm" />
+            </label>
+            <label class="block">
+              <span class="block text-xs uppercase tracking-wide text-[var(--color-text-tertiary)]">End</span>
+              <input v-model="quietHours.end" type="time"
+                     class="mt-1 w-full rounded border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1.5 font-mono text-sm" />
+            </label>
+            <label class="block">
+              <span class="block text-xs uppercase tracking-wide text-[var(--color-text-tertiary)]">Timezone</span>
+              <select v-model="quietHours.timezone"
+                      class="mt-1 w-full rounded border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1.5 text-sm">
+                <option v-for="tz in commonTimezones" :key="tz" :value="tz">{{ tz }}</option>
+              </select>
+            </label>
+          </div>
+          <p class="mt-2 text-xs text-[var(--color-text-tertiary)]">
+            Messages scheduled during this window are held until the window ends — not dropped.
+            Cross-midnight ranges supported (e.g. 22:00 → 08:00).
+          </p>
         </div>
       </div>
 

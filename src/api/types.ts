@@ -175,6 +175,9 @@ export interface CampaignRequest {
   // Phase 3 — Send Time Optimization. When true, 0-delay steps fire at
   // each recipient's learned optimal hour (see client_send_preferences).
   use_sto?: boolean
+  // Phase 5.1 — per-campaign quiet-hours override. Omit or set to
+  // undefined for no override (global policy applies).
+  quiet_hours?: { start: string; end: string; timezone: string } | null
 }
 
 // Analytics types

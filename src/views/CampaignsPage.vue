@@ -7,14 +7,16 @@ import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { useCampaignsStore } from '@/stores/campaigns'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
-import { PlusIcon, PencilSquareIcon, TrashIcon, RocketLaunchIcon, DocumentDuplicateIcon } from '@heroicons/vue/24/outline'
+import { PlusIcon, PencilSquareIcon, TrashIcon, RocketLaunchIcon, DocumentDuplicateIcon, SparklesIcon } from '@heroicons/vue/24/outline'
 import { cloneCampaign } from '@/api/dashboard'
+import BlueprintPickerModal from '@/components/BlueprintPickerModal.vue'
 
 const router = useRouter()
 const store = useCampaignsStore()
 const auth = useAuthStore()
 const { showToast } = useToast()
 
+const blueprintOpen = ref(false)
 const deleteTarget = ref<{ id: number; name: string } | null>(null)
 const deleteOpen = computed({
   get: () => !!deleteTarget.value,
@@ -77,14 +79,24 @@ async function handleClone(id: number) {
         title="Campaigns"
         description="Definitions, workflow steps and live delivery across every channel."
       />
-      <button
-        v-if="auth.canWrite"
-        @click="router.push('/campaigns/new')"
-        class="flex items-center gap-2 px-4 py-2.5 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] shadow-sm transition-all"
-      >
-        <PlusIcon class="h-4 w-4" /> New Campaign
-      </button>
+      <div v-if="auth.canWrite" class="flex items-center gap-2">
+        <button
+          @click="blueprintOpen = true"
+          class="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] px-3 py-2.5 text-sm font-medium hover:bg-[var(--color-bg-page)]"
+          aria-label="Start from blueprint"
+        >
+          <SparklesIcon class="h-4 w-4" aria-hidden="true" /> From blueprint
+        </button>
+        <button
+          @click="router.push('/campaigns/new')"
+          class="flex items-center gap-2 px-4 py-2.5 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] shadow-sm transition-all"
+        >
+          <PlusIcon class="h-4 w-4" /> New Campaign
+        </button>
+      </div>
     </div>
+
+    <BlueprintPickerModal v-model:open="blueprintOpen" />
 
     <!-- Skeleton loading -->
     <div v-if="store.loading" class="space-y-4">
