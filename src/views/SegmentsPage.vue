@@ -1,31 +1,19 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import PageHeader from '@/components/PageHeader.vue'
-import StatusBadge from '@/components/StatusBadge.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import {
-  PlusIcon,
-  PencilSquareIcon,
-  TrashIcon,
-  LockClosedIcon,
-  PlayIcon,
-  XMarkIcon,
-  AdjustmentsHorizontalIcon,
+  PlusIcon, PencilSquareIcon, TrashIcon, LockClosedIcon,
+  PlayIcon, XMarkIcon, AdjustmentsHorizontalIcon,
 } from '@heroicons/vue/24/outline'
 import {
-  fetchSegments,
-  createSegment,
-  updateSegment,
-  deleteSegment,
-  evaluateSegment,
-  evaluateAllSegments,
+  fetchSegments, createSegment, updateSegment, deleteSegment,
+  evaluateSegment, evaluateAllSegments,
 } from '@/api/dashboard'
 import type { Segment, SegmentRequest } from '@/api/types'
 
-const router = useRouter()
 const auth = useAuthStore()
 const { showToast } = useToast()
 
@@ -45,21 +33,21 @@ const editingSlug = ref<string | null>(null)
 const eventInput = ref('')
 
 const ruleTypes = [
-  { value: 'last_order_days', label: 'Last Order Days' },
-  { value: 'order_count', label: 'Order Count' },
-  { value: 'total_spend', label: 'Total Spend' },
-  { value: 'avg_order_value', label: 'Avg Order Value' },
-  { value: 'account_age_days', label: 'Account Age Days' },
-  { value: 'all', label: 'All (Match Everyone)' },
+  { value: 'last_order_days', label: 'Last order days' },
+  { value: 'order_count', label: 'Order count' },
+  { value: 'total_spend', label: 'Total spend' },
+  { value: 'avg_order_value', label: 'Avg order value' },
+  { value: 'account_age_days', label: 'Account age days' },
+  { value: 'all', label: 'All (match everyone)' },
 ]
 
 const operators = [
-  { value: 'gt', label: '> Greater than' },
-  { value: 'gte', label: '>= Greater or equal' },
-  { value: 'lt', label: '< Less than' },
-  { value: 'lte', label: '<= Less or equal' },
-  { value: 'eq', label: '= Equal' },
-  { value: 'between', label: 'Between' },
+  { value: 'gt', label: '> greater than' },
+  { value: 'gte', label: '≥ greater or equal' },
+  { value: 'lt', label: '< less than' },
+  { value: 'lte', label: '≤ less or equal' },
+  { value: 'eq', label: '= equal' },
+  { value: 'between', label: 'between' },
 ]
 
 const defaultForm: SegmentRequest = {
@@ -77,33 +65,22 @@ const defaultForm: SegmentRequest = {
 }
 
 const form = ref<SegmentRequest>({ ...defaultForm })
-
 const isBetween = computed(() => form.value.operator === 'between')
 
 function slugify(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '')
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 }
-
 watch(() => form.value.name, (name) => {
-  if (!editingSlug.value) {
-    form.value.slug = slugify(name)
-  }
+  if (!editingSlug.value) form.value.slug = slugify(name)
 })
 
 async function load() {
   loading.value = true
   try {
     segments.value = await fetchSegments()
-  } catch (e: any) {
-    console.error('Failed to load segments', e)
-  } finally {
-    loading.value = false
-  }
+  } catch (e: any) { console.error('Failed to load segments', e) }
+  finally { loading.value = false }
 }
-
 onMounted(load)
 
 function openCreate() {
@@ -134,31 +111,19 @@ async function handleSave() {
   saving.value = true
   try {
     const payload = { ...form.value }
-    if (payload.operator !== 'between') {
-      payload.threshold_max = undefined
-    }
-    if (!payload.sync_to_tracardi) {
-      payload.tracardi_event_type = undefined
-    }
-    if (editingSlug.value) {
-      await updateSegment(editingSlug.value, payload)
-    } else {
-      await createSegment(payload)
-    }
+    if (payload.operator !== 'between') payload.threshold_max = undefined
+    if (!payload.sync_to_tracardi) payload.tracardi_event_type = undefined
+    if (editingSlug.value) await updateSegment(editingSlug.value, payload)
+    else await createSegment(payload)
     showModal.value = false
     showToast(editingSlug.value ? 'Segment updated' : 'Segment created', 'success')
     await load()
   } catch (e: any) {
     showToast(e.response?.data?.error || 'Failed to save segment', 'error')
-  } finally {
-    saving.value = false
-  }
+  } finally { saving.value = false }
 }
 
-function handleDelete(slug: string, name: string) {
-  deleteTarget.value = { slug, name }
-}
-
+function handleDelete(slug: string, name: string) { deleteTarget.value = { slug, name } }
 async function confirmDelete() {
   if (!deleteTarget.value) return
   const { slug, name } = deleteTarget.value
@@ -168,9 +133,7 @@ async function confirmDelete() {
     await load()
   } catch (e: any) {
     showToast(e.response?.data?.error || 'Failed to delete segment', 'error')
-  } finally {
-    deleteTarget.value = null
-  }
+  } finally { deleteTarget.value = null }
 }
 
 async function handleEvaluate(slug: string) {
@@ -181,9 +144,7 @@ async function handleEvaluate(slug: string) {
     await load()
   } catch (e: any) {
     showToast(e.response?.data?.error || 'Failed to evaluate segment', 'error')
-  } finally {
-    evaluating.value = null
-  }
+  } finally { evaluating.value = null }
 }
 
 async function handleEvaluateAll() {
@@ -194,315 +155,252 @@ async function handleEvaluateAll() {
     await load()
   } catch (e: any) {
     showToast(e.response?.data?.error || 'Failed to evaluate all segments', 'error')
-  } finally {
-    evaluatingAll.value = false
-  }
+  } finally { evaluatingAll.value = false }
 }
 
 function addEvent() {
   const val = eventInput.value.trim()
-  if (val && !form.value.entry_events.includes(val)) {
-    form.value.entry_events.push(val)
-  }
+  if (val && !form.value.entry_events.includes(val)) form.value.entry_events.push(val)
   eventInput.value = ''
 }
-
-function removeEvent(event: string) {
-  form.value.entry_events = form.value.entry_events.filter(e => e !== event)
-}
-
+function removeEvent(event: string) { form.value.entry_events = form.value.entry_events.filter(e => e !== event) }
 function handleEventKeydown(e: KeyboardEvent) {
-  if (e.key === 'Enter') {
-    e.preventDefault()
-    addEvent()
-  }
+  if (e.key === 'Enter') { e.preventDefault(); addEvent() }
 }
 
 function formatOperator(op: string): string {
-  const map: Record<string, string> = { gt: '>', gte: '>=', lt: '<', lte: '<=', eq: '=', between: 'between' }
+  const map: Record<string, string> = { gt: '>', gte: '≥', lt: '<', lte: '≤', eq: '=', between: '↔' }
   return map[op] || op
 }
-
 function formatThreshold(segment: Segment): string {
-  if (segment.operator === 'between') {
-    return `${segment.threshold_min} - ${segment.threshold_max ?? '?'}`
-  }
+  if (segment.operator === 'between') return `${segment.threshold_min} ↔ ${segment.threshold_max ?? '?'}`
   return `${formatOperator(segment.operator)} ${segment.threshold_min}`
 }
+
+const totalMembers = computed(() =>
+  segments.value.reduce((a, s) => a + (s.member_count ?? 0), 0),
+)
 </script>
 
 <template>
   <div class="page-enter">
-    <div class="flex items-center justify-between mb-6">
-      <PageHeader
-        kicker="Audience"
-        title="Segments"
-        description="Compose audiences from behavioural rules, attributes, and engagement history."
-      />
-      <div class="flex items-center gap-2">
+    <PageHeader
+      kicker="Audience"
+      title="Segments"
+      description="Compose audiences from behavioural rules, attributes, and engagement history."
+    >
+      <div class="hdr-actions">
         <button
           v-if="auth.canWrite"
           @click="handleEvaluateAll"
           :disabled="evaluatingAll"
-          class="flex items-center gap-2 px-4 py-2.5 border border-[var(--color-border)] text-[var(--color-text-secondary)] text-sm font-medium rounded-lg hover:bg-[var(--color-bg-subtle)] disabled:opacity-50 transition-all"
+          class="btn btn-ghost"
         >
-          <PlayIcon class="h-4 w-4" /> {{ evaluatingAll ? 'Evaluating...' : 'Evaluate All' }}
+          <PlayIcon class="h-4 w-4" />
+          <span>{{ evaluatingAll ? 'Evaluating…' : 'Evaluate all' }}</span>
         </button>
-        <button
-          v-if="auth.canWrite"
-          @click="openCreate"
-          class="flex items-center gap-2 px-4 py-2.5 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] shadow-sm transition-all"
-        >
-          <PlusIcon class="h-4 w-4" /> New Segment
+        <button v-if="auth.canWrite" @click="openCreate" class="btn btn-primary">
+          <PlusIcon class="h-4 w-4" /> New segment
         </button>
       </div>
+    </PageHeader>
+
+    <!-- Meta strip -->
+    <div v-if="!loading && segments.length" class="seg-meta">
+      <span class="rule-dot">Inventory</span>
+      <span class="seg-meta-num num-tabular">{{ segments.length }}</span>
+      <span class="seg-meta-lbl">segment{{ segments.length === 1 ? '' : 's' }}</span>
+      <span class="seg-meta-sep">·</span>
+      <span class="seg-meta-num num-tabular">{{ totalMembers.toLocaleString() }}</span>
+      <span class="seg-meta-lbl">members total</span>
+      <span class="seg-meta-rule" />
     </div>
 
     <!-- Column guide -->
-    <div class="bg-[var(--color-bg-subtle)] border border-[var(--color-border)] rounded-xl p-4 mb-6 text-sm text-[var(--color-text-secondary)]">
-      <details>
-        <summary class="cursor-pointer font-semibold text-[var(--color-text-primary)] select-none">How segments work</summary>
-        <div class="mt-3 space-y-2">
-          <p>Segments group customers by behavioral rules. When a campaign uses a segment filter, only customers who qualify at enrollment time are entered into the campaign.</p>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
-            <div><span class="font-medium text-[var(--color-text-primary)]">Rule Type</span> &mdash; What customer data to evaluate: days since last order, total order count, lifetime spend, average order value, or account age.</div>
-            <div><span class="font-medium text-[var(--color-text-primary)]">Thresholds</span> &mdash; The comparison value. E.g. <code class="bg-[var(--color-bg-card)] px-1 rounded text-xs">> 30</code> means "more than 30 days" or <code class="bg-[var(--color-bg-card)] px-1 rounded text-xs">2 &ndash; 4</code> means "between 2 and 4 orders".</div>
-            <div><span class="font-medium text-[var(--color-text-primary)]">Entry Events</span> &mdash; Which customer events trigger re-evaluation. When <code class="bg-[var(--color-bg-card)] px-1 rounded text-xs">order-completed</code> fires, the system checks if the customer now enters or exits this segment.</div>
-            <div><span class="font-medium text-[var(--color-text-primary)]">Tracardi</span> &mdash; <span class="text-green-600 font-medium">Connected</span> means thresholds sync to Tracardi for profile tagging. <span class="text-[var(--color-text-muted)]">--</span> means MA-only, not synced.</div>
-            <div><span class="font-medium text-[var(--color-text-primary)]">Members</span> &mdash; Current count of customers in this segment. Updates when entry events fire or when you click the evaluate button.</div>
-            <div><span class="font-medium text-[var(--color-text-primary)]">Actions</span> &mdash; <span class="font-medium">Play</span> = manually evaluate all customers now. <span class="font-medium">Edit</span> = change rules, thresholds, or Tracardi sync settings. Built-in segments (lock icon) can be edited but not deleted.</div>
-          </div>
-        </div>
-      </details>
-    </div>
+    <details class="seg-guide">
+      <summary>
+        <span class="rule-dot">How segments work</span>
+        <span class="seg-guide-chev">›</span>
+      </summary>
+      <div class="seg-guide-body">
+        <p>Segments group customers by behavioural rules. When a campaign uses a segment filter, only customers who qualify at enrollment time are entered.</p>
+        <dl>
+          <div><dt>Rule Type</dt><dd>What customer data to evaluate — days since last order, total order count, lifetime spend, avg order value, or account age.</dd></div>
+          <div><dt>Thresholds</dt><dd>The comparison value. <code>&gt; 30</code> means "more than 30 days"; <code>2 ↔ 4</code> means "between 2 and 4 orders".</dd></div>
+          <div><dt>Entry Events</dt><dd>Which customer events trigger re-evaluation. When <code>order-completed</code> fires, the system re-checks this segment.</dd></div>
+          <div><dt>Tracardi</dt><dd><span class="seg-ok">Connected</span> = thresholds sync to Tracardi for profile tagging. <span class="seg-dim">—</span> = MA-only.</dd></div>
+          <div><dt>Members</dt><dd>Current count. Updates on entry events or when you click evaluate.</dd></div>
+          <div><dt>Actions</dt><dd>Play = re-evaluate now. Edit = change rules. Built-in segments (lock icon) can be edited but not deleted.</dd></div>
+        </dl>
+      </div>
+    </details>
 
-    <!-- Skeleton loading -->
-    <div v-if="loading" class="space-y-3">
-      <div v-for="i in 4" :key="i" class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-5">
-        <div class="flex items-center gap-4">
-          <div class="skeleton h-5 w-40"></div>
-          <div class="skeleton h-4 w-24"></div>
-          <div class="skeleton h-4 w-20"></div>
-          <div class="flex-1"></div>
-          <div class="skeleton h-6 w-16 rounded-full"></div>
-        </div>
+    <!-- Skeletons -->
+    <div v-if="loading" class="seg-table-wrap">
+      <div v-for="i in 4" :key="i" class="seg-skel">
+        <div class="skeleton h-4 w-44"></div>
+        <div class="skeleton h-3.5 w-28"></div>
+        <div class="skeleton h-3.5 w-20"></div>
+        <div class="skeleton h-3.5 w-16 ml-auto"></div>
       </div>
     </div>
 
-    <div v-else-if="segments.length === 0" class="text-center py-16">
-      <div class="text-[var(--color-text-muted)] mb-3">
-        <AdjustmentsHorizontalIcon class="h-12 w-12 mx-auto" />
-      </div>
-      <p class="text-[var(--color-text-tertiary)] font-medium">No segments yet</p>
-      <p class="text-sm text-[var(--color-text-muted)] mt-1">Create your first segment to start grouping your audience.</p>
+    <!-- Empty -->
+    <div v-else-if="segments.length === 0" class="seg-empty">
+      <AdjustmentsHorizontalIcon class="seg-empty-icon" />
+      <p class="seg-empty-title">No segments yet.</p>
+      <p class="seg-empty-sub">Create your first segment to start grouping your audience.</p>
     </div>
 
-    <!-- Segments table -->
-    <div v-else class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b border-[var(--color-border)] bg-[var(--color-bg-subtle)]">
-              <th class="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">Name</th>
-              <th class="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">Slug</th>
-              <th class="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">Rule Type</th>
-              <th class="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">Thresholds</th>
-              <th class="text-left px-4 py-3 text-xs font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">Entry Events</th>
-              <th class="text-right px-4 py-3 text-xs font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">Members</th>
-              <th class="text-center px-4 py-3 text-xs font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">Tracardi</th>
-              <th class="text-center px-4 py-3 text-xs font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">Active</th>
-              <th class="text-right px-4 py-3 text-xs font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="segment in segments"
-              :key="segment.id"
-              class="border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-bg-subtle)]/50 transition-colors"
-            >
-              <td class="px-4 py-3">
-                <div class="flex items-center gap-2">
-                  <LockClosedIcon v-if="segment.is_built_in" class="h-4 w-4 text-[var(--color-text-muted)]" title="Built-in segment" />
-                  <router-link
-                    :to="`/segments/${segment.slug}`"
-                    class="font-medium text-[var(--color-text-primary)] hover:text-[var(--color-primary)] transition-colors"
-                  >
-                    {{ segment.name }}
-                  </router-link>
-                </div>
-              </td>
-              <td class="px-4 py-3">
-                <code class="bg-[var(--color-bg-subtle)] px-1.5 py-0.5 rounded text-xs font-mono text-[var(--color-text-tertiary)]">{{ segment.slug }}</code>
-              </td>
-              <td class="px-4 py-3 text-[var(--color-text-secondary)]">
-                {{ segment.rule_type.replace(/_/g, ' ') }}
-              </td>
-              <td class="px-4 py-3 text-[var(--color-text-secondary)] font-mono text-xs">
-                {{ formatThreshold(segment) }}
-              </td>
-              <td class="px-4 py-3">
-                <div class="flex flex-wrap gap-1">
-                  <span
-                    v-for="evt in segment.entry_events"
-                    :key="evt"
-                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--color-info-bg)] text-[var(--color-info-text)]"
-                  >
-                    {{ evt }}
-                  </span>
-                  <span v-if="segment.entry_events.length === 0" class="text-[var(--color-text-muted)] text-xs">--</span>
-                </div>
-              </td>
-              <td class="px-4 py-3 text-right font-semibold text-[var(--color-text-primary)]">
-                {{ (segment.member_count ?? 0).toLocaleString() }}
-              </td>
-              <td class="px-4 py-3 text-center">
-                <StatusBadge v-if="segment.sync_to_tracardi" status="connected" />
-                <span v-else class="text-[var(--color-text-muted)] text-xs">--</span>
-              </td>
-              <td class="px-4 py-3 text-center">
-                <StatusBadge :status="segment.is_active ? 'active' : 'inactive'" />
-              </td>
-              <td class="px-4 py-3">
-                <div class="flex items-center justify-end gap-1">
-                  <button
-                    @click="handleEvaluate(segment.slug)"
-                    :disabled="evaluating === segment.slug"
-                    class="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors disabled:opacity-50"
-                    title="Evaluate"
-                  >
-                    <PlayIcon class="h-4 w-4" :class="{ 'animate-spin': evaluating === segment.slug }" />
-                  </button>
-                  <button
-                    v-if="auth.canWrite"
-                    @click="openEdit(segment)"
-                    class="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
-                    title="Edit"
-                  >
-                    <PencilSquareIcon class="h-4 w-4" />
-                  </button>
-                  <button
-                    v-if="auth.canWrite && !segment.is_built_in"
-                    @click="handleDelete(segment.slug, segment.name)"
-                    class="p-1.5 text-[var(--color-text-muted)] hover:text-red-600 transition-colors"
-                    title="Delete"
-                  >
-                    <TrashIcon class="h-4 w-4" />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+    <!-- Table -->
+    <div v-else class="seg-card table-scroll">
+      <table class="seg-table">
+        <thead>
+          <tr>
+            <th class="seg-th">Name</th>
+            <th class="seg-th">Slug</th>
+            <th class="seg-th">Rule</th>
+            <th class="seg-th">Threshold</th>
+            <th class="seg-th">Entry events</th>
+            <th class="seg-th seg-th-right">Members</th>
+            <th class="seg-th seg-th-center">Tracardi</th>
+            <th class="seg-th seg-th-center">Active</th>
+            <th class="seg-th seg-th-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="segment in segments" :key="segment.id" class="seg-row">
+            <td class="seg-td">
+              <div class="seg-name-wrap">
+                <LockClosedIcon v-if="segment.is_built_in" class="seg-lock" title="Built-in segment" />
+                <router-link :to="`/segments/${segment.slug}`" class="seg-name">
+                  {{ segment.name }}
+                </router-link>
+              </div>
+            </td>
+            <td class="seg-td">
+              <code class="seg-code">{{ segment.slug }}</code>
+            </td>
+            <td class="seg-td seg-rule">{{ segment.rule_type.replace(/_/g, ' ') }}</td>
+            <td class="seg-td">
+              <code class="seg-threshold num-tabular">{{ formatThreshold(segment) }}</code>
+            </td>
+            <td class="seg-td">
+              <div v-if="segment.entry_events.length" class="seg-events">
+                <span v-for="evt in segment.entry_events" :key="evt" class="seg-event">{{ evt }}</span>
+              </div>
+              <span v-else class="seg-dim">—</span>
+            </td>
+            <td class="seg-td seg-td-right">
+              <span class="seg-members num-tabular">{{ (segment.member_count ?? 0).toLocaleString() }}</span>
+            </td>
+            <td class="seg-td seg-td-center">
+              <span v-if="segment.sync_to_tracardi" class="seg-pill seg-pill-ok">
+                <span class="seg-pill-dot" /> sync
+              </span>
+              <span v-else class="seg-dim">—</span>
+            </td>
+            <td class="seg-td seg-td-center">
+              <span class="seg-pill" :class="segment.is_active ? 'seg-pill-ok' : 'seg-pill-muted'">
+                <span class="seg-pill-dot" />{{ segment.is_active ? 'active' : 'paused' }}
+              </span>
+            </td>
+            <td class="seg-td seg-td-right">
+              <div class="seg-actions">
+                <button
+                  @click="handleEvaluate(segment.slug)"
+                  :disabled="evaluating === segment.slug"
+                  class="seg-action"
+                  :title="evaluating === segment.slug ? 'Evaluating…' : 'Evaluate now'"
+                >
+                  <PlayIcon class="h-4 w-4" :class="{ 'seg-spin': evaluating === segment.slug }" />
+                </button>
+                <button
+                  v-if="auth.canWrite"
+                  @click="openEdit(segment)"
+                  class="seg-action"
+                  title="Edit"
+                >
+                  <PencilSquareIcon class="h-4 w-4" />
+                </button>
+                <button
+                  v-if="auth.canWrite && !segment.is_built_in"
+                  @click="handleDelete(segment.slug, segment.name)"
+                  class="seg-action seg-action-danger"
+                  title="Delete"
+                >
+                  <TrashIcon class="h-4 w-4" />
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <!-- Create / Edit Modal -->
     <Teleport to="body">
-      <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center">
-        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" @click="showModal = false" />
-        <div class="relative bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto mx-4 p-6">
-          <div class="flex items-center justify-between mb-5">
-            <h2 class="text-lg font-semibold text-[var(--color-text-primary)]">
-              {{ editingSlug ? 'Edit Segment' : 'New Segment' }}
-            </h2>
-            <button @click="showModal = false" class="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors">
+      <div v-if="showModal" class="seg-modal-root">
+        <div class="seg-modal-scrim" @click="showModal = false" />
+        <div class="seg-modal" role="dialog" aria-modal="true">
+          <header class="seg-modal-head">
+            <div>
+              <div class="rule-dot">{{ editingSlug ? 'Edit' : 'New' }}</div>
+              <h2 class="seg-modal-title">
+                {{ editingSlug ? 'Edit segment' : 'New segment' }}
+              </h2>
+            </div>
+            <button @click="showModal = false" class="seg-modal-close" aria-label="Close">
               <XMarkIcon class="h-5 w-5" />
             </button>
-          </div>
+          </header>
 
-          <form @submit.prevent="handleSave" class="space-y-4">
-            <!-- Name -->
-            <div>
-              <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Name</label>
-              <input
-                v-model="form.name"
-                type="text"
-                required
-                class="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-page)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)]"
-                placeholder="e.g. High Spenders"
-              />
+          <form @submit.prevent="handleSave" class="seg-form">
+            <div class="seg-field">
+              <label>Name</label>
+              <input v-model="form.name" type="text" required placeholder="e.g. High spenders" />
+            </div>
+            <div class="seg-field">
+              <label>Slug</label>
+              <input v-model="form.slug" type="text" required class="mono" placeholder="high-spenders" />
+            </div>
+            <div class="seg-field">
+              <label>Description</label>
+              <textarea v-model="form.description" rows="2" placeholder="Optional description…" />
             </div>
 
-            <!-- Slug -->
-            <div>
-              <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Slug</label>
-              <input
-                v-model="form.slug"
-                type="text"
-                required
-                class="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-page)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] font-mono"
-                placeholder="high-spenders"
-              />
+            <div class="seg-grid-2">
+              <div class="seg-field">
+                <label>Rule type</label>
+                <select v-model="form.rule_type">
+                  <option v-for="rt in ruleTypes" :key="rt.value" :value="rt.value">{{ rt.label }}</option>
+                </select>
+              </div>
+              <div class="seg-field">
+                <label>Operator</label>
+                <select v-model="form.operator">
+                  <option v-for="op in operators" :key="op.value" :value="op.value">{{ op.label }}</option>
+                </select>
+              </div>
             </div>
 
-            <!-- Description -->
-            <div>
-              <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Description</label>
-              <textarea
-                v-model="form.description"
-                rows="2"
-                class="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-page)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)]"
-                placeholder="Optional description..."
-              />
+            <div class="seg-grid-2">
+              <div class="seg-field">
+                <label>{{ isBetween ? 'Threshold min' : 'Threshold' }}</label>
+                <input v-model.number="form.threshold_min" type="number" required class="mono" />
+              </div>
+              <div v-if="isBetween" class="seg-field">
+                <label>Threshold max</label>
+                <input v-model.number="form.threshold_max" type="number" required class="mono" />
+              </div>
             </div>
 
-            <!-- Rule Type -->
-            <div>
-              <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Rule Type</label>
-              <select
-                v-model="form.rule_type"
-                class="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-page)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)]"
-              >
-                <option v-for="rt in ruleTypes" :key="rt.value" :value="rt.value">{{ rt.label }}</option>
-              </select>
-            </div>
-
-            <!-- Operator -->
-            <div>
-              <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Operator</label>
-              <select
-                v-model="form.operator"
-                class="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-page)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)]"
-              >
-                <option v-for="op in operators" :key="op.value" :value="op.value">{{ op.label }}</option>
-              </select>
-            </div>
-
-            <!-- Threshold Min -->
-            <div>
-              <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
-                {{ isBetween ? 'Threshold Min' : 'Threshold' }}
-              </label>
-              <input
-                v-model.number="form.threshold_min"
-                type="number"
-                required
-                class="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-page)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)]"
-              />
-            </div>
-
-            <!-- Threshold Max (between only) -->
-            <div v-if="isBetween">
-              <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Threshold Max</label>
-              <input
-                v-model.number="form.threshold_max"
-                type="number"
-                required
-                class="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-page)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)]"
-              />
-            </div>
-
-            <!-- Entry Events -->
-            <div>
-              <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Entry Events</label>
-              <div class="flex flex-wrap gap-1.5 mb-2" v-if="form.entry_events.length">
-                <span
-                  v-for="evt in form.entry_events"
-                  :key="evt"
-                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--color-info-bg)] text-[var(--color-info-text)]"
-                >
+            <div class="seg-field">
+              <label>Entry events</label>
+              <div v-if="form.entry_events.length" class="seg-event-list">
+                <span v-for="evt in form.entry_events" :key="evt" class="seg-event-chip">
                   {{ evt }}
-                  <button type="button" @click="removeEvent(evt)" class="hover:text-red-500 transition-colors">
+                  <button type="button" @click="removeEvent(evt)" aria-label="Remove">
                     <XMarkIcon class="h-3 w-3" />
                   </button>
                 </span>
@@ -512,57 +410,31 @@ function formatThreshold(segment: Segment): string {
                 type="text"
                 @keydown="handleEventKeydown"
                 @blur="addEvent"
-                class="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-page)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)]"
+                class="mono"
                 placeholder="Type event name and press Enter"
               />
             </div>
 
-            <!-- Sync to Tracardi -->
-            <div class="space-y-3">
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input
-                  v-model="form.sync_to_tracardi"
-                  type="checkbox"
-                  class="rounded border-[var(--color-border)] text-[var(--color-primary)] focus:ring-[var(--color-accent)]/30"
-                />
-                <span class="text-sm text-[var(--color-text-secondary)]">Sync to Tracardi</span>
+            <div class="seg-field-row">
+              <label class="seg-check">
+                <input v-model="form.sync_to_tracardi" type="checkbox" />
+                <span>Sync to Tracardi</span>
               </label>
-              <div v-if="form.sync_to_tracardi">
-                <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Tracardi Event Type</label>
-                <input
-                  v-model="form.tracardi_event_type"
-                  type="text"
-                  class="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-page)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)]"
-                  placeholder="e.g. segment-entry"
-                />
-              </div>
+              <label class="seg-check">
+                <input v-model="form.is_active" type="checkbox" />
+                <span>Active</span>
+              </label>
             </div>
 
-            <!-- Active toggle -->
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input
-                v-model="form.is_active"
-                type="checkbox"
-                class="rounded border-[var(--color-border)] text-[var(--color-primary)] focus:ring-[var(--color-accent)]/30"
-              />
-              <span class="text-sm text-[var(--color-text-secondary)]">Active</span>
-            </label>
+            <div v-if="form.sync_to_tracardi" class="seg-field">
+              <label>Tracardi event type</label>
+              <input v-model="form.tracardi_event_type" type="text" class="mono" placeholder="e.g. segment-entry" />
+            </div>
 
-            <!-- Actions -->
-            <div class="flex items-center justify-end gap-3 pt-2">
-              <button
-                type="button"
-                @click="showModal = false"
-                class="px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                :disabled="saving"
-                class="px-4 py-2.5 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] shadow-sm transition-all disabled:opacity-50"
-              >
-                {{ saving ? 'Saving...' : (editingSlug ? 'Update' : 'Create') }}
+            <div class="seg-modal-foot">
+              <button type="button" @click="showModal = false" class="btn btn-ghost">Cancel</button>
+              <button type="submit" :disabled="saving" class="btn btn-primary">
+                {{ saving ? 'Saving…' : (editingSlug ? 'Update' : 'Create') }}
               </button>
             </div>
           </form>
@@ -582,3 +454,426 @@ function formatThreshold(segment: Segment): string {
     />
   </div>
 </template>
+
+<style scoped>
+.hdr-actions { display: inline-flex; align-items: center; gap: 8px; }
+
+/* ── Meta ── */
+.seg-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 18px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  letter-spacing: 0.02em;
+}
+.seg-meta-num { color: var(--color-text-primary); font-weight: 500; font-size: 12px; }
+.seg-meta-lbl { color: var(--color-text-muted); }
+.seg-meta-sep { color: var(--color-border-strong); }
+.seg-meta-rule { flex: 1; height: 1px; background: var(--color-divider); margin-left: 8px; }
+
+/* ── Guide ── */
+.seg-guide {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-bottom: 18px;
+  overflow: hidden;
+}
+.seg-guide > summary {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background var(--transition-fast);
+}
+.seg-guide > summary::-webkit-details-marker { display: none; }
+.seg-guide > summary:hover { background: var(--color-bg-subtle); }
+.seg-guide-chev {
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--color-text-muted);
+  transition: transform var(--transition-fast);
+}
+.seg-guide[open] .seg-guide-chev { transform: rotate(90deg); color: var(--hks-cyan); }
+.seg-guide-body {
+  padding: 4px 20px 20px;
+  border-top: 1px solid var(--color-divider);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+.seg-guide-body > p { padding-top: 12px; }
+.seg-guide-body dl {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px 24px;
+  margin-top: 14px;
+}
+@media (min-width: 720px) {
+  .seg-guide-body dl { grid-template-columns: 1fr 1fr; }
+}
+.seg-guide-body dt {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  margin-bottom: 2px;
+}
+.seg-guide-body dd { margin: 0; font-size: 12.5px; color: var(--color-text-secondary); }
+.seg-guide-body code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 1px 6px;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-muted);
+  border-radius: var(--radius-sm);
+}
+.seg-ok { color: var(--color-success); font-weight: 500; }
+.seg-dim { color: var(--color-text-muted); font-family: var(--font-mono); font-size: 11px; }
+
+/* ── Table ── */
+.seg-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.seg-table { width: 100%; border-collapse: collapse; font-family: var(--font-sans); }
+
+.seg-th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  background: var(--color-bg-table-header);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+.seg-th-right { text-align: right; }
+.seg-th-center { text-align: center; }
+
+.seg-row { transition: background var(--transition-fast); }
+.seg-row:hover { background: var(--color-bg-subtle); }
+.seg-td {
+  padding: 13px 16px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-divider);
+  vertical-align: middle;
+}
+.seg-row:last-child .seg-td { border-bottom: 0; }
+.seg-td-right { text-align: right; }
+.seg-td-center { text-align: center; }
+
+.seg-name-wrap { display: inline-flex; align-items: center; gap: 8px; }
+.seg-lock { width: 13px; height: 13px; color: var(--color-text-muted); flex-shrink: 0; }
+.seg-name {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 13.5px;
+  color: var(--color-text-primary);
+  text-decoration: none;
+  letter-spacing: -0.005em;
+  transition: color var(--transition-fast);
+}
+.seg-name:hover { color: var(--hks-cyan); }
+
+.seg-code, .seg-threshold {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  padding: 2px 7px;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-muted);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-tertiary);
+}
+.seg-threshold { color: var(--color-text-secondary); font-weight: 500; }
+
+.seg-rule {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+  text-transform: capitalize;
+  letter-spacing: 0.01em;
+}
+
+.seg-events { display: flex; flex-wrap: wrap; gap: 4px; }
+.seg-event {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  padding: 2px 7px;
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
+  border: 1px solid var(--color-info-border);
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.01em;
+}
+
+.seg-members {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 16px;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: -0.01em;
+}
+
+.seg-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px 2px 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: var(--radius-full);
+  border: 1px solid;
+}
+.seg-pill-dot { width: 5px; height: 5px; border-radius: 50%; }
+.seg-pill-ok {
+  color: var(--color-success-text);
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
+}
+.seg-pill-ok .seg-pill-dot {
+  background: var(--color-success);
+  box-shadow: 0 0 0 2px rgba(11,122,75,0.15);
+}
+.seg-pill-muted {
+  color: var(--color-text-muted);
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border);
+}
+.seg-pill-muted .seg-pill-dot { background: var(--color-text-muted); }
+
+.seg-actions { display: inline-flex; gap: 2px; justify-content: flex-end; }
+.seg-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px; height: 30px;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+}
+.seg-action:hover {
+  color: var(--hks-deep-blue);
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border);
+}
+.seg-action-danger:hover { color: var(--color-error); border-color: var(--color-error-border); }
+.seg-action:disabled { opacity: 0.5; cursor: not-allowed; }
+.seg-spin { animation: segspin 0.8s linear infinite; }
+@keyframes segspin { to { transform: rotate(360deg); } }
+
+/* ── Skeleton ── */
+.seg-table-wrap {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 8px 16px;
+}
+.seg-skel {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-divider);
+}
+.seg-skel:last-child { border-bottom: 0; }
+
+/* ── Empty ── */
+.seg-empty {
+  padding: 96px 24px;
+  text-align: center;
+  background: var(--color-bg-card);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+}
+.seg-empty-icon {
+  width: 42px; height: 42px;
+  color: var(--color-text-muted);
+  margin: 0 auto 16px;
+  opacity: 0.6;
+}
+.seg-empty-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  letter-spacing: -0.01em;
+  font-variation-settings: 'opsz' 72;
+}
+.seg-empty-sub { margin-top: 6px; font-size: 12.5px; color: var(--color-text-muted); }
+
+/* ── Modal ── */
+.seg-modal-root {
+  position: fixed; inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.2s ease-out;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.seg-modal-scrim {
+  position: absolute; inset: 0;
+  background: rgba(10, 13, 24, 0.55);
+  backdrop-filter: blur(4px);
+}
+.seg-modal {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+.seg-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid var(--color-divider);
+}
+.seg-modal-title {
+  margin-top: 6px;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 26px;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+  font-variation-settings: 'opsz' 72, 'SOFT' 30;
+}
+.seg-modal-close {
+  width: 32px; height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+.seg-modal-close:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-subtle);
+}
+
+.seg-form {
+  padding: 18px 24px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.seg-field { display: flex; flex-direction: column; gap: 5px; }
+.seg-field > label {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+.seg-field input, .seg-field select, .seg-field textarea {
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  padding: 9px 11px;
+  color: var(--color-text-primary);
+  background: var(--color-bg-input);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.seg-field input.mono, .seg-field textarea.mono { font-family: var(--font-mono); font-size: 12.5px; }
+.seg-field input:focus, .seg-field select:focus, .seg-field textarea:focus {
+  outline: none;
+  border-color: var(--hks-cyan);
+  box-shadow: 0 0 0 3px var(--color-accent-light);
+}
+.seg-field input::placeholder, .seg-field textarea::placeholder { color: var(--color-text-muted); }
+
+.seg-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 540px) { .seg-grid-2 { grid-template-columns: 1fr; } }
+
+.seg-field-row { display: flex; gap: 24px; flex-wrap: wrap; padding-top: 4px; }
+.seg-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.seg-check input[type="checkbox"] {
+  width: 16px; height: 16px;
+  accent-color: var(--hks-deep-blue);
+  cursor: pointer;
+}
+
+.seg-event-list { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+.seg-event-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px 2px 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-info-text);
+  background: var(--color-info-bg);
+  border: 1px solid var(--color-info-border);
+  border-radius: var(--radius-sm);
+}
+.seg-event-chip button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px;
+  color: inherit;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity var(--transition-fast), color var(--transition-fast);
+}
+.seg-event-chip button:hover { opacity: 1; color: var(--color-error); }
+
+.seg-modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 14px;
+  margin-top: 6px;
+  border-top: 1px solid var(--color-divider);
+}
+</style>
