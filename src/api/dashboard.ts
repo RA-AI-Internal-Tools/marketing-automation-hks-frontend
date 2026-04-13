@@ -266,7 +266,13 @@ export async function fetchSegments(): Promise<Segment[]> {
 }
 
 export async function fetchSegment(slug: string): Promise<Segment> {
+  // Backend returns { segment, member_count } — unwrap so callers get a flat
+  // Segment matching the type. The member_count is folded into the row so
+  // the detail page's audience tile reads it without a second API call.
   const { data } = await api.get(`/api/segments/${slug}`)
+  if (data && typeof data === 'object' && 'segment' in data) {
+    return { ...data.segment, member_count: data.member_count }
+  }
   return data
 }
 
@@ -285,8 +291,16 @@ export async function deleteSegment(slug: string): Promise<void> {
 }
 
 export async function fetchSegmentMembers(slug: string): Promise<SegmentMember[]> {
+  // Backend returns { members, total, limit, offset } — unwrap to the array
+  // so callers can iterate directly. Pagination metadata is dropped here
+  // because the detail page doesn't paginate (it shows up to the default
+  // page size). If a caller needs total, it should hit the endpoint
+  // directly.
   const { data } = await api.get(`/api/segments/${slug}/members`)
-  return data
+  if (data && typeof data === 'object' && 'members' in data) {
+    return data.members ?? []
+  }
+  return Array.isArray(data) ? data : []
 }
 
 export async function evaluateSegment(slug: string): Promise<{ evaluated: number }> {
