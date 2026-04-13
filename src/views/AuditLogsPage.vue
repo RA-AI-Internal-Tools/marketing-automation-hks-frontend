@@ -3,6 +3,8 @@ import { ref, onMounted } from 'vue'
 import { fetchAuditLogs } from '@/api/dashboard'
 import type { AuditLog } from '@/api/types'
 import { ShieldCheckIcon } from '@heroicons/vue/24/outline'
+import SkeletonTable from '@/components/SkeletonTable.vue'
+import ErrorState from '@/components/ErrorState.vue'
 
 const logs = ref<AuditLog[]>([])
 const total = ref(0)
@@ -112,9 +114,9 @@ onMounted(load)
       </button>
     </div>
 
-    <div v-if="loading" class="text-center py-12 text-[var(--color-text-muted)]">Loading audit logs...</div>
+    <SkeletonTable v-if="loading" :rows="8" :columns="5" />
 
-    <div v-else-if="error" class="bg-[var(--color-error-bg)] border border-[var(--color-error-border)] text-[var(--color-error-text)] px-4 py-3 rounded-lg text-sm">{{ error }}</div>
+    <ErrorState v-else-if="error" :message="error" :retryable="true" @retry="load" />
 
     <div v-else class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden">
       <table class="w-full text-sm">
