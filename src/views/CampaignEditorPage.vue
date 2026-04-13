@@ -68,6 +68,7 @@ const conditions = [
   'viewed_product_category',
   'viewed_product_count_gte',
   'cart_contains_category',
+  'rfm_segment',
 ]
 const segments = ['all', 'high_value', 'new_user', 'dormant']
 
@@ -122,6 +123,19 @@ onMounted(async () => {
       error.value = 'Failed to load campaign'
     } finally {
       loading.value = false
+    }
+  } else {
+    // New campaign — check for deep-link seeds from e.g. the RFMPage's
+    // "Create campaign for segment" CTA. A ?rfm_segment= query param
+    // pre-fills the first step's condition so the flow is one click
+    // shorter for the operator.
+    const rfmSeg = route.query.rfm_segment as string | undefined
+    if (rfmSeg && steps.value[0]) {
+      steps.value[0].condition = 'rfm_segment'
+      steps.value[0].condition_params = { segment: rfmSeg }
+      // Hint the operator in the campaign name too — purely a starting
+      // point, fully editable.
+      if (!name.value) name.value = `RFM — ${rfmSeg}`
     }
   }
 })

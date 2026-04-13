@@ -261,6 +261,12 @@ const router = createRouter({
       meta: { title: 'Churn Risk' },
     },
     {
+      path: '/analytics/rfm',
+      name: 'analytics-rfm',
+      component: () => import('@/views/analytics/RFMPage.vue'),
+      meta: { title: 'RFM Segmentation' },
+    },
+    {
       path: '/analytics/cohort',
       name: 'analytics-cohort',
       component: () => import('@/views/analytics/CohortPage.vue'),

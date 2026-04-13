@@ -106,6 +106,7 @@ const allSections: NavSection[] = [
       { name: 'Data health', to: '/analytics/data-health', icon: ServerStackIcon },
       { name: 'Attribution', to: '/analytics/attribution', icon: LinkIcon },
       { name: 'Churn risk', to: '/analytics/churn', icon: ExclamationTriangleIcon },
+      { name: 'RFM segments', to: '/analytics/rfm', icon: UserGroupIcon },
       { name: 'Cohorts & LTV', to: '/analytics/cohort', icon: UserGroupIcon },
       { name: 'Journey', to: '/analytics/journey', icon: MapIcon },
     ],
