@@ -66,7 +66,7 @@ const commonTimezones = [
   'America/New_York', 'America/Los_Angeles', 'America/Sao_Paulo',
   'Asia/Dubai', 'Asia/Singapore', 'Asia/Tokyo', 'Australia/Sydney',
 ]
-const steps = ref<Step[]>([{ delay_minutes: 0, channel: 'email', template_key: '', condition: 'always', condition_params: {} }])
+const steps = ref<Step[]>([{ delay_minutes: 0, channel: 'email', template_key: '', condition: 'always_true', condition_params: {} }])
 
 const saving = ref(false)
 const error = ref('')
@@ -156,7 +156,7 @@ onMounted(async () => {
           timezone: qh.timezone || 'UTC',
         }
       }
-      steps.value = campaign.steps.length > 0 ? campaign.steps : [{ delay_minutes: 0, channel: 'email', template_key: '', condition: 'always' }]
+      steps.value = campaign.steps.length > 0 ? campaign.steps : [{ delay_minutes: 0, channel: 'email', template_key: '', condition: 'always_true' }]
     } catch {
       error.value = 'Failed to load campaign'
     } finally {
@@ -179,7 +179,7 @@ onMounted(async () => {
 })
 
 function addStep() {
-  steps.value.push({ delay_minutes: 0, channel: 'email', template_key: '', condition: 'always' })
+  steps.value.push({ delay_minutes: 0, channel: 'email', template_key: '', condition: 'always_true' })
 }
 
 function removeStep(index: number) {
