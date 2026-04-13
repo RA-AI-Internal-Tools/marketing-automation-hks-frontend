@@ -191,10 +191,10 @@ onMounted(load)
             <td class="px-6 py-4 text-sm text-[var(--color-text-tertiary)]">{{ formatDate(user.last_login_at) }}</td>
             <td class="px-6 py-4 text-right">
               <div v-if="auth.isAdmin" class="flex items-center justify-end gap-2">
-                <button @click="openEdit(user)" class="text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors" title="Edit">
+                <button @click="openEdit(user)" class="text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors" :aria-label="`Edit user ${user.email}`" title="Edit">
                   <PencilSquareIcon class="h-4 w-4" />
                 </button>
-                <button @click="confirmDelete = user" class="text-[var(--color-text-muted)] hover:text-red-600 transition-colors" title="Delete">
+                <button @click="confirmDelete = user" class="text-[var(--color-text-muted)] hover:text-red-600 transition-colors" :aria-label="`Delete user ${user.email}`" title="Delete">
                   <TrashIcon class="h-4 w-4" />
                 </button>
               </div>

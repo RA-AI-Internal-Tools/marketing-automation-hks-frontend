@@ -510,10 +510,10 @@ function channelOptions() { return ['email', 'sms', 'whatsapp', 'push', 'onsite'
         <div class="mb-3 flex items-center justify-between">
           <h3 class="text-sm font-semibold">Properties</h3>
           <div class="flex gap-1">
-            <button @click="deleteSelected" class="rounded p-1 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40" title="Delete node">
+            <button @click="deleteSelected" class="rounded p-1 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40" aria-label="Delete selected node" title="Delete node">
               <TrashIcon class="h-4 w-4" />
             </button>
-            <button @click="selectedNodeId = null" class="rounded p-1 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+            <button @click="selectedNodeId = null" class="rounded p-1 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800" aria-label="Deselect node">
               <XMarkIcon class="h-4 w-4" />
             </button>
           </div>

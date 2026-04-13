@@ -239,16 +239,16 @@ const channelChip: Record<string, string> = {
         </div>
 
         <div v-if="auth.canWrite" class="bc-row-actions">
-          <button v-if="b.status === 'draft'" @click="handleSchedule(b)" class="bc-act bc-act-primary" title="Schedule">
+          <button v-if="b.status === 'draft'" @click="handleSchedule(b)" class="bc-act bc-act-primary" :aria-label="`Schedule broadcast ${b.name}`" title="Schedule">
             <PlayIcon class="h-4 w-4" /> Schedule
           </button>
-          <button v-if="b.status === 'draft'" @click="openEdit(b)" class="bc-act" title="Edit">
+          <button v-if="b.status === 'draft'" @click="openEdit(b)" class="bc-act" :aria-label="`Edit broadcast ${b.name}`" title="Edit">
             <PencilSquareIcon class="h-4 w-4" />
           </button>
-          <button v-if="b.status === 'scheduled' || b.status === 'running'" @click="cancelTarget = b" class="bc-act bc-act-warn" title="Cancel">
+          <button v-if="b.status === 'scheduled' || b.status === 'running'" @click="cancelTarget = b" class="bc-act bc-act-warn" :aria-label="`Cancel broadcast ${b.name}`" title="Cancel">
             <StopIcon class="h-4 w-4" /> Cancel
           </button>
-          <button v-if="b.status === 'draft' || b.status === 'cancelled'" @click="deleteTarget = b" class="bc-act bc-act-danger" title="Delete">
+          <button v-if="b.status === 'draft' || b.status === 'cancelled'" @click="deleteTarget = b" class="bc-act bc-act-danger" :aria-label="`Delete broadcast ${b.name}`" title="Delete">
             <TrashIcon class="h-4 w-4" />
           </button>
         </div>

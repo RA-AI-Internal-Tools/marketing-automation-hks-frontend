@@ -293,16 +293,16 @@ function formatDate(s?: string | null): string {
             </td>
             <td class="px-4 py-3 text-right">
               <div class="flex items-center justify-end gap-1">
-                <button @click="fireTest(w)" class="rounded p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-white" title="Fire test event">
+                <button @click="fireTest(w)" class="rounded p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-white" :aria-label="`Fire test event for ${w.name}`" title="Fire test event">
                   <BoltIcon class="h-4 w-4" />
                 </button>
-                <button @click="openDeliveries(w)" class="rounded p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-white" title="Delivery log">
+                <button @click="openDeliveries(w)" class="rounded p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-white" :aria-label="`Delivery log for ${w.name}`" title="Delivery log">
                   <ClockIcon class="h-4 w-4" />
                 </button>
-                <button @click="openEdit(w)" class="rounded p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-white" title="Edit">
+                <button @click="openEdit(w)" class="rounded p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-white" :aria-label="`Edit webhook ${w.name}`" title="Edit">
                   <PencilSquareIcon class="h-4 w-4" />
                 </button>
-                <button @click="deleteTarget = w" class="rounded p-1.5 text-neutral-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/30" title="Delete">
+                <button @click="deleteTarget = w" class="rounded p-1.5 text-neutral-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/30" :aria-label="`Delete webhook ${w.name}`" title="Delete">
                   <TrashIcon class="h-4 w-4" />
                 </button>
               </div>
