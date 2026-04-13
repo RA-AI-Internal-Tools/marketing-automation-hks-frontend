@@ -6,6 +6,7 @@ import { useAnalyticsStore } from '@/stores/analytics'
 import { fetchExecutiveOverview } from '@/api/analytics'
 import type { ExecutiveOverview } from '@/api/types'
 import { useCachedFetch } from '@/composables/useCache'
+import { chartPalette, alpha } from '@/utils/chartColors'
 import { Line } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -73,8 +74,8 @@ function fmt(n: number): string {
               datasets: [{
                 label: 'Revenue',
                 data: data.daily_revenue.map((d) => d.revenue),
-                borderColor: '#020288',
-                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                borderColor: chartPalette().primary,
+                backgroundColor: alpha(chartPalette().primary, 0.1),
                 fill: true,
                 tension: 0.3,
               }],
@@ -92,8 +93,8 @@ function fmt(n: number): string {
               datasets: [{
                 label: 'Page Views',
                 data: data.daily_traffic.map((d) => d.count),
-                borderColor: '#3b82f6',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                borderColor: chartPalette().info,
+                backgroundColor: alpha(chartPalette().info, 0.1),
                 fill: true,
                 tension: 0.3,
               }],

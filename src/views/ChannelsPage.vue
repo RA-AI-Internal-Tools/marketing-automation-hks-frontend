@@ -13,6 +13,7 @@ import {
 import PageHeader from '@/components/PageHeader.vue'
 import StatCard from '@/components/StatCard.vue'
 import { fetchChannelStats } from '@/api/dashboard'
+import { chartPalette } from '@/utils/chartColors'
 import type { ChannelStats } from '@/api/types'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
@@ -38,15 +39,21 @@ const successRate = computed(() => {
   return total > 0 ? Math.round((totalSent.value / total) * 100) : 0
 })
 
-const chartData = computed(() => ({
-  labels: channels.value.map((c) => c.channel.toUpperCase()),
-  datasets: [
-    { label: 'Sent', data: channels.value.map((c) => c.sent), backgroundColor: '#22c55e' },
-    { label: 'Failed', data: channels.value.map((c) => c.failed), backgroundColor: '#ef4444' },
-    { label: 'Freq Capped', data: channels.value.map((c) => c.frequency_capped), backgroundColor: '#eab308' },
-    { label: 'No Consent', data: channels.value.map((c) => c.no_consent), backgroundColor: '#f97316' },
-  ],
-}))
+const chartData = computed(() => {
+  const p = chartPalette()
+  return {
+    labels: channels.value.map((c) => c.channel.toUpperCase()),
+    datasets: [
+      { label: 'Sent',        data: channels.value.map((c) => c.sent),              backgroundColor: p.success },
+      { label: 'Failed',      data: channels.value.map((c) => c.failed),            backgroundColor: p.error },
+      { label: 'Freq Capped', data: channels.value.map((c) => c.frequency_capped),  backgroundColor: p.warning },
+      // No-consent uses a distinct orange-ish tint that isn't in the
+      // 9-colour palette; keep it hex-literal so the semantic stays
+      // unambiguous (warning-adjacent but not the same bucket).
+      { label: 'No Consent',  data: channels.value.map((c) => c.no_consent),        backgroundColor: '#f97316' },
+    ],
+  }
+})
 
 const chartOptions = {
   responsive: true,

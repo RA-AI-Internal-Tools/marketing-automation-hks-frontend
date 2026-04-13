@@ -4,6 +4,7 @@ import AnalyticsLayout from '@/components/AnalyticsLayout.vue'
 import MetricCard from '@/components/MetricCard.vue'
 import { useAnalyticsStore } from '@/stores/analytics'
 import { fetchOrders } from '@/api/analytics'
+import { chartPalette, alpha } from '@/utils/chartColors'
 import type { OrdersData } from '@/api/types'
 import { Line } from 'vue-chartjs'
 import {
@@ -66,8 +67,8 @@ function fmtCurrency(n: number): string {
             datasets: [{
               label: 'Revenue',
               data: data.revenue_trend.map((d) => d.revenue),
-              borderColor: '#10b981',
-              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              borderColor: chartPalette().success,
+              backgroundColor: alpha(chartPalette().success, 0.1),
               fill: true,
               tension: 0.3,
             }],

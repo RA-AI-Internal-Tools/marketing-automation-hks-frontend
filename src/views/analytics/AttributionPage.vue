@@ -8,6 +8,7 @@
  */
 import { ref, computed, onMounted, watch } from 'vue'
 import AnalyticsLayout from '@/components/AnalyticsLayout.vue'
+import { chartPalette, alpha } from '@/utils/chartColors'
 import { Line, Bar } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -65,13 +66,14 @@ function moneyFull(n: number): string {
 
 const lineData = computed(() => {
   const pts = overview.value?.daily_series || []
+  const accent = chartPalette().accent
   return {
     labels: pts.map(p => p.date.slice(5)),
     datasets: [{
       label: 'Revenue',
       data: pts.map(p => p.revenue),
-      borderColor: '#0099db',
-      backgroundColor: 'rgba(0,153,219,0.15)',
+      borderColor: accent,
+      backgroundColor: alpha(accent, 0.15),
       borderWidth: 2,
       fill: true,
       tension: 0.25,
@@ -103,7 +105,7 @@ const barData = computed(() => ({
   datasets: [{
     label: 'Revenue',
     data: campaignTotals.value.map(([, v]) => v),
-    backgroundColor: '#020288',
+    backgroundColor: chartPalette().primary,
     borderRadius: 4,
   }],
 }))
