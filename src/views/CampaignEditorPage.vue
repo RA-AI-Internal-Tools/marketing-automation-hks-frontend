@@ -3,10 +3,12 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import PageHeader from '@/components/PageHeader.vue'
 import CampaignSimulateModal from '@/components/CampaignSimulateModal.vue'
+import AIJourneyAssistModal from '@/components/AIJourneyAssistModal.vue'
 import { useCampaignsStore } from '@/stores/campaigns'
 import type { Step, StepVariant, CampaignRequest } from '@/api/types'
 import { useTemplatesStore } from '@/stores/templates'
-import { PlusIcon, TrashIcon, ArrowUpIcon, ArrowDownIcon, BeakerIcon } from '@heroicons/vue/24/outline'
+import { PlusIcon, TrashIcon, ArrowUpIcon, ArrowDownIcon, BeakerIcon, SparklesIcon } from '@heroicons/vue/24/outline'
+import { fetchAIStatus, type SuggestedStep } from '@/api/ai'
 
 const route = useRoute()
 const router = useRouter()
@@ -33,6 +35,25 @@ const useSTO = ref(false)
 // Simulate modal open state. Only reachable in edit mode (unsaved
 // campaigns don't yet have an id to simulate against).
 const simulateOpen = ref(false)
+
+// AI assist: gated on a one-time status probe so the buttons stay hidden
+// when OPENAI_API_KEY isn't configured on the server. Failure = disabled
+// (fail-closed on the UI).
+const aiOpen = ref(false)
+const aiEnabled = ref(false)
+fetchAIStatus().then(s => { aiEnabled.value = !!s.enabled }).catch(() => {})
+
+function applyAIJourney(aiSteps: SuggestedStep[]) {
+  // Replace the current steps array with the AI suggestion. Operator
+  // can still tune each step in the editor; we don't auto-activate.
+  steps.value = aiSteps.map(s => ({
+    delay_minutes: s.delay_minutes || 0,
+    channel: s.channel || 'email',
+    template_key: s.template_key || '',
+    condition: s.condition || 'always_true',
+    condition_params: {},
+  }))
+}
 
 // Phase 5.1 — per-campaign quiet hours. Stored as an object in the
 // editor; serialised only at save time, and only when both start+end
@@ -319,8 +340,12 @@ async function handleSubmit() {
       :title="isEdit ? 'Edit Campaign' : 'New Campaign'"
       :description="isEdit ? 'Modify campaign configuration and steps' : 'Create a new campaign workflow'"
     >
-      <template v-if="isEdit" #actions>
-        <button type="button" @click="simulateOpen = true"
+      <template #actions>
+        <button v-if="aiEnabled" type="button" @click="aiOpen = true"
+                class="inline-flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800">
+          <SparklesIcon class="h-4 w-4 text-ma-accent" aria-hidden="true" /> AI assist
+        </button>
+        <button v-if="isEdit" type="button" @click="simulateOpen = true"
                 class="inline-flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800">
           <BeakerIcon class="h-4 w-4" aria-hidden="true" /> Simulate
         </button>
@@ -332,6 +357,11 @@ async function handleSubmit() {
       :open="simulateOpen"
       :campaign-id="campaignId"
       @update:open="simulateOpen = $event"
+    />
+    <AIJourneyAssistModal
+      :open="aiOpen"
+      @update:open="aiOpen = $event"
+      @apply="applyAIJourney"
     />
 
     <div v-if="loading" class="space-y-6 max-w-3xl">

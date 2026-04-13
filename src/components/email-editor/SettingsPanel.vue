@@ -1,6 +1,15 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { TEMPLATE_CATEGORIES, TEMPLATE_LANGUAGES, buildLocalizedTemplateKey } from '@/utils/email-template'
+import AISubjectLineModal from '@/components/AISubjectLineModal.vue'
+import { fetchAIStatus } from '@/api/ai'
+import { SparklesIcon } from '@heroicons/vue/24/outline'
+
+const aiEnabled = ref(false)
+const aiSubjectOpen = ref(false)
+// One-shot probe — hide the button unless the backend confirms AI is
+// configured. Failure treated as disabled (fail-closed).
+fetchAIStatus().then(s => { aiEnabled.value = !!s.enabled }).catch(() => {})
 
 const props = defineProps<{
   name: string
@@ -119,9 +128,17 @@ const labelClass = 'block text-xs font-medium text-[var(--color-text-secondary)]
 
     <!-- Subject -->
     <div>
-      <label :class="labelClass">
-        Subject Line <span class="text-red-500">*</span>
-      </label>
+      <div class="flex items-center justify-between">
+        <label :class="labelClass">
+          Subject Line <span class="text-red-500">*</span>
+        </label>
+        <button v-if="aiEnabled" type="button"
+                @click="aiSubjectOpen = true"
+                class="inline-flex items-center gap-1 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-card)] px-2 py-1 text-[11px] font-medium hover:bg-[var(--color-bg-page)]"
+                :aria-label="'Generate subject line with AI'">
+          <SparklesIcon class="h-3.5 w-3.5 text-ma-accent" aria-hidden="true" /> Generate with AI
+        </button>
+      </div>
       <input
         :value="subject"
         @input="emit('update:subject', ($event.target as HTMLInputElement).value)"
@@ -131,6 +148,11 @@ const labelClass = 'block text-xs font-medium text-[var(--color-text-secondary)]
       <p class="text-[11px] mt-1" :class="subject.length > 78 ? 'text-amber-500' : 'text-[var(--color-text-muted)]'">
         {{ subject.length }} / 78 characters recommended
       </p>
+      <AISubjectLineModal
+        :open="aiSubjectOpen"
+        @update:open="aiSubjectOpen = $event"
+        @pick="(line) => { emit('update:subject', line); aiSubjectOpen = false }"
+      />
     </div>
 
     <!-- Preheader -->
