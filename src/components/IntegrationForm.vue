@@ -59,16 +59,23 @@ const environment = ref<Environment>('sandbox')
 // ---- Credential metadata --------------------------------------------------
 const rows = ref<CredentialRow[]>([])
 const loadingRows = ref(false)
+// Monotonic sequence to drop stale reloadRows() responses (rapid env tab flips)
+// before they overwrite the current view.
+const reloadSeq = ref(0)
 
 async function reloadRows() {
   if (!auth.isAdmin) return
+  const mySeq = ++reloadSeq.value
   loadingRows.value = true
   try {
-    rows.value = await listCredentials(environment.value)
+    const res = await listCredentials(environment.value)
+    if (mySeq !== reloadSeq.value) return
+    rows.value = res
   } catch (e: any) {
+    if (mySeq !== reloadSeq.value) return
     showToast(e.response?.data?.error || 'Failed to load credentials', 'error')
   } finally {
-    loadingRows.value = false
+    if (mySeq === reloadSeq.value) loadingRows.value = false
   }
 }
 
@@ -141,7 +148,10 @@ const testing = ref(false)
 const testResult = ref<{ status: string; detail: string } | null>(null)
 
 async function handleSave() {
-  if (!auth.isAdmin) return
+  if (!auth.isAdmin) {
+    showToast('Admin role required', 'error')
+    return
+  }
   const touched = fields.value.filter(f => getValue(f.key_name).trim() !== '')
   if (touched.length === 0) {
     showToast('Nothing to save — enter at least one value', 'info')
@@ -213,7 +223,10 @@ async function handleSave() {
 }
 
 async function handleTest() {
-  if (!auth.isAdmin) return
+  if (!auth.isAdmin) {
+    showToast('Admin role required', 'error')
+    return
+  }
   testing.value = true
   testResult.value = null
   try {
@@ -232,7 +245,10 @@ const confirmDeleteOpen = ref(false)
 function openDelete() { confirmDeleteOpen.value = true }
 async function handleDelete() {
   confirmDeleteOpen.value = false
-  if (!auth.isAdmin) return
+  if (!auth.isAdmin) {
+    showToast('Admin role required', 'error')
+    return
+  }
   const existing = rows.value.filter(
     r => r.provider === providerKey.value && r.environment === environment.value,
   )

@@ -20,6 +20,9 @@ const page = ref(1)
 const perPage = 25
 const loading = ref(true)
 const error = ref('')
+// Monotonic sequence to drop stale load() responses (env flips, rapid
+// filter/pagination clicks) before they overwrite the current view.
+const loadSeq = ref(0)
 
 // Filters
 const searchInput = ref('')
@@ -67,6 +70,7 @@ const sendResult = ref<PushSendResponse | null>(null)
 
 // --- Data loading ---
 async function load() {
+  const mySeq = ++loadSeq.value
   loading.value = true
   error.value = ''
   try {
@@ -76,12 +80,14 @@ async function load() {
     if (filterActive.value) params.active = filterActive.value
     params.environment = env.mode
     const res = await fetchPushAudience(params)
+    if (mySeq !== loadSeq.value) return
     rows.value = res.data || []
     total.value = res.total
   } catch (e: any) {
+    if (mySeq !== loadSeq.value) return
     error.value = e.response?.data?.error || 'Failed to load push audience'
   } finally {
-    loading.value = false
+    if (mySeq === loadSeq.value) loading.value = false
   }
 }
 
@@ -125,11 +131,13 @@ function nextPage() {
 
 // --- Send ---
 function requestSend() {
+  if (!auth.canWrite) return
   if (!canSend.value) return
   showConfirm.value = true
 }
 
 async function confirmAndSend() {
+  if (!auth.canWrite) return
   showConfirm.value = false
   sending.value = true
   try {

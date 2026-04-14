@@ -143,7 +143,7 @@ function handleIframeLoad(e: Event) {
       <iframe
         v-else
         :srcdoc="renderedHtml"
-        sandbox="allow-same-origin"
+        sandbox=""
         :style="{ width: iframeWidth, maxWidth: '100%', height: iframeHeight + 'px' }"
         class="bg-white rounded-lg shadow-md border-0 transition-all duration-300"
         title="Email preview"
