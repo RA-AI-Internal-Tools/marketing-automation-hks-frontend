@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { fetchConsents, optOut, optIn } from '@/api/dashboard'
+import { getChannelVocabulary } from '@/api/channels'
 import { useAuthStore } from '@/stores/auth'
 import type { ClientConsent } from '@/api/types'
 
@@ -62,7 +63,21 @@ async function toggleConsent(consent: ClientConsent) {
   }
 }
 
-const allChannels = ['email', 'sms', 'whatsapp', 'push']
+// Hardcoded list acts as the first-paint default and the failure
+// fallback. On mount we ask the backend for the canonical vocabulary so
+// new channels (e.g. 'onsite') show up without a frontend deploy.
+const allChannels = ref<string[]>(['email', 'sms', 'whatsapp', 'push', 'onsite'])
+
+onMounted(async () => {
+  try {
+    const channels = await getChannelVocabulary()
+    if (Array.isArray(channels) && channels.length > 0) {
+      allChannels.value = channels
+    }
+  } catch {
+    // Keep fallback — the quick opt-out UI stays functional.
+  }
+})
 
 function purposeLabel(purpose?: string, channel?: string) {
   if (purpose === 'personalization' && channel === 'global') return 'personalization (global)'
