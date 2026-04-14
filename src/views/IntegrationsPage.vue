@@ -6,7 +6,6 @@ import IntegrationForm from '@/components/IntegrationForm.vue'
 import { useIntegrationsStore } from '@/stores/integrations'
 import { useEnvironmentStore } from '@/stores/environment'
 import { useAuthStore } from '@/stores/auth'
-import { useToast } from '@/composables/useToast'
 import type { Integration, ProviderType } from '@/api/types'
 import { listCredentials, type CredentialRow, type Environment } from '@/api/integrations'
 import { getKeyFields } from '@/api/integrationKeys'
@@ -18,13 +17,11 @@ import {
 const store = useIntegrationsStore()
 const env = useEnvironmentStore()
 const auth = useAuthStore()
-const { showToast } = useToast()
 
 const search = ref('')
 const activeCategory = ref<ProviderType | 'all'>('all')
 const formVisible = ref(false)
 const editingIntegration = ref<Integration | null>(null)
-const testingIds = ref<Set<number>>(new Set())
 const credentials = ref<CredentialRow[]>([])
 // Admin-scoped credential environment toggle. Non-admins fall back to the
 // global env store (which is what the read-only catalog view has always used).
@@ -118,19 +115,6 @@ function credStatusFor(providerKey: string, environment: Environment): CredStatu
   return allPresent ? 'full' : 'partial'
 }
 
-async function handleTest(id: number) {
-  testingIds.value.add(id)
-  try {
-    const result = await store.testConnection(id)
-    showToast(result.success ? 'Connection successful' : `Connection failed: ${result.message}`, result.success ? 'success' : 'error')
-    // Reload to update last_tested_at
-    await store.load()
-  } catch (e: any) {
-    showToast(e.response?.data?.error || 'Test connection failed', 'error')
-  } finally {
-    testingIds.value.delete(id)
-  }
-}
 </script>
 
 <template>
@@ -243,11 +227,9 @@ async function handleTest(id: number) {
         v-for="integration in filtered"
         :key="integration.id"
         :integration="integration"
-        :testing="testingIds.has(integration.id)"
         :credential-environment="credEnv"
         :credential-status="credStatusFor(providerKeyFor(integration), credEnv)"
         @edit="openEdit"
-        @test="handleTest"
       />
     </div>
 
@@ -256,6 +238,7 @@ async function handleTest(id: number) {
       :visible="formVisible"
       :integration="editingIntegration"
       :provider="editingProviderKey()"
+      :initial-environment="credEnv"
       @close="formVisible = false"
       @saved="handleSaved"
     />

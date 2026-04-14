@@ -10,15 +10,13 @@ import {
   GlobeAltIcon,
   ChartBarIcon,
   UserGroupIcon,
-  ArrowPathIcon,
   PencilSquareIcon,
   LockClosedIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/vue/24/outline'
 
-const props = defineProps<{
+defineProps<{
   integration: Integration
-  testing?: boolean
   credentialEnvironment?: Environment
   /** 'full' = all required fields stored; 'partial' = some; 'none' = none. */
   credentialStatus?: 'none' | 'partial' | 'full'
@@ -26,7 +24,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'edit', id: number): void
-  (e: 'test', id: number): void
 }>()
 
 const typeIcons: Record<string, any> = {
@@ -61,10 +58,6 @@ function maskEndpointUrl(url: string): string {
     return url.length > 35 ? url.slice(0, 35) + '…' : url
   }
 }
-
-function handleTest() {
-  emit('test', props.integration.id)
-}
 </script>
 
 <template>
@@ -81,8 +74,9 @@ function handleTest() {
       </div>
       <button
         @click="emit('edit', integration.id)"
-        class="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-primary)] opacity-0 group-hover:opacity-100 transition-all"
+        class="p-1.5 rounded-md text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] focus-visible:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]/40 transition-colors"
         title="Edit integration"
+        aria-label="Edit integration"
       >
         <PencilSquareIcon class="h-4 w-4" />
       </button>
@@ -124,16 +118,5 @@ function handleTest() {
       </div>
     </div>
 
-    <!-- Actions -->
-    <div class="mt-4 pt-3 border-t border-[var(--color-border-muted)] flex items-center gap-2">
-      <button
-        @click="handleTest"
-        :disabled="testing || integration.status === 'not_configured'"
-        class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-primary)] bg-[var(--color-primary-light)] rounded-lg hover:bg-[var(--color-primary-soft)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-      >
-        <ArrowPathIcon :class="['h-3.5 w-3.5', testing ? 'animate-spin' : '']" />
-        {{ testing ? 'Testing...' : 'Test Connection' }}
-      </button>
-    </div>
   </div>
 </template>

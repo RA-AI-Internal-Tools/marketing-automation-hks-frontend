@@ -34,11 +34,11 @@ watch(() => analytics.queryParams, load)
     <div v-else-if="error" class="bg-[var(--color-error-bg)] border border-[var(--color-error-border)] text-[var(--color-error-text)] px-4 py-3 rounded-lg text-sm">{{ error }}</div>
     <div v-else-if="data" class="space-y-6">
       <div class="bg-[var(--color-warning-bg)] border border-[var(--color-warning-border)] text-[var(--color-warning-text)] px-4 py-3 rounded-lg text-sm">
-        Some acquisition metrics are partial in staging. Source attribution is available, but signup and returning-user metrics depend on event quality upstream.
+        Some acquisition metrics are partial in staging. Source attribution is available, but signup and returning-client metrics depend on event quality upstream.
       </div>
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard title="New Clients" :value="data.new_users.toLocaleString()" />
-        <MetricCard title="Returning Users" :value="data.returning_users.toLocaleString()" />
+        <MetricCard title="Returning Clients" :value="data.returning_users.toLocaleString()" />
         <MetricCard title="Signup Rate" :value="data.signup_rate.toFixed(2) + '%'" />
         <MetricCard title="Total Sources" :value="data.sources.length" />
       </div>

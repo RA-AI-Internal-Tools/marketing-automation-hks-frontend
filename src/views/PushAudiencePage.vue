@@ -85,7 +85,15 @@ async function load() {
   }
 }
 
+function clearSelectionOnScopeChange() {
+  if (selected.value.size > 0) {
+    selected.value = new Set()
+    showToast('Selection cleared (filter changed)', 'info')
+  }
+}
+
 function applyFilters() {
+  clearSelectionOnScopeChange()
   page.value = 1
   load()
 }
@@ -94,16 +102,25 @@ function clearFilters() {
   searchInput.value = ''
   filterPlatform.value = ''
   filterActive.value = ''
+  clearSelectionOnScopeChange()
   page.value = 1
   load()
 }
 
 function prevPage() {
-  if (page.value > 1 && !loading.value) { page.value--; load() }
+  if (page.value > 1 && !loading.value) {
+    clearSelectionOnScopeChange()
+    page.value--
+    load()
+  }
 }
 
 function nextPage() {
-  if (page.value * perPage < total.value && !loading.value) { page.value++; load() }
+  if (page.value * perPage < total.value && !loading.value) {
+    clearSelectionOnScopeChange()
+    page.value++
+    load()
+  }
 }
 
 // --- Send ---

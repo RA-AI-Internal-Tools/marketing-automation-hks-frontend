@@ -24,6 +24,8 @@ const props = defineProps<{
   provider?: string
   /** Optional: the catalog row, used for displaying title/metadata only. */
   integration?: Integration | null
+  /** Initial env tab to open (defaults to sandbox). */
+  initialEnvironment?: Environment
 }>()
 
 const emit = defineEmits<{
@@ -62,7 +64,7 @@ async function reloadRows() {
   if (!auth.isAdmin) return
   loadingRows.value = true
   try {
-    rows.value = await listCredentials()
+    rows.value = await listCredentials(environment.value)
   } catch (e: any) {
     showToast(e.response?.data?.error || 'Failed to load credentials', 'error')
   } finally {
@@ -112,13 +114,25 @@ function isRevealed(keyName: string): boolean {
 }
 
 // ---- Lifecycle ------------------------------------------------------------
+// Remember the provider key from the last time the modal was opened, so
+// reopening the same provider (e.g. after an accidental backdrop click)
+// preserves typed-but-unsaved values.
+const lastShownProviderKey = ref<string | null>(null)
 watch(() => props.visible, (v) => {
   if (v) {
-    values.value = {}
-    revealed.value = {}
-    environment.value = 'sandbox'
+    if (lastShownProviderKey.value !== providerKey.value) {
+      values.value = {}
+      revealed.value = {}
+      lastShownProviderKey.value = providerKey.value
+    }
+    environment.value = props.initialEnvironment ?? 'sandbox'
     reloadRows()
   }
+})
+
+// Refetch credentials when the env tab flips inside the modal.
+watch(environment, () => {
+  if (props.visible) reloadRows()
 })
 
 // ---- Actions --------------------------------------------------------------
