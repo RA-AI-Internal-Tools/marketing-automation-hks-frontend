@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { fetchCampaignFunnel, fetchVariantPerformance, fetchCampaigns } from '@/api/dashboard'
 import type { CampaignFunnelStats, VariantPerformance, CampaignDefinition } from '@/api/types'
+import { chartPalette } from '@/utils/chartColors'
 import {
   ChartBarIcon,
   FunnelIcon,
@@ -30,12 +31,13 @@ const funnelStages = computed(() => {
   if (!funnel.value) return []
   const f = funnel.value
   const enrolled = f.enrolled || 1
+  const p = chartPalette()
   return [
-    { name: 'Enrolled', count: f.enrolled, rate: 100, color: 'bg-blue-500', icon: FunnelIcon },
-    { name: 'Sent', count: f.sent, rate: rate(f.sent, enrolled), color: 'bg-[#0099db]', icon: PaperAirplaneIcon },
-    { name: 'Delivered', count: f.delivered, rate: rate(f.delivered, enrolled), color: 'bg-purple-500', icon: ArrowTrendingUpIcon },
-    { name: 'Opened', count: f.opened, rate: rate(f.opened, enrolled), color: 'bg-amber-500', icon: EnvelopeOpenIcon },
-    { name: 'Clicked', count: f.clicked, rate: rate(f.clicked, enrolled), color: 'bg-green-500', icon: CursorArrowRaysIcon },
+    { name: 'Enrolled', count: f.enrolled, rate: 100, color: p.primary, icon: FunnelIcon },
+    { name: 'Sent', count: f.sent, rate: rate(f.sent, enrolled), color: p.accent, icon: PaperAirplaneIcon },
+    { name: 'Delivered', count: f.delivered, rate: rate(f.delivered, enrolled), color: p.secondary, icon: ArrowTrendingUpIcon },
+    { name: 'Opened', count: f.opened, rate: rate(f.opened, enrolled), color: p.warning, icon: EnvelopeOpenIcon },
+    { name: 'Clicked', count: f.clicked, rate: rate(f.clicked, enrolled), color: p.success, icon: CursorArrowRaysIcon },
   ]
 })
 
@@ -145,9 +147,8 @@ function onCampaignChange() {
             <div class="flex-1">
               <div class="relative h-8 bg-[var(--color-bg-subtle)] rounded-lg overflow-hidden">
                 <div
-                  :class="stage.color"
                   class="absolute inset-y-0 left-0 rounded-lg transition-all duration-500"
-                  :style="{ width: Math.max(stage.rate, 1) + '%' }"
+                  :style="{ width: Math.max(stage.rate, 1) + '%', backgroundColor: stage.color }"
                 />
                 <div class="absolute inset-0 flex items-center px-3 text-sm font-medium"
                      :class="stage.rate > 30 ? 'text-white' : 'text-[var(--color-text-secondary)]'">
@@ -155,7 +156,7 @@ function onCampaignChange() {
                 </div>
               </div>
             </div>
-            <div class="w-16 text-right text-sm font-semibold" :class="stage.rate >= 50 ? 'text-green-600' : stage.rate >= 20 ? 'text-amber-600' : 'text-red-500'">
+            <div class="w-16 text-right text-sm font-semibold" :class="stage.rate >= 50 ? 'text-[var(--color-success-strong)]' : stage.rate >= 20 ? 'text-[var(--color-warning-strong)]' : 'text-[var(--color-error-strong)]'">
               {{ stage.rate.toFixed(1) }}%
             </div>
           </div>
@@ -224,10 +225,10 @@ function onCampaignChange() {
               <td class="py-3 text-right text-[var(--color-text-secondary)]">{{ v.delivered.toLocaleString() }}</td>
               <td class="py-3 text-right text-[var(--color-text-secondary)]">{{ v.opened.toLocaleString() }}</td>
               <td class="py-3 text-right text-[var(--color-text-secondary)]">{{ v.clicked.toLocaleString() }}</td>
-              <td class="py-3 text-right font-semibold" :class="variantOpenRate(v) > 25 ? 'text-green-600' : 'text-amber-600'">
+              <td class="py-3 text-right font-semibold" :class="variantOpenRate(v) > 25 ? 'text-[var(--color-success-strong)]' : 'text-[var(--color-warning-strong)]'">
                 {{ variantOpenRate(v).toFixed(1) }}%
               </td>
-              <td class="py-3 text-right font-semibold" :class="variantClickRate(v) > 5 ? 'text-green-600' : 'text-amber-600'">
+              <td class="py-3 text-right font-semibold" :class="variantClickRate(v) > 5 ? 'text-[var(--color-success-strong)]' : 'text-[var(--color-warning-strong)]'">
                 {{ variantClickRate(v).toFixed(1) }}%
               </td>
             </tr>

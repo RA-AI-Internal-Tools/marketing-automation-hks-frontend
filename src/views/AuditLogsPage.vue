@@ -20,11 +20,18 @@ const filterDateTo = ref('')
 
 const actionOptions = ['create', 'update', 'delete', 'toggle', 'login', 'logout', 'clone_variant', 'evaluate']
 
+// Semantic mapping per action — covers every entry in `actionOptions`.
+// Uses design-system tokens so dark mode + theme changes apply.
 const actionColors: Record<string, string> = {
-  create: 'bg-green-100 text-green-700',
-  update: 'bg-blue-100 text-blue-700',
-  delete: 'bg-red-100 text-red-700',
-  toggle: 'bg-amber-100 text-amber-700',
+  create: 'bg-[var(--color-success-soft)] text-[var(--color-success-strong)]',
+  login: 'bg-[var(--color-success-soft)] text-[var(--color-success-strong)]',
+  delete: 'bg-[var(--color-error-soft)] text-[var(--color-error-strong)]',
+  logout: 'bg-[var(--color-error-soft)] text-[var(--color-error-strong)]',
+  failed: 'bg-[var(--color-error-soft)] text-[var(--color-error-strong)]',
+  update: 'bg-[var(--color-info-bg)] text-[var(--color-info-text)]',
+  clone_variant: 'bg-[var(--color-info-bg)] text-[var(--color-info-text)]',
+  toggle: 'bg-[var(--color-warning-soft)] text-[var(--color-warning-strong)]',
+  evaluate: 'bg-[var(--color-warning-soft)] text-[var(--color-warning-strong)]',
 }
 
 async function load() {

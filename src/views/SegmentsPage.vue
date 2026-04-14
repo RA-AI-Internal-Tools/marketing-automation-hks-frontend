@@ -150,9 +150,20 @@ async function handleEvaluate(slug: string) {
 async function handleEvaluateAll() {
   evaluatingAll.value = true
   try {
+    // Backend now returns 202 with { status, client_count, segment_count }
+    // (async fire-and-forget). The old 200 { clients_evaluated, segments_evaluated, results }
+    // shape is gone; list will update once the background job writes back.
     const result = await evaluateAllSegments()
-    showToast(`${result.clients_evaluated} clients evaluated across ${result.segments_evaluated} segments.`, 'success', 5000)
-    await load()
+    const started = result?.status === 'evaluation_started'
+    showToast(
+      started
+        ? `Evaluating ${result.segment_count} segments across ${result.client_count} clients…`
+        : 'Evaluation started.',
+      'success',
+      5000,
+    )
+    // Refresh after a short delay so the first results have a chance to persist.
+    setTimeout(() => { load() }, 2000)
   } catch (e: any) {
     showToast(e.response?.data?.error || 'Failed to evaluate all segments', 'error')
   } finally { evaluatingAll.value = false }

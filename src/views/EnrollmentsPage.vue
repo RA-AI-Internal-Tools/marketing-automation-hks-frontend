@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, watch } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import { fetchEnrollments, exportEnrollments } from '@/api/dashboard'
+import { getEnrollmentStatusVocabulary, DEFAULT_ENROLLMENT_STATUSES } from '@/api/enrollments'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import type { CampaignEnrollment } from '@/api/types'
@@ -21,6 +22,11 @@ const limit = 25
 const filterStatus = ref('')
 const filterCampaign = ref('')
 const filterClient = ref('')
+const statusOptions = ref<string[]>([...DEFAULT_ENROLLMENT_STATUSES])
+
+function statusLabel(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
 
 async function load() {
   loading.value = true
@@ -41,7 +47,13 @@ async function load() {
   }
 }
 
-onMounted(load)
+onMounted(async () => {
+  // Pull status vocabulary so the filter doesn't silently drop new
+  // statuses the backend adds (e.g. 'paused'). Falls back to the
+  // hardcoded list on 404 / network error.
+  statusOptions.value = await getEnrollmentStatusVocabulary()
+  await load()
+})
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
 watch([filterStatus, filterCampaign, filterClient], () => {
@@ -98,11 +110,7 @@ function formatDate(d?: string): string {
              wait-for-event enrollments paused until an external event
              fires — previously hidden from the filter dropdown. -->
         <option value="">All statuses</option>
-        <option value="active">Active</option>
-        <option value="waiting">Waiting</option>
-        <option value="completed">Completed</option>
-        <option value="cancelled">Cancelled</option>
-        <option value="expired">Expired</option>
+        <option v-for="s in statusOptions" :key="s" :value="s">{{ statusLabel(s) }}</option>
       </select>
       <input
         v-model="filterCampaign"
