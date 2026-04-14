@@ -56,14 +56,29 @@ const preference = ref<ThemePreference>(getStoredPreference())
 const systemPrefersDark = ref(getSystemPreference())
 
 let listenerAttached = false
+let mqRef: MediaQueryList | null = null
+
+function onSystemPrefChange(e: MediaQueryListEvent) {
+  systemPrefersDark.value = e.matches
+}
 
 function attachSystemListener() {
   if (listenerAttached || typeof window === 'undefined') return
   listenerAttached = true
-  const mq = window.matchMedia('(prefers-color-scheme: dark)')
-  mq.addEventListener('change', (e) => {
-    systemPrefersDark.value = e.matches
-  })
+  mqRef = window.matchMedia('(prefers-color-scheme: dark)')
+  mqRef.addEventListener('change', onSystemPrefChange)
+}
+
+/**
+ * Remove the system-preference listener. Intended as an escape hatch for
+ * HMR and test teardown — normal runtime keeps the listener for the life
+ * of the page (singleton behaviour).
+ */
+export function teardownTheme() {
+  if (!listenerAttached || !mqRef) return
+  mqRef.removeEventListener('change', onSystemPrefChange)
+  mqRef = null
+  listenerAttached = false
 }
 
 /**

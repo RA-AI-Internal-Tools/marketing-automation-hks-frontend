@@ -1,4 +1,4 @@
-import { ref, onUnmounted } from 'vue'
+import { ref, onUnmounted, getCurrentInstance } from 'vue'
 
 export interface SSEEvent {
   type: string
@@ -78,7 +78,12 @@ export function useSSE(url: string, onError?: () => void) {
     connected.value = false
   }
 
-  onUnmounted(disconnect)
+  // Only register the lifecycle hook when we're inside a component setup.
+  // useSSE can be invoked from a Pinia action where no component instance
+  // exists; calling onUnmounted there logs a noisy Vue warning.
+  if (getCurrentInstance()) {
+    onUnmounted(disconnect)
+  }
 
   // Start connection
   connect()
