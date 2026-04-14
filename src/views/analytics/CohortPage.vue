@@ -69,7 +69,7 @@ watch(() => analytics.queryParams, load)
             <thead>
               <tr class="text-left text-[var(--color-text-tertiary)] text-xs uppercase">
                 <th class="pb-2 pr-3">Cohort</th>
-                <th class="pb-2 pr-3 text-right">Users</th>
+                <th class="pb-2 pr-3 text-right">Clients</th>
                 <th v-for="(_, i) in cohortData.cohorts[0]?.periods || []" :key="i" class="pb-2 text-center min-w-[48px]">
                   M{{ i }}
                 </th>

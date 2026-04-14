@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Integration } from '@/api/types'
 import type { Environment } from '@/api/integrations'
+import StatusBadge from './StatusBadge.vue'
 import {
   LinkIcon,
   EnvelopeIcon,
@@ -12,13 +13,15 @@ import {
   ArrowPathIcon,
   PencilSquareIcon,
   LockClosedIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps<{
   integration: Integration
   testing?: boolean
   credentialEnvironment?: Environment
-  hasCredentials?: boolean
+  /** 'full' = all required fields stored; 'partial' = some; 'none' = none. */
+  credentialStatus?: 'none' | 'partial' | 'full'
 }>()
 
 const emit = defineEmits<{
@@ -34,14 +37,6 @@ const typeIcons: Record<string, any> = {
   crm: UserGroupIcon,
   analytics: ChartBarIcon,
   infrastructure: LinkIcon,
-}
-
-const statusConfig: Record<string, { label: string; colorClass: string; dotClass: string }> = {
-  connected: { label: 'Connected', colorClass: 'bg-[var(--color-success-bg)] text-[var(--color-success-text)] border border-[var(--color-success-border)]', dotClass: 'bg-[var(--color-success)]' },
-  degraded: { label: 'Degraded', colorClass: 'bg-[var(--color-warning-bg)] text-[var(--color-warning-text)] border border-[var(--color-warning-border)]', dotClass: 'bg-[var(--color-warning)]' },
-  not_configured: { label: 'Not Configured', colorClass: 'bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] border border-[var(--color-border)]', dotClass: 'bg-[var(--color-text-muted)]' },
-  error: { label: 'Error', colorClass: 'bg-[var(--color-error-bg)] text-[var(--color-error-text)] border border-[var(--color-error-border)]', dotClass: 'bg-[var(--color-error)]' },
-  disabled: { label: 'Disabled', colorClass: 'bg-[var(--color-warning-bg)] text-[var(--color-warning-text)] border border-[var(--color-warning-border)]', dotClass: 'bg-[var(--color-warning)]' },
 }
 
 const typeLabels: Record<string, string> = {
@@ -95,19 +90,22 @@ function handleTest() {
 
     <!-- Status badge -->
     <div class="flex items-center gap-2 mb-3 flex-wrap">
+      <StatusBadge :status="integration.status" />
       <span
-        :class="['inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium', statusConfig[integration.status]?.colorClass]"
-      >
-        <span :class="['h-1.5 w-1.5 rounded-full', statusConfig[integration.status]?.dotClass]"></span>
-        {{ statusConfig[integration.status]?.label || integration.status }}
-      </span>
-      <span
-        v-if="hasCredentials && credentialEnvironment"
+        v-if="credentialStatus === 'full' && credentialEnvironment"
         class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] border border-[var(--color-border)]"
         :title="`Credentials stored for ${credentialEnvironment}`"
       >
         <LockClosedIcon class="h-3 w-3" />
         Configured ({{ credentialEnvironment }})
+      </span>
+      <span
+        v-else-if="credentialStatus === 'partial' && credentialEnvironment"
+        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-[var(--color-warning-bg)] text-[var(--color-warning-text)] border border-[var(--color-warning-border)]"
+        :title="`Some required credential fields are missing for ${credentialEnvironment}`"
+      >
+        <ExclamationTriangleIcon class="h-3 w-3" />
+        Partial ({{ credentialEnvironment }})
       </span>
     </div>
 

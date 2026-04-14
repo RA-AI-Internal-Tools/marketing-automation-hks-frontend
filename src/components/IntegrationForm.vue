@@ -135,21 +135,48 @@ async function handleSave() {
   }
   saving.value = true
   try {
-    for (const f of touched) {
-      await upsertCredential({
-        provider: providerKey.value,
-        environment: environment.value,
-        key_name: f.key_name,
-        value: getValue(f.key_name),
-      })
+    // Use allSettled so a mid-list failure doesn't silently hide successful
+    // writes to earlier fields — previously a field-2 error would surface
+    // only that error while field 1 was already persisted.
+    const results = await Promise.allSettled(
+      touched.map(f =>
+        upsertCredential({
+          provider: providerKey.value,
+          environment: environment.value,
+          key_name: f.key_name,
+          value: getValue(f.key_name),
+        }),
+      ),
+    )
+    const succeeded: typeof touched = []
+    const failed: { field: string; reason: string }[] = []
+    results.forEach((r, i) => {
+      const f = touched[i]!
+      if (r.status === 'fulfilled') {
+        succeeded.push(f)
+      } else {
+        const err: any = r.reason
+        failed.push({
+          field: f.key_name,
+          reason: err?.response?.data?.error || err?.message || 'request failed',
+        })
+      }
+    })
+    // clear typed values for fields that actually persisted
+    for (const f of succeeded) setValue(f.key_name, '')
+    if (failed.length === 0) {
+      showToast(`Saved ${succeeded.length} credential${succeeded.length === 1 ? '' : 's'}`, 'success')
+    } else if (succeeded.length === 0) {
+      showToast(`Failed to save: ${failed.map(f => `${f.field} (${f.reason})`).join('; ')}`, 'error')
+    } else {
+      const failedList = failed.map(f => `${f.field} (${f.reason})`).join('; ')
+      showToast(
+        `Saved ${succeeded.length} of ${touched.length} fields. Failed: ${failedList}`,
+        'warning',
+      )
     }
-    showToast(`Saved ${touched.length} credential${touched.length === 1 ? '' : 's'}`, 'success')
-    // clear typed values after save — we never want to retain plaintext
-    for (const f of touched) setValue(f.key_name, '')
     await reloadRows()
-    emit('saved')
-  } catch (e: any) {
-    showToast(e.response?.data?.error || 'Failed to save credentials', 'error')
+    if (succeeded.length > 0) emit('saved')
   } finally {
     saving.value = false
   }
@@ -183,20 +210,43 @@ async function handleDelete() {
     showToast('No stored credentials to delete for this environment', 'info')
     return
   }
-  try {
-    for (const r of existing) {
-      await deleteCredential({
+  // Use allSettled so partial delete failures surface per-field rather
+  // than aborting on the first rejection.
+  const results = await Promise.allSettled(
+    existing.map(r =>
+      deleteCredential({
         provider: providerKey.value,
         environment: environment.value,
         key_name: r.key_name,
+      }),
+    ),
+  )
+  const failed: { field: string; reason: string }[] = []
+  let succeeded = 0
+  results.forEach((r, i) => {
+    if (r.status === 'fulfilled') {
+      succeeded++
+    } else {
+      const err: any = r.reason
+      failed.push({
+        field: existing[i]!.key_name,
+        reason: err?.response?.data?.error || err?.message || 'request failed',
       })
     }
-    showToast(`Deleted ${existing.length} credential${existing.length === 1 ? '' : 's'}`, 'success')
-    await reloadRows()
-    emit('saved')
-  } catch (e: any) {
-    showToast(e.response?.data?.error || 'Failed to delete credentials', 'error')
+  })
+  if (failed.length === 0) {
+    showToast(`Deleted ${succeeded} credential${succeeded === 1 ? '' : 's'}`, 'success')
+  } else if (succeeded === 0) {
+    showToast(`Failed to delete: ${failed.map(f => `${f.field} (${f.reason})`).join('; ')}`, 'error')
+  } else {
+    const failedList = failed.map(f => `${f.field} (${f.reason})`).join('; ')
+    showToast(
+      `Deleted ${succeeded} of ${existing.length} fields. Failed: ${failedList}`,
+      'warning',
+    )
   }
+  await reloadRows()
+  if (succeeded > 0) emit('saved')
 }
 </script>
 

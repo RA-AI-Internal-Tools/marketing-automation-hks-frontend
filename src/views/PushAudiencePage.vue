@@ -6,6 +6,8 @@ import { useAuthStore } from '@/stores/auth'
 import { useEnvironmentStore } from '@/stores/environment'
 import { useToast } from '@/composables/useToast'
 import PageHeader from '@/components/PageHeader.vue'
+import StatusBadge from '@/components/StatusBadge.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
 const auth = useAuthStore()
 const env = useEnvironmentStore()
@@ -147,12 +149,6 @@ function formatDate(d: string) {
   return new Date(d).toLocaleString()
 }
 
-const statusColors: Record<string, string> = {
-  sent: 'bg-green-100 text-green-700',
-  failed: 'bg-red-100 text-red-700',
-  no_consent: 'bg-amber-100 text-amber-700',
-}
-
 onMounted(load)
 </script>
 
@@ -252,14 +248,11 @@ onMounted(load)
               </td>
               <td class="px-4 py-3 text-[var(--color-text-tertiary)] text-xs whitespace-nowrap">{{ formatDate(row.last_seen_at) }}</td>
               <td class="px-4 py-3">
-                <span :class="[
-                  'px-2 py-0.5 rounded-full text-xs font-medium',
-                  row.is_active ? 'bg-green-100 text-green-700' : 'bg-[var(--color-bg-subtle)] text-[var(--color-text-muted)]'
-                ]">{{ row.is_active ? 'Active' : 'Inactive' }}</span>
+                <StatusBadge :status="row.is_active ? 'active' : 'inactive'" />
               </td>
             </tr>
             <tr v-if="rows.length === 0">
-              <td colspan="6" class="px-4 py-8 text-center text-[var(--color-text-muted)]">No push registrations found</td>
+              <td colspan="7" class="px-4 py-8 text-center text-[var(--color-text-muted)]">No push registrations found</td>
             </tr>
           </tbody>
         </table>
@@ -317,35 +310,15 @@ onMounted(load)
     </div>
 
     <!-- Confirmation Dialog -->
-    <Teleport to="body">
-      <div v-if="showConfirm" class="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="showConfirm = false" />
-        <div class="relative bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-xl w-full max-w-md p-6 space-y-4">
-          <h3 class="text-lg font-semibold text-[var(--color-text-primary)]">Confirm Push Send</h3>
-          <p class="text-sm text-[var(--color-text-secondary)]">
-            You are about to send a push notification to
-            <strong>{{ selected.size }} client{{ selected.size === 1 ? '' : 's' }}</strong>
-            in <strong>{{ env.mode }}</strong> environment.
-          </p>
-          <div class="bg-[var(--color-bg-page)] rounded-lg p-3 text-sm space-y-1">
-            <div><span class="text-[var(--color-text-tertiary)]">Title:</span> {{ pushTitle }}</div>
-            <div><span class="text-[var(--color-text-tertiary)]">Body:</span> {{ pushBody }}</div>
-            <div v-if="pushLink"><span class="text-[var(--color-text-tertiary)]">Link:</span> {{ pushLink }}</div>
-          </div>
-          <p class="text-xs text-[var(--color-text-muted)]">This action cannot be undone.</p>
-          <div class="flex justify-end gap-3 pt-2">
-            <button @click="showConfirm = false"
-              class="px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-bg-page)] transition-colors">
-              Cancel
-            </button>
-            <button @click="confirmAndSend"
-              class="px-4 py-2 text-sm font-medium text-white bg-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors">
-              Send Now
-            </button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
+    <ConfirmDialog
+      :open="showConfirm"
+      title="Confirm Push Send"
+      :message="`You are about to send a push notification to ${selected.size} client${selected.size === 1 ? '' : 's'} in the ${env.mode} environment.\n\nTitle: ${pushTitle}\nBody: ${pushBody}${pushLink ? `\nLink: ${pushLink}` : ''}\n\nThis action cannot be undone.`"
+      variant="danger"
+      :confirm-text="`Send to ${selected.size} client${selected.size === 1 ? '' : 's'}`"
+      @confirm="confirmAndSend"
+      @cancel="showConfirm = false"
+    />
 
     <!-- Result Modal -->
     <Teleport to="body">
@@ -381,9 +354,7 @@ onMounted(load)
                   <td class="py-2 font-mono text-xs">{{ r.client_id }}</td>
                   <td class="py-2 font-mono text-xs text-[var(--color-text-tertiary)]">{{ r.device_token_masked || '-' }}</td>
                   <td class="py-2">
-                    <span :class="['px-2 py-0.5 rounded-full text-xs font-medium', statusColors[r.status] || '']">
-                      {{ r.status }}
-                    </span>
+                    <StatusBadge :status="r.status" />
                   </td>
                   <td class="py-2 text-xs text-[var(--color-text-tertiary)]">{{ r.error || r.provider_message_id || '-' }}</td>
                 </tr>

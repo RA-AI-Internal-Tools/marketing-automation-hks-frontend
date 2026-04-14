@@ -59,10 +59,10 @@ function fmt(n: number): string {
         <MetricCard title="Revenue" :value="'$' + fmt(data.revenue)" :delta="data.revenue_delta" delta-label="vs prev" />
         <MetricCard title="Traffic" :value="fmt(data.traffic)" :delta="data.traffic_delta" delta-label="vs prev" />
         <MetricCard title="Conversion Rate" :value="data.conversion_rate.toFixed(2) + '%'" :delta="data.conversion_rate_delta" />
-        <MetricCard title="Active Users" :value="fmt(data.active_users)" :delta="data.active_users_delta" />
+        <MetricCard title="Active Clients" :value="fmt(data.active_users)" :delta="data.active_users_delta" />
         <MetricCard title="Orders" :value="fmt(data.total_orders)" :delta="data.total_orders_delta" />
       </div>
-      <p class="text-xs text-[var(--color-text-muted)] -mt-2">Traffic and active users are live from Tracardi. Revenue, conversion rate, and order counts populate once real purchase flows are active in the store.</p>
+      <p class="text-xs text-[var(--color-text-muted)] -mt-2">Traffic and active clients are live from Tracardi. Revenue, conversion rate, and order counts populate once real purchase flows are active in the store.</p>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <BaseCard>

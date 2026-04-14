@@ -9,6 +9,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import type { Integration, ProviderType } from '@/api/types'
 import { listCredentials, type CredentialRow, type Environment } from '@/api/integrations'
+import { getKeyFields } from '@/api/integrationKeys'
 import {
   LinkIcon,
   MagnifyingGlassIcon,
@@ -96,8 +97,25 @@ function editingProviderKey(): string {
   return editingIntegration.value ? providerKeyFor(editingIntegration.value) : ''
 }
 
-function hasCredsFor(providerKey: string, environment: Environment): boolean {
-  return credentials.value.some(c => c.provider === providerKey && c.environment === environment)
+type CredStatus = 'none' | 'partial' | 'full'
+
+function credStatusFor(providerKey: string, environment: Environment): CredStatus {
+  const fields = getKeyFields(providerKey)
+  if (fields.length === 0) {
+    // Unknown schema — fall back to "any key present = configured" so older
+    // providers not listed in integrationKeys.ts don't regress to "none".
+    return credentials.value.some(c => c.provider === providerKey && c.environment === environment)
+      ? 'full'
+      : 'none'
+  }
+  const present = new Set(
+    credentials.value
+      .filter(c => c.provider === providerKey && c.environment === environment)
+      .map(c => c.key_name),
+  )
+  if (present.size === 0) return 'none'
+  const allPresent = fields.every(f => present.has(f.key_name))
+  return allPresent ? 'full' : 'partial'
 }
 
 async function handleTest(id: number) {
@@ -227,7 +245,7 @@ async function handleTest(id: number) {
         :integration="integration"
         :testing="testingIds.has(integration.id)"
         :credential-environment="credEnv"
-        :has-credentials="hasCredsFor(providerKeyFor(integration), credEnv)"
+        :credential-status="credStatusFor(providerKeyFor(integration), credEnv)"
         @edit="openEdit"
         @test="handleTest"
       />
