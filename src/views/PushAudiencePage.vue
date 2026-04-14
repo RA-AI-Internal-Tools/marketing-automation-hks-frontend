@@ -219,7 +219,8 @@ onMounted(load)
               </th>
               <th class="px-4 py-3">Client ID</th>
               <th class="px-4 py-3">Devices</th>
-              <th class="px-4 py-3">Platforms</th>
+              <th class="px-4 py-3">Device</th>
+              <th class="px-4 py-3">Locale</th>
               <th class="px-4 py-3">Last Seen</th>
               <th class="px-4 py-3">Status</th>
             </tr>
@@ -235,10 +236,19 @@ onMounted(load)
               <td class="px-4 py-3 font-mono text-[var(--color-text-primary)] font-medium">{{ row.client_id }}</td>
               <td class="px-4 py-3 text-[var(--color-text-secondary)]">{{ row.device_count }}</td>
               <td class="px-4 py-3">
-                <span v-for="p in row.platforms" :key="p"
-                  class="inline-block mr-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)]">
-                  {{ p }}
+                <!-- Prefer device_categories (mobile/tablet/desktop); fall
+                     back to legacy platforms (ios/android/web) for older rows
+                     pre-migration. Raw platforms stay visible via title. -->
+                <span
+                  v-for="d in ((row.device_categories && row.device_categories.length) ? row.device_categories : row.platforms)"
+                  :key="d"
+                  :title="(row.platforms || []).join(', ')"
+                  class="inline-block mr-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] capitalize">
+                  {{ d }}
                 </span>
+              </td>
+              <td class="px-4 py-3 text-xs text-[var(--color-text-tertiary)]">
+                {{ (row.locales && row.locales[0]) || '—' }}
               </td>
               <td class="px-4 py-3 text-[var(--color-text-tertiary)] text-xs whitespace-nowrap">{{ formatDate(row.last_seen_at) }}</td>
               <td class="px-4 py-3">

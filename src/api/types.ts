@@ -349,6 +349,8 @@ export interface PushAudienceEntry {
   client_id: number
   device_count: number
   platforms: string[]
+  device_categories?: string[]
+  locales?: string[]
   last_seen_at: string
   is_active: boolean
 }
