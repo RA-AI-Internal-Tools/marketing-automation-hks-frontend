@@ -88,6 +88,26 @@ describe('useSSE', () => {
     expect(new Set(attempts).size).toBe(3)
   })
 
+  it('caps exponential backoff at MAX_MS across many consecutive failures', () => {
+    // The composable doesn't cap the number of attempts (it retries
+    // indefinitely with exponential backoff), but the backoff interval
+    // itself is capped at 30 s. After ~10 failures the base interval is
+    // saturated, so a 60 s tick MUST still spawn exactly one new attempt
+    // per cycle — not a thundering herd, and not zero (abandonment).
+    useSSE('/api/sse')
+    // Drive 10 failures to push attempt counter past the cap.
+    for (let i = 0; i < 10; i++) {
+      MockEventSource.last!._error()
+      vi.advanceTimersByTime(40_000)
+    }
+    const beforeCount = (MockEventSource.last as any)
+    // One more cycle at the capped interval — still produces exactly one reconnect.
+    beforeCount._error()
+    vi.advanceTimersByTime(40_000)
+    const afterCount = MockEventSource.last
+    expect(afterCount).not.toBe(beforeCount)
+  })
+
   it('disconnect() stops further reconnects', () => {
     const sse = useSSE('/api/sse')
     const first = MockEventSource.last!

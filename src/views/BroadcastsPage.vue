@@ -4,6 +4,7 @@ import PageHeader from '@/components/PageHeader.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import SkeletonTable from '@/components/SkeletonTable.vue'
+import StatusBadge from '@/components/StatusBadge.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useTemplatesStore } from '@/stores/templates'
 import { useToast } from '@/composables/useToast'
@@ -216,7 +217,7 @@ const channelChip: Record<string, string> = {
       <div v-for="b in rows" :key="b.id" class="bc-row" :data-status="b.status">
         <div class="bc-row-main">
           <div class="bc-row-top">
-            <span class="bc-status" :data-status="b.status">{{ b.status }}</span>
+            <StatusBadge :status="b.status" />
             <h3 class="bc-name">{{ b.name }}</h3>
             <span class="bc-chip" :class="channelChip[b.channel]">
               <span class="bc-chip-dot" /> {{ b.channel }}
@@ -401,14 +402,14 @@ const channelChip: Record<string, string> = {
 
 .bc-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 9px; font-size: 11px; font-weight: 500; text-transform: capitalize; border-radius: var(--radius-full); border: 1px solid; }
 .bc-chip-dot { width: 5px; height: 5px; border-radius: 50%; }
-.chip-email    { color: #1e3a8a; background: #e8eefd; border-color: #c8d5f5; }
-.chip-email .bc-chip-dot { background: #1e3a8a; }
-.chip-sms      { color: #5b2d8c; background: #ede5fa; border-color: #d6c8f0; }
-.chip-sms .bc-chip-dot { background: #5b2d8c; }
-.chip-whatsapp { color: #0b5334; background: #e8f5ee; border-color: #b6dac5; }
-.chip-whatsapp .bc-chip-dot { background: #0b5334; }
-.chip-push     { color: #7a3e00; background: #fbeddb; border-color: #edd0a4; }
-.chip-push .bc-chip-dot { background: #7a3e00; }
+.chip-email    { color: var(--channel-email);    background: var(--channel-email-soft);    border-color: var(--channel-email-border); }
+.chip-email    .bc-chip-dot { background: var(--channel-email); }
+.chip-sms      { color: var(--channel-sms);      background: var(--channel-sms-soft);      border-color: var(--channel-sms-border); }
+.chip-sms      .bc-chip-dot { background: var(--channel-sms); }
+.chip-whatsapp { color: var(--channel-whatsapp); background: var(--channel-whatsapp-soft); border-color: var(--channel-whatsapp-border); }
+.chip-whatsapp .bc-chip-dot { background: var(--channel-whatsapp); }
+.chip-push     { color: var(--channel-push);     background: var(--channel-push-soft);     border-color: var(--channel-push-border); }
+.chip-push     .bc-chip-dot { background: var(--channel-push); }
 
 .bc-row-meta {
   margin-top: 8px; font-family: var(--font-sans); font-size: 12px;

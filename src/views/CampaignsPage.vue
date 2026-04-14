@@ -14,6 +14,7 @@ import { cloneCampaign } from '@/api/dashboard'
 import BlueprintPickerModal from '@/components/BlueprintPickerModal.vue'
 import ChannelChip from '@/components/ChannelChip.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import StatusBadge from '@/components/StatusBadge.vue'
 
 const router = useRouter()
 const store = useCampaignsStore()
@@ -148,9 +149,7 @@ const totalActive = computed(() => store.campaigns.filter(c => c.is_active).leng
           </div>
 
           <div class="camp-head-tools">
-            <span class="camp-status" :data-active="campaign.is_active">
-              {{ campaign.is_active ? 'Live' : 'Paused' }}
-            </span>
+            <StatusBadge :status="campaign.is_active ? 'active' : 'inactive'" />
 
             <label v-if="auth.canWrite" class="camp-toggle" :title="campaign.is_active ? 'Pause' : 'Activate'">
               <input type="checkbox" :checked="campaign.is_active" @change="handleToggle(campaign.id)" />
@@ -253,7 +252,12 @@ const totalActive = computed(() => store.campaigns.filter(c => c.is_active).leng
 .camp-meta-sep { color: var(--color-border-strong); }
 .camp-meta-rule { flex: 1; height: 1px; background: var(--color-divider); margin-left: 8px; }
 
-/* ── List ── */
+/* ── List ──
+ * Campaign cards stack full-width by default (mobile + dense desktop). The
+ * card bodies are long (flow visualiser + footer meta) so 2-up or 3-up grids
+ * create excessive horizontal bleed + clipped step arrows on mid-widths.
+ * Single column remains the editorial default; grid kicks in only on very
+ * wide screens where two-up no longer cramps the flow strip. */
 .camp-list { display: flex; flex-direction: column; gap: 16px; }
 
 /* ── Card ── */

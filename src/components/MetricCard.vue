@@ -12,9 +12,9 @@ const props = defineProps<{
 
 const accentColors: Record<string, string> = {
   indigo: 'bg-[var(--color-primary)]',
-  green: 'bg-emerald-500',
-  yellow: 'bg-amber-500',
-  red: 'bg-red-500',
+  green: 'bg-[var(--color-success)]',
+  yellow: 'bg-[var(--color-warning)]',
+  red: 'bg-[var(--color-error)]',
   blue: 'bg-[var(--color-accent)]',
 }
 </script>
@@ -29,7 +29,7 @@ const accentColors: Record<string, string> = {
         <span
           :class="[
             'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold',
-            delta >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
+            delta >= 0 ? 'bg-[var(--color-success-soft)] text-[var(--color-success-strong)]' : 'bg-[var(--color-error-soft)] text-[var(--color-error-strong)]'
           ]"
         >
           <ArrowTrendingUpIcon v-if="delta >= 0" class="h-3.5 w-3.5" />

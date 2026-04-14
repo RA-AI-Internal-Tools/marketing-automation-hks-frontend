@@ -2,6 +2,7 @@
 import { computed, onMounted, watch } from 'vue'
 import AnalyticsLayout from '@/components/AnalyticsLayout.vue'
 import MetricCard from '@/components/MetricCard.vue'
+import BaseCard from '@/components/BaseCard.vue'
 import { useAnalyticsStore } from '@/stores/analytics'
 import { fetchExecutiveOverview } from '@/api/analytics'
 import type { ExecutiveOverview } from '@/api/types'
@@ -65,7 +66,7 @@ function fmt(n: number): string {
       <p class="text-xs text-[var(--color-text-muted)] -mt-2">Traffic and active users are live from Tracardi. Revenue, conversion rate, and order counts populate once real purchase flows are active in the store.</p>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+        <BaseCard>
           <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Revenue Trend</h3>
           <Line
             v-if="data.daily_revenue.length"
@@ -83,8 +84,8 @@ function fmt(n: number): string {
             :options="{ responsive: true, plugins: { legend: { display: false } } }"
           />
           <p v-else class="text-sm text-[var(--color-text-muted)]">No data</p>
-        </div>
-        <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+        </BaseCard>
+        <BaseCard>
           <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Traffic Trend</h3>
           <Line
             v-if="data.daily_traffic.length"
@@ -102,7 +103,7 @@ function fmt(n: number): string {
             :options="{ responsive: true, plugins: { legend: { display: false } } }"
           />
           <p v-else class="text-sm text-[var(--color-text-muted)]">No data</p>
-        </div>
+        </BaseCard>
       </div>
     </div>
   </AnalyticsLayout>

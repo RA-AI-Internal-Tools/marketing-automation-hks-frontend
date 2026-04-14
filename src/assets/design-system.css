@@ -83,6 +83,31 @@
   --color-info-border: #c0cfee;
   --color-info-text: #142e81;
 
+  /* ---- Semantic soft/strong pairs — for pill chips (e.g. delta % on MetricCard) ---- */
+  --color-success-soft: #e8f5ee;
+  --color-success-strong: #0b5334;
+  --color-error-soft: #fbeceb;
+  --color-error-strong: #7a1c16;
+  --color-warning-soft: #faf1dc;
+  --color-warning-strong: #6e4602;
+
+  /* ---- Channel palette — single source for ChannelChip / broadcast chips ---- */
+  --channel-email: #1e3a8a;
+  --channel-email-soft: #e8eefd;
+  --channel-email-border: #c8d5f5;
+  --channel-sms: #5b2d8c;
+  --channel-sms-soft: #ede5fa;
+  --channel-sms-border: #d6c8f0;
+  --channel-whatsapp: #0b5334;
+  --channel-whatsapp-soft: #e8f5ee;
+  --channel-whatsapp-border: #b6dac5;
+  --channel-push: #7a3e00;
+  --channel-push-soft: #fbeddb;
+  --channel-push-border: #edd0a4;
+  --channel-onsite: #142e81;
+  --channel-onsite-soft: #eaf0fa;
+  --channel-onsite-border: #c0cfee;
+
   /* ---- Environment Colors ---- */
   --env-sandbox-bg: #faf1dc;
   --env-sandbox-border: #ecd39a;
@@ -243,6 +268,31 @@
   --color-info-bg: rgba(96, 165, 250, 0.08);
   --color-info-border: rgba(96, 165, 250, 0.22);
   --color-info-text: #93c5fd;
+
+  /* Semantic soft/strong for dark mode */
+  --color-success-soft: rgba(74, 222, 128, 0.10);
+  --color-success-strong: #86efac;
+  --color-error-soft: rgba(248, 113, 113, 0.10);
+  --color-error-strong: #fca5a5;
+  --color-warning-soft: rgba(251, 191, 36, 0.10);
+  --color-warning-strong: #fde68a;
+
+  /* Channel palette — dark */
+  --channel-email: #93b4ff;
+  --channel-email-soft: rgba(147, 180, 255, 0.10);
+  --channel-email-border: rgba(147, 180, 255, 0.30);
+  --channel-sms: #c79cf5;
+  --channel-sms-soft: rgba(199, 156, 245, 0.10);
+  --channel-sms-border: rgba(199, 156, 245, 0.30);
+  --channel-whatsapp: #7cd9a9;
+  --channel-whatsapp-soft: rgba(124, 217, 169, 0.10);
+  --channel-whatsapp-border: rgba(124, 217, 169, 0.30);
+  --channel-push: #f0b879;
+  --channel-push-soft: rgba(240, 184, 121, 0.10);
+  --channel-push-border: rgba(240, 184, 121, 0.30);
+  --channel-onsite: #93c5fd;
+  --channel-onsite-soft: rgba(96, 165, 250, 0.10);
+  --channel-onsite-border: rgba(96, 165, 250, 0.30);
 
   --env-sandbox-bg: rgba(251, 191, 36, 0.08);
   --env-sandbox-border: rgba(251, 191, 36, 0.22);

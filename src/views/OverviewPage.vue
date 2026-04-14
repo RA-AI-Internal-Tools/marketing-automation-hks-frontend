@@ -596,7 +596,7 @@ function pctLabel(n: number, total: number): string {
   gap: 12px;
 }
 @media (min-width: 640px) { .stat-grid { grid-template-columns: repeat(3, 1fr); } }
-@media (min-width: 1100px) { .stat-grid { grid-template-columns: repeat(6, 1fr); } }
+@media (min-width: 1280px) { .stat-grid { grid-template-columns: repeat(6, 1fr); } }
 
 .stat-skel {
   background: var(--color-bg-card);
