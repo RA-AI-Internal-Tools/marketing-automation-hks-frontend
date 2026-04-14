@@ -5,6 +5,7 @@ import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import SkeletonTable from '@/components/SkeletonTable.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
+import ChannelChip from '@/components/ChannelChip.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useTemplatesStore } from '@/stores/templates'
 import { useToast } from '@/composables/useToast'
@@ -169,9 +170,6 @@ function formatTime(iso: string) {
   })
 }
 
-const channelChip: Record<string, string> = {
-  email: 'chip-email', sms: 'chip-sms', whatsapp: 'chip-whatsapp', push: 'chip-push',
-}
 </script>
 
 <template>
@@ -219,9 +217,7 @@ const channelChip: Record<string, string> = {
           <div class="bc-row-top">
             <StatusBadge :status="b.status" />
             <h3 class="bc-name">{{ b.name }}</h3>
-            <span class="bc-chip" :class="channelChip[b.channel]">
-              <span class="bc-chip-dot" /> {{ b.channel }}
-            </span>
+            <ChannelChip :channel="b.channel" />
           </div>
           <div class="bc-row-meta">
             <span>Template: <code>{{ b.template_key }}</code></span>
@@ -399,17 +395,6 @@ const channelChip: Record<string, string> = {
 .bc-status[data-status="completed"] { color: var(--color-primary-text);  background: var(--color-primary-soft); border-color: var(--color-primary-border); }
 .bc-status[data-status="cancelled"] { color: var(--color-text-muted);    background: var(--color-bg-subtle); border-color: var(--color-border); }
 .bc-status[data-status="failed"]    { color: var(--color-error-text);    background: var(--color-error-bg);  border-color: var(--color-error-border); }
-
-.bc-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 9px; font-size: 11px; font-weight: 500; text-transform: capitalize; border-radius: var(--radius-full); border: 1px solid; }
-.bc-chip-dot { width: 5px; height: 5px; border-radius: 50%; }
-.chip-email    { color: var(--channel-email);    background: var(--channel-email-soft);    border-color: var(--channel-email-border); }
-.chip-email    .bc-chip-dot { background: var(--channel-email); }
-.chip-sms      { color: var(--channel-sms);      background: var(--channel-sms-soft);      border-color: var(--channel-sms-border); }
-.chip-sms      .bc-chip-dot { background: var(--channel-sms); }
-.chip-whatsapp { color: var(--channel-whatsapp); background: var(--channel-whatsapp-soft); border-color: var(--channel-whatsapp-border); }
-.chip-whatsapp .bc-chip-dot { background: var(--channel-whatsapp); }
-.chip-push     { color: var(--channel-push);     background: var(--channel-push-soft);     border-color: var(--channel-push-border); }
-.chip-push     .bc-chip-dot { background: var(--channel-push); }
 
 .bc-row-meta {
   margin-top: 8px; font-family: var(--font-sans); font-size: 12px;

@@ -10,7 +10,9 @@ const loading = ref(true)
 const lastChecked = ref('')
 const error = ref('')
 
-let interval: ReturnType<typeof setInterval>
+// nullable so onUnmounted / visibility handlers can safely no-op when
+// the interval isn't running (e.g. tab hidden before first mount tick).
+let interval: ReturnType<typeof setInterval> | null = null
 
 async function checkHealth() {
   try {
@@ -25,12 +27,42 @@ async function checkHealth() {
   }
 }
 
+function startPolling() {
+  if (interval) return
+  interval = setInterval(checkHealth, 15000)
+}
+
+function stopPolling() {
+  if (interval) {
+    clearInterval(interval)
+    interval = null
+  }
+}
+
+// Pause polling while the tab is hidden — saves a request every 15s
+// per background tab and avoids a thundering-herd refetch when the
+// browser wakes up from sleep. When it becomes visible again, kick
+// off one immediate refetch so the status shown is never older than
+// the resume moment.
+function onVisibilityChange() {
+  if (document.hidden) {
+    stopPolling()
+  } else {
+    checkHealth()
+    startPolling()
+  }
+}
+
 onMounted(() => {
   checkHealth()
-  interval = setInterval(checkHealth, 15000)
+  startPolling()
+  document.addEventListener('visibilitychange', onVisibilityChange)
 })
 
-onUnmounted(() => clearInterval(interval))
+onUnmounted(() => {
+  stopPolling()
+  document.removeEventListener('visibilitychange', onVisibilityChange)
+})
 
 function normalizeHealthStatus(status: string | undefined): string {
   if (!status) return 'unknown'

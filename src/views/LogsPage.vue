@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import { fetchLogs, exportLogs } from '@/api/dashboard'
@@ -50,6 +50,11 @@ watch([filterCampaign, filterStatus, filterChannel], () => {
     page.value = 0
     load()
   }, 300)
+})
+
+// Clear any pending debounced fetch so it can't fire after unmount.
+onUnmounted(() => {
+  if (debounceTimer) clearTimeout(debounceTimer)
 })
 
 async function handleExport() {

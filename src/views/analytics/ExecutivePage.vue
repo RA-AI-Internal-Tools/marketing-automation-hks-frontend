@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
+import { onMounted, watch } from 'vue'
 import AnalyticsLayout from '@/components/AnalyticsLayout.vue'
 import MetricCard from '@/components/MetricCard.vue'
 import BaseCard from '@/components/BaseCard.vue'
@@ -29,9 +29,8 @@ const analytics = useAnalyticsStore()
 // endpoints (4-5s backend per live QA) and operators often bounce between
 // tabs in under a minute. Cache key includes the date range so different
 // windows don't pollute each other.
-const cacheKey = computed(() => `analytics:executive:${analytics.since}:${analytics.until}`)
 const { data, loading, error, load: runLoad } = useCachedFetch<ExecutiveOverview>(
-  cacheKey.value,
+  () => `analytics:executive:${analytics.since}:${analytics.until}`,
   () => fetchExecutiveOverview(analytics.since, analytics.until),
   60_000,
 )

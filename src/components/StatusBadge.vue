@@ -18,6 +18,9 @@ const statusConfig: Record<string, { bg: string; text: string; dot: string }> = 
   clicked: { bg: 'bg-[var(--color-info-bg)]', text: 'text-[var(--color-info-text)]', dot: 'bg-[var(--color-info)]' },
   bounced: { bg: 'bg-[var(--color-error-bg)]', text: 'text-[var(--color-error-text)]', dot: 'bg-[var(--color-error)]' },
   complaint: { bg: 'bg-[var(--color-error-bg)]', text: 'text-[var(--color-error-text)]', dot: 'bg-[var(--color-error)]' },
+  // `unsubscribed` is a provider-reported opt-out signal. Amber rather than
+  // error red — it's the user's explicit choice, not a delivery failure.
+  unsubscribed: { bg: 'bg-[var(--color-warning-bg)]', text: 'text-[var(--color-warning-text)]', dot: 'bg-[var(--color-warning)]' },
   failed: { bg: 'bg-[var(--color-error-bg)]', text: 'text-[var(--color-error-text)]', dot: 'bg-[var(--color-error)]' },
   // ─── Skip / deferred variants ─────────────────────────────────────────
   // Distinct from terminal failures: nothing was sent and nothing went

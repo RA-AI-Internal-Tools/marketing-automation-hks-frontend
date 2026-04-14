@@ -13,6 +13,7 @@ import {
   Filler,
 } from 'chart.js'
 import StatCard from '@/components/StatCard.vue'
+import StatusBadge from '@/components/StatusBadge.vue'
 import {
   fetchOverviewStats,
   fetchDailyVolume,
@@ -130,56 +131,61 @@ const { sorted: sortedCampaigns, key: sortKey, dir: sortDir, toggle: toggleSort 
     defaultDir: 'desc',
   })
 
-const chartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  interaction: { intersect: false, mode: 'index' as const },
-  plugins: {
-    legend: {
-      position: 'bottom' as const,
-      labels: {
-        padding: 16,
-        usePointStyle: true,
-        pointStyleWidth: 6,
-        boxHeight: 6,
-        font: { size: 11, family: 'IBM Plex Sans', weight: 500 as const },
-        color: 'rgba(107, 106, 92, 1)',
+const chartOptions = computed(() => {
+  // Pull axis + grid colors from the live design-system palette so dark
+  // mode and brand changes propagate without hex maintenance here.
+  const p = chartPalette()
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { intersect: false, mode: 'index' as const },
+    plugins: {
+      legend: {
+        position: 'bottom' as const,
+        labels: {
+          padding: 16,
+          usePointStyle: true,
+          pointStyleWidth: 6,
+          boxHeight: 6,
+          font: { size: 11, family: 'IBM Plex Sans', weight: 500 as const },
+          color: p.textTertiary,
+        },
+      },
+      tooltip: {
+        backgroundColor: '#1a1a15',
+        padding: 12,
+        cornerRadius: 6,
+        titleFont: { family: 'IBM Plex Sans', weight: 600 as const, size: 12 },
+        bodyFont: { family: 'IBM Plex Mono', size: 12 },
+        bodySpacing: 6,
+        borderColor: 'rgba(255,255,255,0.1)',
+        borderWidth: 1,
+        displayColors: true,
+        boxPadding: 4,
       },
     },
-    tooltip: {
-      backgroundColor: '#1a1a15',
-      padding: 12,
-      cornerRadius: 6,
-      titleFont: { family: 'IBM Plex Sans', weight: 600 as const, size: 12 },
-      bodyFont: { family: 'IBM Plex Mono', size: 12 },
-      bodySpacing: 6,
-      borderColor: 'rgba(255,255,255,0.1)',
-      borderWidth: 1,
-      displayColors: true,
-      boxPadding: 4,
-    },
-  },
-  scales: {
-    y: {
-      beginAtZero: true,
-      grid: { color: 'rgba(15, 23, 42, 0.04)', drawTicks: false },
-      border: { display: false },
-      ticks: {
-        font: { size: 10, family: 'IBM Plex Mono' },
-        color: 'rgba(107, 106, 92, 1)',
-        padding: 8,
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: { color: p.border, drawTicks: false },
+        border: { display: false },
+        ticks: {
+          font: { size: 10, family: 'IBM Plex Mono' },
+          color: p.textTertiary,
+          padding: 8,
+        },
+      },
+      x: {
+        grid: { display: false },
+        border: { display: false },
+        ticks: {
+          font: { size: 10, family: 'IBM Plex Mono' },
+          color: p.textTertiary,
+        },
       },
     },
-    x: {
-      grid: { display: false },
-      border: { display: false },
-      ticks: {
-        font: { size: 10, family: 'IBM Plex Mono' },
-        color: 'rgba(107, 106, 92, 1)',
-      },
-    },
-  },
-}
+  }
+})
 
 function pctLabel(n: number, total: number): string {
   if (!total) return '—'
@@ -342,7 +348,7 @@ function pctLabel(n: number, total: number): string {
               :key="'log-' + log.id"
               class="live-row"
             >
-              <span class="live-status" :data-status="log.status">{{ log.status }}</span>
+              <StatusBadge :status="log.status" />
               <span class="live-campaign">{{ log.campaign_slug }}</span>
               <span class="live-meta">step {{ log.step_index }} · {{ log.channel }}</span>
               <span class="live-time">{{ new Date(log.created_at).toLocaleTimeString() }}</span>
@@ -352,7 +358,7 @@ function pctLabel(n: number, total: number): string {
               :key="'enr-' + enr.id"
               class="live-row live-row-enroll"
             >
-              <span class="live-status" data-status="enroll">enroll</span>
+              <StatusBadge status="active" />
               <span class="live-campaign">Client #{{ enr.client_id }}</span>
               <span class="live-meta">{{ enr.status }} · step {{ enr.current_step }}</span>
               <span class="live-time">{{ new Date(enr.created_at).toLocaleTimeString() }}</span>
@@ -688,22 +694,6 @@ function pctLabel(n: number, total: number): string {
   transition: background var(--transition-fast);
 }
 .live-row:hover { background: var(--color-bg-subtle); }
-
-.live-status {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
-  border: 1px solid;
-  text-align: center;
-}
-.live-status[data-status="sent"]     { color: var(--color-success-text); background: var(--color-success-bg); border-color: var(--color-success-border); }
-.live-status[data-status="failed"]   { color: var(--color-error-text);   background: var(--color-error-bg);   border-color: var(--color-error-border); }
-.live-status[data-status="skipped"]  { color: var(--color-warning-text); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
-.live-status[data-status="enroll"]   { color: var(--color-primary-text); background: var(--color-primary-soft); border-color: var(--color-primary-border); }
 
 .live-campaign {
   font-family: var(--font-sans);

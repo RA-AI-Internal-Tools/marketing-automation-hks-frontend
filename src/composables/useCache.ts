@@ -45,8 +45,10 @@ export interface UseCachedFetchReturn<T> {
   invalidate: () => void
 }
 
+export type CacheKey = string | (() => string)
+
 export function useCachedFetch<T>(
-  key: string,
+  key: CacheKey,
   fetcher: () => Promise<T>,
   ttlMs = 60_000,
 ): UseCachedFetchReturn<T> {
@@ -54,9 +56,12 @@ export function useCachedFetch<T>(
   const loading = ref(false)
   const error   = ref<string | null>(null)
 
+  const resolveKey = (): string => (typeof key === 'function' ? key() : key)
+
   async function load(force = false): Promise<void> {
     const now = Date.now()
-    const entry = cache.get(key)
+    const k = resolveKey()
+    const entry = cache.get(k)
 
     // Hot path: cached value still fresh.
     if (!force && entry?.data !== undefined && entry.expiry > now) {
@@ -82,13 +87,13 @@ export function useCachedFetch<T>(
     loading.value = true
     error.value = null
     const inflight = fetcher()
-    cache.set(key, { expiry: now + ttlMs, inflight })
+    cache.set(k, { expiry: now + ttlMs, inflight })
     try {
       const result = await inflight
       data.value = result
-      cache.set(key, { data: result, expiry: Date.now() + ttlMs })
+      cache.set(k, { data: result, expiry: Date.now() + ttlMs })
     } catch (e: any) {
-      cache.delete(key) // don't cache a failure
+      cache.delete(k) // don't cache a failure
       error.value = e?.response?.data?.error || e?.message || 'Fetch failed'
     } finally {
       loading.value = false
@@ -96,7 +101,7 @@ export function useCachedFetch<T>(
   }
 
   function invalidate() {
-    cache.delete(key)
+    cache.delete(resolveKey())
   }
 
   return { data, loading, error, load, invalidate }

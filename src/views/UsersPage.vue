@@ -5,6 +5,7 @@ import { fetchUsers, createUser, updateUser, deleteUser } from '@/api/users'
 import type { User, UserRequest } from '@/api/types'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import {
   PlusIcon,
   PencilSquareIcon,
@@ -16,7 +17,11 @@ const auth = useAuthStore()
 
 const users = ref<User[]>([])
 const loading = ref(true)
-const error = ref('')
+// Page-level error (load/delete failures). Kept separate from form errors
+// so a failed save inside the modal doesn't leak onto the page banner.
+const loadError = ref('')
+// Modal-only error surface; cleared every time the modal opens.
+const formError = ref('')
 
 // Modal state
 const showModal = ref(false)
@@ -36,11 +41,11 @@ const deleting = ref(false)
 
 async function load() {
   loading.value = true
-  error.value = ''
+  loadError.value = ''
   try {
     users.value = await fetchUsers()
   } catch (e: any) {
-    error.value = e.response?.data?.error || 'Failed to load users'
+    loadError.value = e.response?.data?.error || 'Failed to load users'
   } finally {
     loading.value = false
   }
@@ -48,12 +53,14 @@ async function load() {
 
 function openCreate() {
   editingUser.value = null
+  formError.value = ''
   form.value = { email: '', name: '', role: 'viewer', password: '', is_active: true }
   showModal.value = true
 }
 
 function openEdit(user: User) {
   editingUser.value = user
+  formError.value = ''
   form.value = {
     email: user.email,
     name: user.name,
@@ -66,7 +73,7 @@ function openEdit(user: User) {
 
 async function handleSave() {
   saving.value = true
-  error.value = ''
+  formError.value = ''
   try {
     if (editingUser.value) {
       const payload: Partial<UserRequest> = {
@@ -81,7 +88,7 @@ async function handleSave() {
       await updateUser(editingUser.value.id, payload)
     } else {
       if (!form.value.password) {
-        error.value = 'Password is required for new users'
+        formError.value = 'Password is required for new users'
         saving.value = false
         return
       }
@@ -90,7 +97,7 @@ async function handleSave() {
     showModal.value = false
     await load()
   } catch (e: any) {
-    error.value = e.response?.data?.error || 'Failed to save user'
+    formError.value = e.response?.data?.error || 'Failed to save user'
   } finally {
     saving.value = false
   }
@@ -104,7 +111,7 @@ async function handleDelete() {
     confirmDelete.value = null
     await load()
   } catch (e: any) {
-    error.value = e.response?.data?.error || 'Failed to delete user'
+    loadError.value = e.response?.data?.error || 'Failed to delete user'
   } finally {
     deleting.value = false
   }
@@ -118,12 +125,6 @@ function formatDate(d?: string) {
   })
 }
 
-const roleBadgeColor: Record<string, string> = {
-  admin: 'red',
-  editor: 'blue',
-  viewer: 'gray',
-}
-
 onMounted(load)
 </script>
 
@@ -131,6 +132,7 @@ onMounted(load)
   <div class="page-enter">
     <PageHeader title="User Management" description="Manage dashboard users and their roles">
       <button
+        v-if="auth.isAdmin"
         @click="openCreate"
         class="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors"
       >
@@ -139,9 +141,9 @@ onMounted(load)
       </button>
     </PageHeader>
 
-    <!-- Error -->
-    <div v-if="error" class="mb-4 bg-[var(--color-error-bg)] text-[var(--color-error-text)] px-4 py-3 rounded-lg text-sm">
-      {{ error }}
+    <!-- Page-level error (load / delete) -->
+    <div v-if="loadError" class="mb-4 bg-[var(--color-error-bg)] text-[var(--color-error-text)] px-4 py-3 rounded-lg text-sm">
+      {{ loadError }}
     </div>
 
     <!-- Loading -->
@@ -167,26 +169,10 @@ onMounted(load)
             </td>
             <td class="px-6 py-4 text-sm text-[var(--color-text-secondary)]">{{ user.email }}</td>
             <td class="px-6 py-4">
-              <span
-                :class="[
-                  'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize',
-                  user.role === 'admin' ? 'bg-red-100 text-red-700' :
-                  user.role === 'editor' ? 'bg-blue-100 text-blue-700' :
-                  'bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)]'
-                ]"
-              >
-                {{ user.role }}
-              </span>
+              <StatusBadge :status="user.role" />
             </td>
             <td class="px-6 py-4">
-              <span
-                :class="[
-                  'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-                  user.is_active ? 'bg-green-100 text-green-700' : 'bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)]'
-                ]"
-              >
-                {{ user.is_active ? 'Active' : 'Disabled' }}
-              </span>
+              <StatusBadge :status="user.is_active ? 'active' : 'inactive'" />
             </td>
             <td class="px-6 py-4 text-sm text-[var(--color-text-tertiary)]">{{ formatDate(user.last_login_at) }}</td>
             <td class="px-6 py-4 text-right">
@@ -259,7 +245,7 @@ onMounted(load)
               <label for="is_active" class="text-sm text-[var(--color-text-secondary)]">Active</label>
             </div>
 
-            <div v-if="error" class="text-sm text-red-600">{{ error }}</div>
+            <div v-if="formError" class="text-sm text-red-600">{{ formError }}</div>
 
             <div class="flex justify-end gap-3 pt-2">
               <button type="button" @click="showModal = false"
@@ -277,27 +263,15 @@ onMounted(load)
     </Teleport>
 
     <!-- Delete confirmation -->
-    <Teleport to="body">
-      <div v-if="confirmDelete" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="fixed inset-0 bg-black/50" @click="confirmDelete = null" />
-        <div class="relative bg-[var(--color-bg-card)] rounded-xl shadow-xl w-full max-w-sm p-6">
-          <h3 class="text-lg font-semibold tracking-tight text-[var(--color-text-primary)] mb-2">Delete User</h3>
-          <p class="text-sm text-[var(--color-text-secondary)] mb-6">
-            Are you sure you want to delete <strong>{{ confirmDelete.name }}</strong> ({{ confirmDelete.email }})?
-            This action cannot be undone.
-          </p>
-          <div class="flex justify-end gap-3">
-            <button @click="confirmDelete = null"
-              class="px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-bg-hover)] transition-colors">
-              Cancel
-            </button>
-            <button @click="handleDelete" :disabled="deleting"
-              class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50">
-              {{ deleting ? 'Deleting...' : 'Delete' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
+    <ConfirmDialog
+      :open="!!confirmDelete"
+      :title="`Delete user ${confirmDelete?.name || ''}?`"
+      :message="confirmDelete ? `Are you sure you want to delete ${confirmDelete.name} (${confirmDelete.email})? This action cannot be undone.` : ''"
+      :confirm-text="deleting ? 'Deleting...' : 'Delete'"
+      cancel-text="Cancel"
+      variant="danger"
+      @confirm="handleDelete"
+      @cancel="confirmDelete = null"
+    />
   </div>
 </template>

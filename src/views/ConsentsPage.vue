@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { fetchConsents, optOut, optIn } from '@/api/dashboard'
 import { useAuthStore } from '@/stores/auth'
 import type { ClientConsent } from '@/api/types'
@@ -27,13 +28,34 @@ async function lookupConsents() {
   }
 }
 
-async function toggleConsent(consent: ClientConsent) {
+// Opt-out is destructive (a user can no longer be reached on that
+// channel until they re-opt-in from their own UI), so it goes through a
+// confirmation step. Opt-in is additive — no confirm needed.
+const pendingOptOut = ref<{ clientId: number; channel: string } | null>(null)
+
+function requestOptOut(cid: number, channel: string) {
+  pendingOptOut.value = { clientId: cid, channel }
+}
+
+async function confirmPendingOptOut() {
+  if (!pendingOptOut.value) return
+  const { clientId: cid, channel } = pendingOptOut.value
+  pendingOptOut.value = null
   try {
-    if (consent.opted_in) {
-      await optOut(consent.client_id, consent.channel)
-    } else {
-      await optIn(consent.client_id, consent.channel)
-    }
+    await optOut(cid, channel)
+    await lookupConsents()
+  } catch (e: any) {
+    error.value = e.response?.data?.error || 'Action failed'
+  }
+}
+
+async function toggleConsent(consent: ClientConsent) {
+  if (consent.opted_in) {
+    requestOptOut(consent.client_id, consent.channel)
+    return
+  }
+  try {
+    await optIn(consent.client_id, consent.channel)
     await lookupConsents()
   } catch (e: any) {
     error.value = e.response?.data?.error || 'Action failed'
@@ -47,15 +69,10 @@ function purposeLabel(purpose?: string, channel?: string) {
   return purpose || 'legacy / unspecified'
 }
 
-async function createOptOut(channel: string) {
+function createOptOut(channel: string) {
   const id = parseInt(clientId.value)
   if (!id) return
-  try {
-    await optOut(id, channel)
-    await lookupConsents()
-  } catch (e: any) {
-    error.value = e.response?.data?.error || 'Action failed'
-  }
+  requestOptOut(id, channel)
 }
 </script>
 
@@ -149,5 +166,16 @@ async function createOptOut(channel: string) {
         </div>
       </div>
     </div>
+
+    <ConfirmDialog
+      :open="!!pendingOptOut"
+      :title="`Opt out client #${pendingOptOut?.clientId ?? ''}?`"
+      :message="pendingOptOut ? `Are you sure you want to opt out client #${pendingOptOut.clientId} from ${pendingOptOut.channel}? They will no longer receive ${pendingOptOut.channel} messages until they opt back in.` : ''"
+      confirm-text="Opt out"
+      cancel-text="Cancel"
+      variant="danger"
+      @confirm="confirmPendingOptOut"
+      @cancel="pendingOptOut = null"
+    />
   </div>
 </template>

@@ -75,6 +75,31 @@ describe('useCachedFetch', () => {
     expect(data.value).toBe('ok')
   })
 
+  it('supports a getter key that is re-evaluated on each load', async () => {
+    let currentKey = 'test:getter:a'
+    const fetcher = vi.fn(() => Promise.resolve(currentKey))
+    const { load, data, invalidate } = useCachedFetch(() => currentKey, fetcher, 60_000)
+
+    await load()
+    expect(data.value).toBe('test:getter:a')
+    expect(fetcher).toHaveBeenCalledTimes(1)
+
+    // Same key → served from cache
+    await load()
+    expect(fetcher).toHaveBeenCalledTimes(1)
+
+    // Change key → must trigger a fresh fetch (not read stale entry)
+    currentKey = 'test:getter:b'
+    await load()
+    expect(fetcher).toHaveBeenCalledTimes(2)
+    expect(data.value).toBe('test:getter:b')
+
+    // invalidate uses the *current* resolved key
+    invalidate()
+    await load()
+    expect(fetcher).toHaveBeenCalledTimes(3)
+  })
+
   it('sets loading true during fetch, false after', async () => {
     let resolveFn!: (v: string) => void
     const fetcher = vi.fn(() => new Promise<string>(r => { resolveFn = r }))

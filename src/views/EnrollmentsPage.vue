@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import { fetchEnrollments, exportEnrollments } from '@/api/dashboard'
@@ -50,6 +50,12 @@ watch([filterStatus, filterCampaign, filterClient], () => {
     page.value = 0
     load()
   }, 300)
+})
+
+// Prevent a pending debounced fetch from firing after the component is
+// torn down (it would touch `page` / `load` on a disposed instance).
+onUnmounted(() => {
+  if (debounceTimer) clearTimeout(debounceTimer)
 })
 
 async function handleExport() {
