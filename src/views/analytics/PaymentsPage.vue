@@ -37,8 +37,8 @@ watch(() => analytics.queryParams, load)
         Payment analytics are partially derived from staging event payloads. Methods and failure reasons may be incomplete when upstream events omit PSP-specific metadata.
       </div>
       <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
-        <MetricCard title="Approval Rate" :value="data.approval_rate.toFixed(1) + '%'" color="green" />
-        <MetricCard title="Decline Rate" :value="data.decline_rate.toFixed(1) + '%'" color="red" />
+        <MetricCard title="Approval Rate" :value="data.approval_rate.toFixed(1) + '%'" accent="green" />
+        <MetricCard title="Decline Rate" :value="data.decline_rate.toFixed(1) + '%'" accent="red" />
         <MetricCard title="Payment Methods" :value="data.methods.length" />
       </div>
 

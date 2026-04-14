@@ -36,7 +36,7 @@ watch(() => analytics.queryParams, load)
       <MetricCard
         title="Overall Conversion"
         :value="data.overall_conversion.toFixed(2) + '%'"
-        color="green"
+        accent="green"
       />
       <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
         <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-6">Conversion Funnel</h3>

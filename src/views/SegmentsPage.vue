@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -29,6 +29,14 @@ const showModal = ref(false)
 const saving = ref(false)
 const evaluating = ref<string | null>(null)
 const evaluatingAll = ref(false)
+const evaluatingAllPolling = ref(false)
+let evalPollTimer: ReturnType<typeof setTimeout> | null = null
+let evalPollDeadline = 0
+
+function stopEvalPolling() {
+  if (evalPollTimer) { clearTimeout(evalPollTimer); evalPollTimer = null }
+  evaluatingAllPolling.value = false
+}
 const editingSlug = ref<string | null>(null)
 const eventInput = ref('')
 
@@ -150,9 +158,9 @@ async function handleEvaluate(slug: string) {
 async function handleEvaluateAll() {
   evaluatingAll.value = true
   try {
-    // Backend now returns 202 with { status, client_count, segment_count }
-    // (async fire-and-forget). The old 200 { clients_evaluated, segments_evaluated, results }
-    // shape is gone; list will update once the background job writes back.
+    // Backend returns 202 with { status, client_count, segment_count }
+    // (async fire-and-forget). We poll GET /api/segments looking for member_count
+    // changes to detect when the background job has written back.
     const result = await evaluateAllSegments()
     const started = result?.status === 'evaluation_started'
     showToast(
@@ -162,12 +170,39 @@ async function handleEvaluateAll() {
       'success',
       5000,
     )
-    // Refresh after a short delay so the first results have a chance to persist.
-    setTimeout(() => { load() }, 2000)
+    // Snapshot current member counts keyed by slug and poll for changes.
+    const baseline = new Map<string, number>(
+      segments.value.map(s => [s.slug, s.member_count ?? 0]),
+    )
+    stopEvalPolling()
+    evaluatingAllPolling.value = true
+    evalPollDeadline = Date.now() + 60_000
+
+    const poll = async () => {
+      if (!evaluatingAllPolling.value) return
+      try {
+        const fresh = await fetchSegments()
+        const changed = fresh.some(s => (s.member_count ?? 0) !== (baseline.get(s.slug) ?? 0))
+        if (changed) {
+          segments.value = fresh
+          stopEvalPolling()
+          return
+        }
+      } catch (_e) { /* swallow; try again */ }
+      if (Date.now() >= evalPollDeadline) {
+        stopEvalPolling()
+        showToast('Evaluation still running in background', 'success', 5000)
+        return
+      }
+      evalPollTimer = setTimeout(poll, 3000)
+    }
+    evalPollTimer = setTimeout(poll, 3000)
   } catch (e: any) {
     showToast(e.response?.data?.error || 'Failed to evaluate all segments', 'error')
   } finally { evaluatingAll.value = false }
 }
+
+onBeforeUnmount(() => { stopEvalPolling() })
 
 function addEvent() {
   const val = eventInput.value.trim()
@@ -204,12 +239,20 @@ const totalMembers = computed(() =>
         <button
           v-if="auth.canWrite"
           @click="handleEvaluateAll"
-          :disabled="evaluatingAll"
+          :disabled="evaluatingAll || evaluatingAllPolling"
           class="btn btn-ghost"
         >
           <PlayIcon class="h-4 w-4" />
-          <span>{{ evaluatingAll ? 'Evaluating…' : 'Evaluate all' }}</span>
+          <span>{{ evaluatingAll || evaluatingAllPolling ? 'Evaluating…' : 'Evaluate all' }}</span>
         </button>
+        <span
+          v-if="evaluatingAllPolling"
+          class="text-xs text-[var(--color-text-muted)] inline-flex items-center gap-1"
+          aria-live="polite"
+        >
+          <span class="inline-block h-1.5 w-1.5 rounded-full bg-[var(--color-primary)] animate-pulse" />
+          Evaluating…
+        </span>
         <button v-if="auth.canWrite" @click="openCreate" class="btn btn-primary">
           <PlusIcon class="h-4 w-4" /> New segment
         </button>

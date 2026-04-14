@@ -7,7 +7,7 @@ const props = defineProps<{
   value: string | number
   delta?: number
   deltaLabel?: string
-  color?: 'indigo' | 'green' | 'yellow' | 'red' | 'blue'
+  accent?: 'indigo' | 'green' | 'yellow' | 'red' | 'blue'
 }>()
 
 const accentColors: Record<string, string> = {
@@ -21,7 +21,7 @@ const accentColors: Record<string, string> = {
 
 <template>
   <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm card-interactive overflow-hidden">
-    <div class="h-1" :class="accentColors[color || 'indigo']"></div>
+    <div class="h-1" :class="accentColors[accent || 'indigo']"></div>
     <div class="p-5">
       <p class="text-xs font-medium text-[var(--color-text-tertiary)] uppercase tracking-wide">{{ title }}</p>
       <p class="mt-2 text-2xl font-bold text-[var(--color-text-primary)] tracking-tight">{{ value }}</p>
