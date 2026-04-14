@@ -266,7 +266,7 @@ function formatTime(iso: string) {
                 <span class="bc-field-lbl">Name</span>
                 <input v-model="form.name" type="text" placeholder="April newsletter" class="bc-input" />
               </label>
-              <div class="bc-grid">
+              <div class="bc-grid grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <label class="bc-field">
                   <span class="bc-field-lbl">Channel</span>
                   <select v-model="form.channel" class="bc-input">
@@ -286,7 +286,7 @@ function formatTime(iso: string) {
                   </select>
                 </label>
               </div>
-              <div class="bc-grid">
+              <div class="bc-grid grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <label class="bc-field">
                   <span class="bc-field-lbl">Segment</span>
                   <input v-model="form.segment_filter" type="text" placeholder="all" class="bc-input" />
@@ -383,19 +383,6 @@ function formatTime(iso: string) {
   color: var(--color-text-primary); letter-spacing: -0.005em;
 }
 
-.bc-status {
-  font-family: var(--font-mono); font-size: 10px; font-weight: 500;
-  letter-spacing: 0.08em; text-transform: uppercase;
-  padding: 2px 8px; border-radius: var(--radius-sm);
-  border: 1px solid; text-align: center;
-}
-.bc-status[data-status="draft"]     { color: var(--color-text-tertiary); background: var(--color-bg-subtle); border-color: var(--color-border); }
-.bc-status[data-status="scheduled"] { color: var(--color-info-text);     background: var(--color-info-bg);   border-color: var(--color-info-border); }
-.bc-status[data-status="running"]   { color: var(--color-success-text);  background: var(--color-success-bg);border-color: var(--color-success-border); }
-.bc-status[data-status="completed"] { color: var(--color-primary-text);  background: var(--color-primary-soft); border-color: var(--color-primary-border); }
-.bc-status[data-status="cancelled"] { color: var(--color-text-muted);    background: var(--color-bg-subtle); border-color: var(--color-border); }
-.bc-status[data-status="failed"]    { color: var(--color-error-text);    background: var(--color-error-bg);  border-color: var(--color-error-border); }
-
 .bc-row-meta {
   margin-top: 8px; font-family: var(--font-sans); font-size: 12px;
   color: var(--color-text-tertiary); display: flex; gap: 8px; flex-wrap: wrap;
@@ -463,8 +450,7 @@ function formatTime(iso: string) {
 .bc-modal-close:hover { color: var(--color-text-primary); background: var(--color-bg-subtle); }
 
 .bc-modal-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
-.bc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-@media (max-width: 560px) { .bc-grid { grid-template-columns: 1fr; } }
+/* .bc-grid: layout via Tailwind utilities on the element itself. */
 
 .bc-field { display: flex; flex-direction: column; gap: 4px; }
 .bc-field-lbl { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-text-tertiary); }

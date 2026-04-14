@@ -14,6 +14,7 @@ import {
 } from 'chart.js'
 import StatCard from '@/components/StatCard.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
+import BaseCard from '@/components/BaseCard.vue'
 import {
   fetchOverviewStats,
   fetchDailyVolume,
@@ -261,10 +262,10 @@ function pctLabel(n: number, total: number): string {
           <div class="skeleton h-9 w-20"></div>
         </div>
       </div>
-      <div class="chart-card">
+      <BaseCard>
         <div class="skeleton h-4 w-48 mb-6"></div>
         <div class="skeleton h-64 w-full"></div>
-      </div>
+      </BaseCard>
     </div>
 
     <template v-else>
@@ -320,11 +321,11 @@ function pctLabel(n: number, total: number): string {
             <span class="legend-swatch legend-failed" /> <span>Failed</span>
           </div>
         </div>
-        <div class="chart-card">
+        <BaseCard>
           <div class="chart-wrap">
             <Line :data="chartData" :options="chartOptions" />
           </div>
-        </div>
+        </BaseCard>
       </section>
 
       <!-- ─────────── Live feed ─────────── -->
@@ -341,7 +342,7 @@ function pctLabel(n: number, total: number): string {
           <span class="section-rule" />
         </div>
 
-        <div class="live-card">
+        <BaseCard flush class="live-card">
           <ol class="live-feed">
             <li
               v-for="log in dashboardStore.recentLogs.slice(0, 12)"
@@ -364,7 +365,7 @@ function pctLabel(n: number, total: number): string {
               <span class="live-time">{{ new Date(enr.created_at).toLocaleTimeString() }}</span>
             </li>
           </ol>
-        </div>
+        </BaseCard>
       </section>
 
       <!-- ─────────── Performance table ─────────── -->
@@ -373,7 +374,7 @@ function pctLabel(n: number, total: number): string {
           <span class="rule-dot">Campaign performance</span>
           <span class="section-rule" />
         </div>
-        <div class="perf-card">
+        <BaseCard flush class="perf-card">
           <div class="table-scroll">
           <table class="perf-table num-tabular">
             <thead>
@@ -418,7 +419,7 @@ function pctLabel(n: number, total: number): string {
             </tbody>
           </table>
           </div>
-        </div>
+        </BaseCard>
       </section>
     </template>
   </div>
@@ -612,12 +613,6 @@ function pctLabel(n: number, total: number): string {
 }
 
 /* ───────── Chart ───────── */
-.chart-card {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 24px;
-}
 .chart-wrap { height: 280px; }
 
 .chart-legend-inline {
@@ -669,9 +664,6 @@ function pctLabel(n: number, total: number): string {
 }
 
 .live-card {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
   padding: 8px 4px;
   max-height: 360px;
   overflow-y: auto;
@@ -715,9 +707,6 @@ function pctLabel(n: number, total: number): string {
 
 /* ───────── Performance table ───────── */
 .perf-card {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
   overflow: hidden;
 }
 .perf-table {

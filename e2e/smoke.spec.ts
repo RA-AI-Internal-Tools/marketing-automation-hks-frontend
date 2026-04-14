@@ -7,23 +7,17 @@
  * wires secrets in only on the dedicated e2e job.
  */
 import { test, expect } from '@playwright/test'
-
-const EMAIL = process.env.E2E_EMAIL
-const PASSWORD = process.env.E2E_PASSWORD
+import { hasE2ECreds, login } from './helpers/login'
 
 test.describe('MA frontend smoke', () => {
   test.beforeEach(async ({ page }) => {
-    test.skip(!EMAIL || !PASSWORD, 'E2E_EMAIL / E2E_PASSWORD not set — running in smoke-opt-out mode')
-    await page.goto('/login')
+    test.skip(!hasE2ECreds(), 'E2E_EMAIL / E2E_PASSWORD not set — running in smoke-opt-out mode')
+    // Shared login helper — any change to login flow lives in e2e/helpers/login.ts.
+    await login(page)
   })
 
   test('login → dashboard → new campaign → analytics executive', async ({ page }) => {
-    // Login
-    await page.getByLabel(/email/i).fill(EMAIL!)
-    await page.getByLabel(/password/i).fill(PASSWORD!)
-    await page.getByRole('button', { name: /sign in|log in/i }).click()
-
-    // Dashboard loaded (Overview page)
+    // Post-login shell is visible.
     await expect(page).toHaveURL(/\/(overview|dashboard)?/)
     await expect(page.locator('body')).toBeVisible()
 

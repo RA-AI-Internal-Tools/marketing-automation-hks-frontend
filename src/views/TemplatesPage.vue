@@ -7,6 +7,7 @@ import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import CloneVariantDialog from '@/components/CloneVariantDialog.vue'
 import TestSendModal from '@/components/TestSendModal.vue'
 import ChannelChip from '@/components/ChannelChip.vue'
+import BaseCard from '@/components/BaseCard.vue'
 import { useTemplatesStore } from '@/stores/templates'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
@@ -297,7 +298,7 @@ async function confirmClone(locale: string) {
       </button>
     </div>
 
-    <div v-else class="tpl-card table-scroll">
+    <BaseCard v-else flush class="tpl-card table-scroll">
       <table class="tpl-table">
         <thead class="bg-[var(--color-bg-page)] border-b border-[var(--color-border)]">
           <tr>
@@ -445,7 +446,7 @@ async function confirmClone(locale: string) {
           </template>
         </tbody>
       </table>
-    </div>
+    </BaseCard>
 
     <!-- Modals -->
     <TestSendModal :open="testSendOpen" @close="testSendOpen = false" />
@@ -635,8 +636,6 @@ async function confirmClone(locale: string) {
 
 /* ─────────── Table ─────────── */
 .tpl-card {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   overflow: hidden;
 }

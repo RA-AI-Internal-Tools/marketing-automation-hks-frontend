@@ -364,26 +364,6 @@ const totalActive = computed(() => store.campaigns.filter(c => c.is_active).leng
   flex-wrap: wrap;
 }
 
-/* ── Live status chip ── */
-.camp-status {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding: 3px 10px;
-  border-radius: var(--radius-full);
-  border: 1px solid;
-  color: var(--color-text-muted);
-  background: var(--color-bg-subtle);
-  border-color: var(--color-border);
-}
-.camp-status[data-active="true"] {
-  color: var(--color-success-text);
-  background: var(--color-success-bg);
-  border-color: var(--color-success-border);
-}
-
 /* ── Toggle ── */
 .camp-toggle { position: relative; display: inline-flex; cursor: pointer; }
 .camp-toggle input { position: absolute; opacity: 0; pointer-events: none; }
