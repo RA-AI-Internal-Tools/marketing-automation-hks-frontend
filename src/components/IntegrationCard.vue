@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Integration } from '@/api/types'
+import type { Environment } from '@/api/integrations'
 import {
   LinkIcon,
   EnvelopeIcon,
@@ -10,11 +11,14 @@ import {
   UserGroupIcon,
   ArrowPathIcon,
   PencilSquareIcon,
+  LockClosedIcon,
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps<{
   integration: Integration
   testing?: boolean
+  credentialEnvironment?: Environment
+  hasCredentials?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -90,12 +94,20 @@ function handleTest() {
     </div>
 
     <!-- Status badge -->
-    <div class="flex items-center gap-2 mb-3">
+    <div class="flex items-center gap-2 mb-3 flex-wrap">
       <span
         :class="['inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium', statusConfig[integration.status]?.colorClass]"
       >
         <span :class="['h-1.5 w-1.5 rounded-full', statusConfig[integration.status]?.dotClass]"></span>
         {{ statusConfig[integration.status]?.label || integration.status }}
+      </span>
+      <span
+        v-if="hasCredentials && credentialEnvironment"
+        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] border border-[var(--color-border)]"
+        :title="`Credentials stored for ${credentialEnvironment}`"
+      >
+        <LockClosedIcon class="h-3 w-3" />
+        Configured ({{ credentialEnvironment }})
       </span>
     </div>
 

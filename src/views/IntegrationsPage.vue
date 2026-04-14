@@ -7,9 +7,9 @@ import { useIntegrationsStore } from '@/stores/integrations'
 import { useEnvironmentStore } from '@/stores/environment'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
-import type { Integration, IntegrationRequest, ProviderType } from '@/api/types'
+import type { Integration, ProviderType } from '@/api/types'
+import { listCredentials, type CredentialRow, type Environment } from '@/api/integrations'
 import {
-  PlusIcon,
   LinkIcon,
   MagnifyingGlassIcon,
 } from '@heroicons/vue/24/outline'
@@ -22,9 +22,21 @@ const { showToast } = useToast()
 const search = ref('')
 const activeCategory = ref<ProviderType | 'all'>('all')
 const formVisible = ref(false)
-const formSaving = ref(false)
 const editingIntegration = ref<Integration | null>(null)
 const testingIds = ref<Set<number>>(new Set())
+const credentials = ref<CredentialRow[]>([])
+// Admin-scoped credential environment toggle. Non-admins fall back to the
+// global env store (which is what the read-only catalog view has always used).
+const credEnv = ref<Environment>('sandbox')
+
+async function reloadCredentials() {
+  if (!auth.isAdmin) return
+  try {
+    credentials.value = await listCredentials()
+  } catch {
+    // non-fatal — the page still renders the catalog
+  }
+}
 
 const categories: { value: ProviderType | 'all'; label: string }[] = [
   { value: 'all', label: 'All' },
@@ -48,37 +60,35 @@ const filtered = computed(() => {
   return list
 })
 
-onMounted(() => store.load())
+onMounted(() => {
+  store.load()
+  reloadCredentials()
+})
 
 // Reload when environment changes
 watch(() => env.mode, () => store.load())
-
-function openAdd() {
-  editingIntegration.value = null
-  formVisible.value = true
-}
 
 function openEdit(id: number) {
   editingIntegration.value = store.integrations.find(i => i.id === id) || null
   formVisible.value = true
 }
 
-async function handleSave(req: IntegrationRequest, id?: number) {
-  formSaving.value = true
-  try {
-    if (id) {
-      await store.update(id, req)
-      showToast('Integration updated', 'success')
-    } else {
-      await store.create(req)
-      showToast('Integration created', 'success')
-    }
-    formVisible.value = false
-  } catch (e: any) {
-    showToast(e.response?.data?.error || 'Failed to save integration', 'error')
-  } finally {
-    formSaving.value = false
-  }
+async function handleSaved() {
+  // Credential form saved — refresh the credential metadata so cards
+  // reflect the new "Configured (env)" state without a full page reload.
+  await reloadCredentials()
+}
+
+function providerKeyFor(i: Integration): string {
+  return i.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')
+}
+
+function editingProviderKey(): string {
+  return editingIntegration.value ? providerKeyFor(editingIntegration.value) : ''
+}
+
+function hasCredsFor(providerKey: string, environment: Environment): boolean {
+  return credentials.value.some(c => c.provider === providerKey && c.environment === environment)
 }
 
 async function handleTest(id: number) {
@@ -100,13 +110,27 @@ async function handleTest(id: number) {
   <div class="page-enter">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
       <PageHeader title="Integrations" description="Third-party provider configuration and management" />
-      <button
-        v-if="auth.canWrite"
-        @click="openAdd"
-        class="flex items-center gap-2 px-4 py-2.5 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] shadow-sm transition-all shrink-0"
-      >
-        <PlusIcon class="h-4 w-4" /> Add Integration
-      </button>
+      <!-- Admin credential environment toggle — separate from the global env
+           store which governs the read-only catalog view. Only admins can
+           store credentials, so this control is hidden for everyone else. -->
+      <div v-if="auth.isAdmin" role="tablist" aria-label="Credential environment" class="inline-flex items-center gap-1 p-1 rounded-lg bg-[var(--color-bg-subtle)] border border-[var(--color-border)]">
+        <button
+          v-for="envOpt in (['sandbox', 'production'] as Environment[])"
+          :key="envOpt"
+          type="button"
+          role="tab"
+          :aria-selected="credEnv === envOpt"
+          @click="credEnv = envOpt"
+          :class="[
+            'px-3 py-1.5 text-xs font-medium rounded-md capitalize transition-colors',
+            credEnv === envOpt
+              ? 'bg-[var(--color-bg-card)] text-[var(--color-text-primary)] shadow-sm'
+              : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]',
+          ]"
+        >
+          {{ envOpt }}
+        </button>
+      </div>
     </div>
 
     <!-- Environment banner -->
@@ -184,13 +208,6 @@ async function handleTest(id: number) {
       <p class="text-sm text-[var(--color-text-muted)] mt-1">
         {{ search || activeCategory !== 'all' ? 'Try adjusting your filters.' : `Add your first ${env.mode} integration to get started.` }}
       </p>
-      <button
-        v-if="auth.canWrite && !search && activeCategory === 'all'"
-        @click="openAdd"
-        class="mt-4 inline-flex items-center gap-2 px-4 py-2.5 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] transition-all"
-      >
-        <PlusIcon class="h-4 w-4" /> Add Integration
-      </button>
     </div>
 
     <!-- Integration grid -->
@@ -200,6 +217,8 @@ async function handleTest(id: number) {
         :key="integration.id"
         :integration="integration"
         :testing="testingIds.has(integration.id)"
+        :credential-environment="credEnv"
+        :has-credentials="hasCredsFor(providerKeyFor(integration), credEnv)"
         @edit="openEdit"
         @test="handleTest"
       />
@@ -209,9 +228,9 @@ async function handleTest(id: number) {
     <IntegrationForm
       :visible="formVisible"
       :integration="editingIntegration"
-      :saving="formSaving"
+      :provider="editingProviderKey()"
       @close="formVisible = false"
-      @save="handleSave"
+      @saved="handleSaved"
     />
   </div>
 </template>

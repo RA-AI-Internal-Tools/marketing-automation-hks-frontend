@@ -29,3 +29,52 @@ export async function testIntegrationConnection(id: number): Promise<{ success: 
   const { data } = await api.post(`/api/integrations/${id}/test`)
   return data
 }
+
+// --- Encrypted credential storage (admin only) -----------------------------
+// Separate from the read-only /api/integrations catalog above. The backend
+// never returns credential values — only metadata (provider/env/key_name +
+// audit info). The UI must therefore render a form from a static key-name
+// schema (see integrationKeys.ts) rather than from server data.
+
+export type Environment = 'sandbox' | 'production'
+
+export interface CredentialRow {
+  provider: string
+  environment: Environment
+  key_name: string
+  updated_at: string
+  rotated_by: number | null
+}
+
+export async function listCredentials(): Promise<CredentialRow[]> {
+  const { data } = await api.get('/api/integrations/credentials')
+  return data?.credentials ?? []
+}
+
+export async function upsertCredential(req: {
+  provider: string
+  environment: Environment
+  key_name: string
+  value: string
+}): Promise<void> {
+  await api.post('/api/integrations/credentials', req)
+}
+
+export async function deleteCredential(req: {
+  provider: string
+  environment: Environment
+  key_name: string
+}): Promise<void> {
+  await api.delete('/api/integrations/credentials', { data: req })
+}
+
+export async function testIntegration(
+  provider: string,
+  environment: Environment,
+): Promise<{ status: string; detail: string }> {
+  // NB: route is /credentials/:provider/test because the legacy
+  // /integrations/:id/test endpoint (numeric id) occupies the sibling slot —
+  // gin can't overload a path param at the same segment.
+  const { data } = await api.post(`/api/integrations/credentials/${provider}/test`, { environment })
+  return data
+}
