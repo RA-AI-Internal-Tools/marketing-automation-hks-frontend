@@ -32,18 +32,17 @@ const credEnv = ref<Environment>('sandbox')
 async function reloadCredentials() {
   if (!auth.isAdmin) return
   try {
-    // Fetch both environments so the "Configured (sandbox|production)"
-    // lock chips and the form's "(stored)" placeholder light up
-    // regardless of the currently selected tab.
-    const [sandbox, production] = await Promise.all([
-      listCredentials('sandbox'),
-      listCredentials('production'),
-    ])
-    credentials.value = [...sandbox, ...production]
+    // Scope to the currently-selected env tab. Env-backed credentials
+    // live only under the running instance's env (MA_ENVIRONMENT), so
+    // asking the backend for the active tab gives an unambiguous view.
+    credentials.value = await listCredentials(credEnv.value)
   } catch {
     // non-fatal — the page still renders the catalog
   }
 }
+
+// Refetch whenever the operator flips the env tab.
+watch(credEnv, () => { reloadCredentials() })
 
 const categories: { value: ProviderType | 'all'; label: string }[] = [
   { value: 'all', label: 'All' },
