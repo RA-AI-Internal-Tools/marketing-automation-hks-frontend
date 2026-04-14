@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { fetchPushAudience, sendPushToAudience } from '@/api/push'
 import type { PushAudienceEntry, PushSendResponse } from '@/api/types'
 import { useAuthStore } from '@/stores/auth'
@@ -165,6 +165,18 @@ function formatDate(d: string) {
   if (!d) return '-'
   return new Date(d).toLocaleString()
 }
+
+// Flipping the global env switcher must wipe stale rows/selection AND the
+// unsaved draft — otherwise the operator could send a message composed in
+// sandbox to clients looked up under production (or vice-versa).
+watch(() => env.mode, () => {
+  clearSelectionOnScopeChange()
+  pushTitle.value = ''
+  pushBody.value = ''
+  pushLink.value = ''
+  page.value = 1
+  load()
+})
 
 onMounted(load)
 </script>

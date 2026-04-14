@@ -60,21 +60,34 @@ export async function listCredentials(environment?: Environment): Promise<Creden
   return data?.credentials ?? []
 }
 
+/**
+ * Backend mutation response for credential upsert/delete. `requires_restart`
+ * is set when the channel sender for the given provider caches credentials at
+ * boot (e.g. SES, FCM), so the UI can surface a prominent "restart api" hint.
+ */
+export interface CredentialMutationResponse {
+  status: string
+  requires_restart?: boolean
+  note?: string
+}
+
 export async function upsertCredential(req: {
   provider: string
   environment: Environment
   key_name: string
   value: string
-}): Promise<void> {
-  await api.post('/api/integrations/credentials', req)
+}): Promise<CredentialMutationResponse> {
+  const { data } = await api.post('/api/integrations/credentials', req)
+  return data ?? { status: 'ok' }
 }
 
 export async function deleteCredential(req: {
   provider: string
   environment: Environment
   key_name: string
-}): Promise<void> {
-  await api.delete('/api/integrations/credentials', { data: req })
+}): Promise<CredentialMutationResponse> {
+  const { data } = await api.delete('/api/integrations/credentials', { data: req })
+  return data ?? { status: 'ok' }
 }
 
 export async function testIntegration(

@@ -164,10 +164,16 @@ async function handleSave() {
     )
     const succeeded: typeof touched = []
     const failed: { field: string; reason: string }[] = []
+    let restartRequired = false
+    let restartNote = ''
     results.forEach((r, i) => {
       const f = touched[i]!
       if (r.status === 'fulfilled') {
         succeeded.push(f)
+        if (r.value?.requires_restart) {
+          restartRequired = true
+          if (r.value.note) restartNote = r.value.note
+        }
       } else {
         const err: any = r.reason
         failed.push({
@@ -187,6 +193,16 @@ async function handleSave() {
       showToast(
         `Saved ${succeeded.length} of ${touched.length} fields. Failed: ${failedList}`,
         'warning',
+      )
+    }
+    // Only surface the restart hint when at least one field actually
+    // persisted — otherwise the modal just showed an error toast.
+    if (succeeded.length > 0 && restartRequired) {
+      showToast(
+        restartNote
+          || 'Saved. Channel senders read credentials at boot — restart the api container to use the new value.',
+        'warning',
+        8000,
       )
     }
     await reloadRows()
@@ -237,9 +253,15 @@ async function handleDelete() {
   )
   const failed: { field: string; reason: string }[] = []
   let succeeded = 0
+  let restartRequired = false
+  let restartNote = ''
   results.forEach((r, i) => {
     if (r.status === 'fulfilled') {
       succeeded++
+      if (r.value?.requires_restart) {
+        restartRequired = true
+        if (r.value.note) restartNote = r.value.note
+      }
     } else {
       const err: any = r.reason
       failed.push({
@@ -257,6 +279,14 @@ async function handleDelete() {
     showToast(
       `Deleted ${succeeded} of ${existing.length} fields. Failed: ${failedList}`,
       'warning',
+    )
+  }
+  if (succeeded > 0 && restartRequired) {
+    showToast(
+      restartNote
+        || 'Saved. Channel senders read credentials at boot — restart the api container to use the new value.',
+      'warning',
+      8000,
     )
   }
   await reloadRows()

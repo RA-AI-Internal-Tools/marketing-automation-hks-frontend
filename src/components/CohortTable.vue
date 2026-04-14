@@ -27,7 +27,7 @@ const maxPeriods = computed(() => Math.max(...(props.cohorts.map((c) => c.period
       <thead>
         <tr>
           <th class="px-3 py-2.5 text-left font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wide text-[10px]">Cohort</th>
-          <th class="px-3 py-2.5 text-right font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wide text-[10px]">Users</th>
+          <th class="px-3 py-2.5 text-right font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wide text-[10px]">Clients</th>
           <th
             v-for="i in maxPeriods"
             :key="i"
