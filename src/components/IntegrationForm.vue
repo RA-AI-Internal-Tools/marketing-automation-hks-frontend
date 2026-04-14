@@ -38,8 +38,13 @@ const { showToast } = useToast()
 function slugify(s: string): string {
   return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')
 }
+// Prefer the backend-provided provider_slug (stable, matches
+// integrationKeys.ts). Fall back to slugifying the name only for
+// older responses that don't yet carry the field.
 const providerKey = computed<string>(() =>
-  props.provider || (props.integration ? slugify(props.integration.name) : ''),
+  props.provider
+    || props.integration?.provider_slug
+    || (props.integration ? slugify(props.integration.name) : ''),
 )
 const fields = computed<KeyField[]>(() => getKeyFields(providerKey.value))
 const title = computed(() =>

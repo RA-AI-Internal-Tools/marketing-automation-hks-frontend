@@ -378,12 +378,14 @@ export interface PushSendResponse {
 
 // Integration types
 
-export type ProviderType = 'email' | 'sms' | 'push' | 'webhook' | 'crm' | 'analytics' | 'infrastructure'
+export type ProviderType = 'email' | 'sms' | 'push' | 'webhook' | 'crm' | 'analytics' | 'infrastructure' | 'ai'
 export type IntegrationStatus = 'connected' | 'degraded' | 'not_configured' | 'error' | 'disabled'
 
 export interface Integration {
   id: number
   name: string
+  /** Stable slug from the backend (openai, fcm, ses, …) — use this to key the credential field schema, not the display name. */
+  provider_slug?: string
   provider_type: ProviderType
   environment: 'sandbox' | 'production'
   status: IntegrationStatus

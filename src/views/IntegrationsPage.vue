@@ -80,7 +80,10 @@ async function handleSaved() {
 }
 
 function providerKeyFor(i: Integration): string {
-  return i.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')
+  // Backend now sends provider_slug (openai, fcm, ses, …). Fall back to
+  // slugifying the display name for compatibility with older builds.
+  return i.provider_slug
+    || i.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')
 }
 
 function editingProviderKey(): string {
