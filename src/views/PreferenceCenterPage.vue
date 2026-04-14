@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/api/client'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
 const route = useRoute()
 
@@ -99,23 +100,52 @@ async function toggleChannel(channel: ChannelPreference) {
   }
 }
 
-async function optOutAll() {
-  saving.value = 'all'
+async function togglePersonalization() {
+  saving.value = 'personalization'
   error.value = ''
+  success.value = ''
   try {
-    for (const ch of channels.value) {
-      if (ch.opted_in) {
-        await api.post('/api/consents/opt-out', { client_id: clientId.value, purpose: 'marketing', channel: ch.channel }, publicConfig())
-        ch.opted_in = false
-      }
-    }
-    success.value = 'You have been unsubscribed from all notifications'
-    setTimeout(() => { success.value = '' }, 5000)
+    const newState = !personalization.value
+    const path = newState ? '/api/consents/opt-in' : '/api/consents/opt-out'
+    await api.post(path, { client_id: clientId.value, purpose: 'personalization', channel: 'global' }, publicConfig())
+    personalization.value = newState
+    success.value = `Personalization ${newState ? 'enabled' : 'disabled'}`
+    setTimeout(() => { success.value = '' }, 3000)
   } catch (e: any) {
-    error.value = 'Failed to update preferences'
+    error.value = 'Failed to update personalization preference'
   } finally {
     saving.value = null
   }
+}
+
+// Unsubscribe-all is destructive and reaches N channels in one click.
+// Confirm first; then fire all opt-outs in parallel via allSettled so a
+// single flaky channel doesn't leave the UI half-updated.
+const confirmUnsubscribeAll = ref(false)
+function requestOptOutAll() { confirmUnsubscribeAll.value = true }
+
+async function optOutAll() {
+  confirmUnsubscribeAll.value = false
+  saving.value = 'all'
+  error.value = ''
+  const targets = channels.value.filter(c => c.opted_in)
+  const results = await Promise.allSettled(
+    targets.map(ch =>
+      api.post('/api/consents/opt-out', { client_id: clientId.value, purpose: 'marketing', channel: ch.channel }, publicConfig())
+        .then(() => { ch.opted_in = false; return ch.label })
+    ),
+  )
+  const failed = results
+    .map((r, i) => ({ r, label: targets[i]!.label }))
+    .filter(x => x.r.status === 'rejected')
+    .map(x => x.label)
+  if (failed.length === 0) {
+    success.value = 'You have been unsubscribed from all notifications'
+    setTimeout(() => { success.value = '' }, 5000)
+  } else {
+    error.value = `Failed to unsubscribe from: ${failed.join(', ')}`
+  }
+  saving.value = null
 }
 
 onMounted(loadPreferences)
@@ -172,10 +202,39 @@ onMounted(loadPreferences)
           </button>
         </div>
 
+        <!-- Personalization — controls whether the merchant can use
+             behavioural signals (browsing, product views) to tailor
+             messages. Stored as a single (purpose=personalization,
+             channel=global) consent record on the backend. -->
+        <div class="flex items-center justify-between p-5">
+          <div>
+            <div class="font-medium text-[var(--color-text-primary)]">Personalization</div>
+            <div class="text-sm text-[var(--color-text-tertiary)] mt-0.5">
+              Allow us to tailor product recommendations and content using your browsing activity.
+            </div>
+          </div>
+          <button
+            @click="togglePersonalization"
+            :disabled="saving !== null"
+            :class="[
+              'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-[var(--color-accent)]/40 focus:ring-offset-2',
+              personalization ? 'bg-[var(--color-primary)]' : 'bg-[var(--color-border)]',
+              saving !== null ? 'opacity-50 cursor-not-allowed' : '',
+            ]"
+          >
+            <span
+              :class="[
+                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                personalization ? 'translate-x-5' : 'translate-x-0',
+              ]"
+            />
+          </button>
+        </div>
+
         <!-- Opt out all -->
         <div class="p-5">
           <button
-            @click="optOutAll"
+            @click="requestOptOutAll"
             :disabled="saving !== null || channels.every(c => !c.opted_in)"
             class="w-full py-2 px-4 text-sm font-medium text-[var(--color-error-text)] border border-[var(--color-error-border)] rounded-lg hover:bg-[var(--color-error-bg)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
@@ -183,6 +242,17 @@ onMounted(loadPreferences)
           </button>
         </div>
       </div>
+
+      <ConfirmDialog
+        :open="confirmUnsubscribeAll"
+        title="Unsubscribe from all notifications?"
+        message="You will stop receiving messages on every channel. You can opt back into individual channels at any time from this page."
+        confirm-text="Unsubscribe all"
+        cancel-text="Cancel"
+        variant="danger"
+        @confirm="optOutAll"
+        @cancel="confirmUnsubscribeAll = false"
+      />
 
       <!-- Footer -->
       <p class="mt-6 text-center text-xs text-[var(--color-text-muted)]">

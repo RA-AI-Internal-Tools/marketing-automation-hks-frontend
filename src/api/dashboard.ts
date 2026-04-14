@@ -134,12 +134,19 @@ export async function fetchConsents(clientId: number): Promise<ClientConsent[]> 
   return data
 }
 
-export async function optOut(clientId: number, channel: string): Promise<void> {
-  await api.post('/api/consents/opt-out', { client_id: clientId, channel })
+export async function optOut(clientId: number, channel: string, purpose?: string): Promise<void> {
+  // `purpose` defaults to 'marketing' server-side when omitted. Pass it
+  // explicitly when the caller knows (e.g. flipping a personalization
+  // consent row) so the backend doesn't mutate the wrong record.
+  const body: Record<string, unknown> = { client_id: clientId, channel }
+  if (purpose) body.purpose = purpose
+  await api.post('/api/consents/opt-out', body)
 }
 
-export async function optIn(clientId: number, channel: string): Promise<void> {
-  await api.post('/api/consents/opt-in', { client_id: clientId, channel })
+export async function optIn(clientId: number, channel: string, purpose?: string): Promise<void> {
+  const body: Record<string, unknown> = { client_id: clientId, channel }
+  if (purpose) body.purpose = purpose
+  await api.post('/api/consents/opt-in', body)
 }
 
 export async function fetchHealth(): Promise<HealthCheck> {

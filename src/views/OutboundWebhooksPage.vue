@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import StatusBadge from '@/components/StatusBadge.vue'
 import { useToast } from '@/composables/useToast'
 import { useAction } from '@/composables/useAction'
 import {
@@ -183,16 +184,6 @@ async function copyToClipboard(text: string, label = 'Copied') {
   }
 }
 
-function statusBadgeClass(d: WebhookDelivery) {
-  switch (d.status) {
-    case 'delivered': return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200'
-    case 'failed':    return 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200'
-    case 'retrying':  return 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200'
-    case 'in_flight': return 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200'
-    default:          return 'bg-neutral-200 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-200'
-  }
-}
-
 function formatDate(s?: string | null): string {
   if (!s) return '—'
   try { return new Date(s).toLocaleString() } catch { return s }
@@ -276,12 +267,7 @@ function formatDate(s?: string | null): string {
               </div>
             </td>
             <td class="px-4 py-3">
-              <span v-if="w.active" class="inline-flex items-center gap-1 rounded bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
-                <CheckCircleIcon class="h-3 w-3" /> Active
-              </span>
-              <span v-else class="inline-flex items-center gap-1 rounded bg-neutral-200 px-2 py-0.5 text-xs font-medium text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300">
-                Paused
-              </span>
+              <StatusBadge :status="w.active ? 'active' : 'paused'" />
             </td>
             <td class="px-4 py-3 text-xs">
               <div v-if="w.last_delivery_at" class="flex items-center gap-1">
@@ -442,7 +428,23 @@ func verify(rawBody []byte, h http.Header, secret string) bool {
 
         <div class="flex items-center justify-end gap-2 border-t border-neutral-200 p-4 dark:border-neutral-800">
           <button @click="editorOpen = false" class="rounded-md px-3 py-2 text-sm text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800">Close</button>
-          <button @click="save" :disabled="saving" class="inline-flex items-center gap-2 rounded-md bg-ma-accent px-4 py-2 text-sm font-medium text-white hover:bg-ma-accent-hover disabled:opacity-50">
+          <!-- Once the secret is revealed, Create has already succeeded;
+               the only remaining action is "Done" which dismisses the
+               modal. Leaving the Create button active re-posts the same
+               form and spawns a duplicate webhook. -->
+          <button
+            v-if="revealedSecret"
+            @click="editorOpen = false"
+            class="inline-flex items-center gap-2 rounded-md bg-ma-accent px-4 py-2 text-sm font-medium text-white hover:bg-ma-accent-hover"
+          >
+            Done
+          </button>
+          <button
+            v-else
+            @click="save"
+            :disabled="saving"
+            class="inline-flex items-center gap-2 rounded-md bg-ma-accent px-4 py-2 text-sm font-medium text-white hover:bg-ma-accent-hover disabled:opacity-50"
+          >
             <ArrowPathIcon v-if="saving" class="h-4 w-4 animate-spin" />
             {{ editing ? 'Save' : 'Create' }}
           </button>
@@ -469,7 +471,7 @@ func verify(rawBody []byte, h http.Header, secret string) bool {
           <div v-for="d in deliveries" :key="d.id" class="p-4 text-sm">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
-                <span class="rounded px-2 py-0.5 text-xs font-medium" :class="statusBadgeClass(d)">{{ d.status }}</span>
+                <StatusBadge :status="d.status" />
                 <span class="font-mono text-xs text-neutral-600 dark:text-neutral-300">{{ d.event_type }}</span>
                 <span v-if="d.http_status" class="font-mono text-xs text-neutral-500">HTTP {{ d.http_status }}</span>
               </div>
@@ -497,9 +499,13 @@ func verify(rawBody []byte, h http.Header, secret string) bool {
     </div>
 
     <ConfirmDialog
-      :open="deleteOpen" @update:open="(v: boolean) => !v && (deleteTarget = null)"
-      title="Delete webhook?" :message="`Permanently remove «${deleteTarget?.name}»? Deliveries in flight will be buried as failed.`"
-      confirm-label="Delete" confirm-variant="danger" @confirm="confirmDelete"
+      :open="deleteOpen"
+      title="Delete webhook?"
+      :message="`Permanently remove «${deleteTarget?.name}»? Deliveries in flight will be buried as failed.`"
+      confirm-text="Delete"
+      variant="danger"
+      @confirm="confirmDelete"
+      @cancel="deleteTarget = null"
     />
   </div>
 </template>

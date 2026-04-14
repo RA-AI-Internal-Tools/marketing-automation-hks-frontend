@@ -26,7 +26,24 @@ const carts = ref<AbandonedCart[]>([])
 const aggregate = ref({ total_count: 0, total_value: 0, avg_value: 0 })
 const topProducts = ref<TopAbandonedProduct[]>([])
 
+// Nullable so the visibility handler can toggle the timer without
+// double-starts and so unmount cleanup is a no-op when already stopped.
 let refreshTimer: ReturnType<typeof setInterval> | null = null
+
+function startPolling() {
+  if (refreshTimer) return
+  refreshTimer = setInterval(load, 30_000)
+}
+function stopPolling() {
+  if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null }
+}
+// Mirrors HealthPage: don't burn requests while the tab is hidden, and
+// force an immediate refetch on visibility to close the gap caused by a
+// long background pause (e.g. laptop resumed from sleep).
+function onVisibilityChange() {
+  if (document.hidden) stopPolling()
+  else { load(); startPolling() }
+}
 
 async function load() {
   loading.value = true
@@ -47,10 +64,12 @@ async function load() {
 
 onMounted(() => {
   load()
-  refreshTimer = setInterval(load, 30_000)
+  startPolling()
+  document.addEventListener('visibilitychange', onVisibilityChange)
 })
 onUnmounted(() => {
-  if (refreshTimer) clearInterval(refreshTimer)
+  stopPolling()
+  document.removeEventListener('visibilitychange', onVisibilityChange)
 })
 
 function parsedItems(raw?: string): Array<{ name?: string; quantity?: number }> {

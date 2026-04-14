@@ -20,8 +20,8 @@
  *   - Undo/redo
  *   - Multi-select operations
  */
-import { ref, computed, onMounted, markRaw, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, computed, onMounted, onBeforeUnmount, markRaw, watch } from 'vue'
+import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { VueFlow, useVueFlow, MarkerType, type Connection } from '@vue-flow/core'
 // Node / Edge types from @vue-flow/core are deep generics that trip TS's
 // recursion limit under the project's strict-mode settings. Everything we
@@ -44,6 +44,7 @@ import WebhookNode from '@/components/campaign-builder/WebhookNode.vue'
 import ConditionNode from '@/components/campaign-builder/ConditionNode.vue'
 import { fetchCampaignGraph, replaceCampaignSteps, type CampaignGraphNode,
   type CampaignStepPayload } from '@/api/dashboard'
+import { getChannelVocabulary } from '@/api/channels'
 import { useToast } from '@/composables/useToast'
 import {
   ArrowLeftIcon, ArrowPathIcon,
@@ -99,6 +100,20 @@ const vf: any = useVueFlow()
 // Mark graph dirty whenever nodes or edges mutate. Initial load sets dirty
 // back to false after layout settles.
 watch([nodes, edges], () => { dirty.value = true }, { deep: true })
+
+// Route-leave + page-unload guard. The visual builder has no autosave, so
+// navigating away with unsaved work silently loses it. Confirm before
+// leaving; also attach a beforeunload handler for full-page navigations.
+onBeforeRouteLeave(() => {
+  if (!dirty.value) return true
+  return window.confirm('You have unsaved changes to this campaign. Discard changes?')
+})
+
+function onBeforeUnload(e: BeforeUnloadEvent) {
+  if (dirty.value) e.preventDefault()
+}
+onMounted(() => window.addEventListener('beforeunload', onBeforeUnload))
+onBeforeUnmount(() => window.removeEventListener('beforeunload', onBeforeUnload))
 
 let nextId = 1
 function newId(prefix: string) { return `${prefix}_${nextId++}` }
@@ -430,7 +445,18 @@ async function save() {
   }
 }
 
-function channelOptions() { return ['email', 'sms', 'whatsapp', 'push', 'onsite'] }
+// Channel list — lazily hydrated from the backend vocabulary endpoint on
+// mount so new surfaces light up without a redeploy. The hardcoded list
+// is the first-paint default and the transient-failure fallback, matching
+// the ConsentsPage convention.
+const channels = ref<string[]>(['email', 'sms', 'whatsapp', 'push', 'onsite'])
+function channelOptions() { return channels.value }
+onMounted(async () => {
+  try {
+    const v = await getChannelVocabulary()
+    if (Array.isArray(v) && v.length > 0) channels.value = v
+  } catch { /* keep fallback */ }
+})
 </script>
 
 <template>

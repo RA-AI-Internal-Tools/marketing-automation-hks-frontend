@@ -49,6 +49,14 @@ const statusConfig: Record<string, { bg: string; text: string; dot: string }> = 
   // worker dispatch. Amber distinguishes it from terminal sent (green) and
   // from the no-action "deferred" warnings.
   queued: { bg: 'bg-[var(--color-warning-bg)]', text: 'text-[var(--color-warning-text)]', dot: 'bg-[var(--color-warning)]' },
+  // ─── Outbound webhook delivery states ─────────────────────────────────
+  // `in_flight` is the transient "worker picked it up, awaiting HTTP
+  // response" status — treat it as neutral/info so operators don't
+  // conflate it with terminal failure. `retrying` is amber: the delivery
+  // hit a non-2xx, but the worker is backing off and will try again.
+  in_flight: { bg: 'bg-[var(--color-info-bg)]', text: 'text-[var(--color-info-text)]', dot: 'bg-[var(--color-info)]' },
+  retrying: { bg: 'bg-[var(--color-warning-bg)]', text: 'text-[var(--color-warning-text)]', dot: 'bg-[var(--color-warning)]' },
+  paused: { bg: 'bg-[var(--color-bg-subtle)]', text: 'text-[var(--color-text-tertiary)]', dot: 'bg-[var(--color-text-muted)]' },
   // ─── Broadcast lifecycle ──────────────────────────────────────────────
   // draft → scheduled → running → completed (terminal). `cancelled` and
   // `failed` are terminal negatives already covered above.

@@ -14,6 +14,7 @@ import {
   scheduleBroadcast, cancelBroadcast, deleteBroadcast,
   type Broadcast, type BroadcastRequest,
 } from '@/api/broadcasts'
+import { getChannelVocabulary } from '@/api/channels'
 import { PlusIcon, PlayIcon, StopIcon, TrashIcon, PencilSquareIcon, XMarkIcon, MegaphoneIcon } from '@heroicons/vue/24/outline'
 
 const auth = useAuthStore()
@@ -57,9 +58,18 @@ async function load() {
   }
 }
 
+// Channel list is hydrated from the backend vocabulary endpoint on mount
+// so new delivery surfaces (e.g. 'line', 'telegram') appear here without a
+// frontend redeploy. The hardcoded list below is the first-paint default
+// and the failure fallback — same pattern as ConsentsPage.
+const availableChannels = ref<string[]>(['email', 'sms', 'push', 'whatsapp'])
+
 onMounted(() => {
   load()
   templatesStore.load()
+  getChannelVocabulary()
+    .then(v => { if (Array.isArray(v) && v.length > 0) availableChannels.value = v })
+    .catch(() => { /* keep fallback */ })
 })
 
 watch(statusFilter, load)
@@ -270,10 +280,7 @@ function formatTime(iso: string) {
                 <label class="bc-field">
                   <span class="bc-field-lbl">Channel</span>
                   <select v-model="form.channel" class="bc-input">
-                    <option value="email">email</option>
-                    <option value="sms">sms</option>
-                    <option value="push">push</option>
-                    <option value="whatsapp">whatsapp</option>
+                    <option v-for="ch in availableChannels" :key="ch" :value="ch">{{ ch }}</option>
                   </select>
                 </label>
                 <label class="bc-field">

@@ -32,18 +32,18 @@ async function lookupConsents() {
 // Opt-out is destructive (a user can no longer be reached on that
 // channel until they re-opt-in from their own UI), so it goes through a
 // confirmation step. Opt-in is additive — no confirm needed.
-const pendingOptOut = ref<{ clientId: number; channel: string } | null>(null)
+const pendingOptOut = ref<{ clientId: number; channel: string; purpose?: string } | null>(null)
 
-function requestOptOut(cid: number, channel: string) {
-  pendingOptOut.value = { clientId: cid, channel }
+function requestOptOut(cid: number, channel: string, purpose?: string) {
+  pendingOptOut.value = { clientId: cid, channel, purpose }
 }
 
 async function confirmPendingOptOut() {
   if (!pendingOptOut.value) return
-  const { clientId: cid, channel } = pendingOptOut.value
+  const { clientId: cid, channel, purpose } = pendingOptOut.value
   pendingOptOut.value = null
   try {
-    await optOut(cid, channel)
+    await optOut(cid, channel, purpose)
     await lookupConsents()
   } catch (e: any) {
     error.value = e.response?.data?.error || 'Action failed'
@@ -51,12 +51,14 @@ async function confirmPendingOptOut() {
 }
 
 async function toggleConsent(consent: ClientConsent) {
+  // Thread `purpose` through so toggling a personalization row doesn't
+  // collide with the user's marketing consent on the same channel.
   if (consent.opted_in) {
-    requestOptOut(consent.client_id, consent.channel)
+    requestOptOut(consent.client_id, consent.channel, consent.purpose)
     return
   }
   try {
-    await optIn(consent.client_id, consent.channel)
+    await optIn(consent.client_id, consent.channel, consent.purpose)
     await lookupConsents()
   } catch (e: any) {
     error.value = e.response?.data?.error || 'Action failed'

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { useAuthStore } from '@/stores/auth'
 import { fetchSettings, changePassword, flushCache } from '@/api/dashboard'
 
@@ -27,7 +28,14 @@ onMounted(async () => {
   }
 })
 
+// Flushing the analytics cache evicts every cached aggregate and forces
+// the next page-load everywhere to hit the DB cold — a non-trivial cost
+// the user should confirm. Gated to admins in the template.
+const flushConfirmOpen = ref(false)
+function requestFlushCache() { flushConfirmOpen.value = true }
+
 async function handleFlushCache() {
+  flushConfirmOpen.value = false
   flushing.value = true
   flushSuccess.value = ''
   flushError.value = ''
@@ -140,8 +148,9 @@ async function handleChangePassword() {
         </form>
       </div>
 
-      <!-- Flush cache -->
-      <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+      <!-- Flush cache — admin-only. Evicting the analytics cache makes
+           every subsequent dashboard request cold; gate behind a confirm. -->
+      <div v-if="auth.isAdmin" class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
         <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-2">Analytics Cache</h3>
         <p class="text-sm text-[var(--color-text-tertiary)] mb-4">Clear all cached analytics data. The next page load will fetch fresh results from the database.</p>
 
@@ -153,7 +162,7 @@ async function handleChangePassword() {
         </div>
 
         <button
-          @click="handleFlushCache"
+          @click="requestFlushCache"
           :disabled="flushing"
           class="px-6 py-2.5 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] disabled:opacity-50 transition-colors"
         >
@@ -161,5 +170,16 @@ async function handleChangePassword() {
         </button>
       </div>
     </div>
+
+    <ConfirmDialog
+      :open="flushConfirmOpen"
+      title="Flush analytics cache?"
+      message="Every cached dashboard aggregate will be evicted. The next load of every analytics page will hit the database cold until the cache warms back up. Proceed?"
+      confirm-text="Flush cache"
+      cancel-text="Cancel"
+      variant="danger"
+      @confirm="handleFlushCache"
+      @cancel="flushConfirmOpen = false"
+    />
   </div>
 </template>
