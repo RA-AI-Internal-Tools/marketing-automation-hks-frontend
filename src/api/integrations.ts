@@ -44,10 +44,19 @@ export interface CredentialRow {
   key_name: string
   updated_at: string
   rotated_by: number | null
+  /** Where the credential lives: db = DB-stored + encrypted; env = legacy marketing.env var. Both are "configured". */
+  source?: 'db' | 'env'
+  has_value?: boolean
 }
 
-export async function listCredentials(): Promise<CredentialRow[]> {
-  const { data } = await api.get('/api/integrations/credentials')
+export async function listCredentials(environment?: Environment): Promise<CredentialRow[]> {
+  const url = environment
+    ? `/api/integrations/credentials?environment=${encodeURIComponent(environment)}`
+    : '/api/integrations/credentials'
+  const { data } = await api.get(url)
+  // Backend returns the array directly. Accept legacy { credentials: [] }
+  // shape as well for forward-compat.
+  if (Array.isArray(data)) return data
   return data?.credentials ?? []
 }
 

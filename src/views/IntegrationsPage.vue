@@ -32,7 +32,14 @@ const credEnv = ref<Environment>('sandbox')
 async function reloadCredentials() {
   if (!auth.isAdmin) return
   try {
-    credentials.value = await listCredentials()
+    // Fetch both environments so the "Configured (sandbox|production)"
+    // lock chips and the form's "(stored)" placeholder light up
+    // regardless of the currently selected tab.
+    const [sandbox, production] = await Promise.all([
+      listCredentials('sandbox'),
+      listCredentials('production'),
+    ])
+    credentials.value = [...sandbox, ...production]
   } catch {
     // non-fatal — the page still renders the catalog
   }
