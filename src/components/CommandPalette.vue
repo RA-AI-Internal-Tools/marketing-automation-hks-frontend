@@ -47,7 +47,7 @@ const commands = computed<Cmd[]>(() => {
     { id: 'nav.exec',       title: 'Executive analytics', section: 'Navigate', icon: PresentationChartBarIcon, run: () => router.push('/analytics/executive') },
     { id: 'nav.acq',        title: 'Acquisition',   section: 'Navigate', icon: GlobeAltIcon,                  run: () => router.push('/analytics/acquisition') },
     { id: 'nav.funnel',     title: 'Funnel',        section: 'Navigate', icon: FunnelIcon,                    run: () => router.push('/analytics/funnel') },
-    { id: 'nav.users',      title: 'User analytics',section: 'Navigate', icon: UserGroupIcon,                 run: () => router.push('/analytics/users') },
+    { id: 'nav.clients',    title: 'Client analytics',section: 'Navigate', icon: UserGroupIcon,               run: () => router.push('/analytics/clients') },
     { id: 'nav.products',   title: 'Products',      section: 'Navigate', icon: CubeIcon,                      run: () => router.push('/analytics/products') },
     { id: 'nav.payments',   title: 'Payments',      section: 'Navigate', icon: CreditCardIcon,                run: () => router.push('/analytics/payments') },
     { id: 'nav.orders',     title: 'Orders',        section: 'Navigate', icon: ShoppingCartIcon,              run: () => router.push('/analytics/orders') },

@@ -26,7 +26,7 @@ async function load() {
   try {
     data.value = await fetchUsers(analytics.since, analytics.until)
   } catch (e: any) {
-    error.value = e.response?.data?.error || 'Failed to load user analytics'
+    error.value = e.response?.data?.error || 'Failed to load client analytics'
   } finally {
     loading.value = false
   }
@@ -37,7 +37,7 @@ watch(() => analytics.queryParams, load)
 </script>
 
 <template>
-  <AnalyticsLayout title="Users & Behavior" description="Active users, top events, and demographics">
+  <AnalyticsLayout title="Clients & Behavior" description="Active clients, top events, and demographics">
     <div v-if="loading" class="text-center py-12 text-[var(--color-text-muted)]">Loading...</div>
     <div v-else-if="error" class="bg-[var(--color-error-bg)] border border-[var(--color-error-border)] text-[var(--color-error-text)] px-4 py-3 rounded-lg text-sm">{{ error }}</div>
     <div v-else-if="data" class="space-y-6">
@@ -46,7 +46,7 @@ watch(() => analytics.queryParams, load)
         <MetricCard title="WAU" :value="data.wau.toLocaleString()" />
         <MetricCard title="MAU" :value="data.mau.toLocaleString()" />
       </div>
-      <p class="text-xs text-[var(--color-text-muted)] -mt-2">DAU/WAU counts unique user IDs from <code class="bg-[var(--color-bg-subtle)] px-1 rounded">page-view</code> events in the selected period. MAU may differ due to date-range query limits in the current Tracardi version.</p>
+      <p class="text-xs text-[var(--color-text-muted)] -mt-2">DAU/WAU counts unique client IDs from <code class="bg-[var(--color-bg-subtle)] px-1 rounded">page-view</code> events in the selected period. MAU may differ due to date-range query limits in the current Tracardi version.</p>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
@@ -67,7 +67,7 @@ watch(() => analytics.queryParams, load)
           <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Geographic Distribution</h3>
           <table class="w-full text-sm">
             <thead><tr class="text-left text-[var(--color-text-tertiary)] text-xs uppercase">
-              <th class="pb-2">Country</th><th class="pb-2 text-right">Users</th>
+              <th class="pb-2">Country</th><th class="pb-2 text-right">Clients</th>
             </tr></thead>
             <tbody>
               <tr v-for="g in data.geo_distribution" :key="g.country" class="border-t border-[var(--color-border-muted)]">

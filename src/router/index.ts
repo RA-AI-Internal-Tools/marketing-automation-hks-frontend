@@ -211,10 +211,14 @@ const router = createRouter({
       meta: { title: 'Funnel' },
     },
     {
+      path: '/analytics/clients',
+      name: 'analytics-clients',
+      component: () => import('@/views/analytics/ClientsPage.vue'),
+      meta: { title: 'Clients Analytics' },
+    },
+    {
       path: '/analytics/users',
-      name: 'analytics-users',
-      component: () => import('@/views/analytics/UsersPage.vue'),
-      meta: { title: 'Users Analytics' },
+      redirect: '/analytics/clients',
     },
     {
       path: '/analytics/products',

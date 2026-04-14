@@ -98,7 +98,7 @@ const allSections: NavSection[] = [
       { name: 'Cart activity', to: '/cart-activity', icon: ShoppingCartIcon },
       { name: 'Acquisition', to: '/analytics/acquisition', icon: GlobeAltIcon },
       { name: 'Funnel', to: '/analytics/funnel', icon: FunnelIcon },
-      { name: 'Users', to: '/analytics/users', icon: UserGroupIcon },
+      { name: 'Clients', to: '/analytics/clients', icon: UserGroupIcon },
       { name: 'Products', to: '/analytics/products', icon: CubeIcon },
       { name: 'Payments', to: '/analytics/payments', icon: CreditCardIcon },
       { name: 'Orders', to: '/analytics/orders', icon: ShoppingCartIcon },
