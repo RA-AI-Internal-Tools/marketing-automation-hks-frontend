@@ -106,5 +106,3 @@ function submit() {
     </template>
   </ModalWrapper>
 </template>
-</content>
-</invoke>
