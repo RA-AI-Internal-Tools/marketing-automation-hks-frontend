@@ -61,12 +61,12 @@ function formatTime(ts: string): string {
             v-model="clientId"
             type="text"
             placeholder="Enter client ID"
-            class="flex-1 max-w-xs px-3 py-2 border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)]"
+            class="form-input flex-1 max-w-xs"
           />
           <button
             type="submit"
             :disabled="loading"
-            class="px-4 py-2 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] disabled:opacity-50 transition-colors"
+            class="btn btn-primary"
           >
             {{ loading ? 'Loading...' : 'View Journey' }}
           </button>

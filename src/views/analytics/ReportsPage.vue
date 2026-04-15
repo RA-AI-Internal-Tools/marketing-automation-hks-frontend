@@ -162,15 +162,13 @@ async function confirmDelete() {
           <!-- Name -->
           <div>
             <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Name</label>
-            <input v-model="form.name" type="text" placeholder="e.g. Weekly Campaign Summary"
-              class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-[var(--color-focus-ring)]/40" />
+            <input v-model="form.name" type="text" placeholder="e.g. Weekly Campaign Summary" class="form-input" />
           </div>
 
           <!-- Schedule -->
           <div>
             <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Schedule</label>
-            <select v-model="form.schedule"
-              class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-[var(--color-focus-ring)]/40">
+            <select v-model="form.schedule" class="form-select">
               <option v-for="opt in scheduleOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
             </select>
           </div>
@@ -178,8 +176,7 @@ async function confirmDelete() {
           <!-- Format -->
           <div>
             <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Format</label>
-            <select v-model="form.format"
-              class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-[var(--color-focus-ring)]/40">
+            <select v-model="form.format" class="form-select">
               <option v-for="opt in formatOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
             </select>
           </div>
@@ -206,8 +203,7 @@ async function confirmDelete() {
           <!-- Recipients -->
           <div>
             <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Recipients (comma-separated emails)</label>
-            <input v-model="form.recipients" type="text" placeholder="alice@example.com, bob@example.com"
-              class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-[var(--color-focus-ring)]/40" />
+            <input v-model="form.recipients" type="text" placeholder="alice@example.com, bob@example.com" class="form-input" />
           </div>
 
           <!-- Active -->
@@ -218,12 +214,10 @@ async function confirmDelete() {
 
           <!-- Actions -->
           <div class="flex justify-end gap-3 pt-2">
-            <button @click="showDialog = false" :disabled="formSaving"
-              class="px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-bg-hover)] transition-colors">
+            <button @click="showDialog = false" :disabled="formSaving" class="btn btn-ghost">
               Cancel
             </button>
-            <button @click="handleSave" :disabled="formSaving"
-              class="px-4 py-2 text-sm font-medium text-white bg-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary-hover)] disabled:opacity-50">
+            <button @click="handleSave" :disabled="formSaving" class="btn btn-primary">
               {{ formSaving ? 'Saving...' : (editingId ? 'Update' : 'Create') }}
             </button>
           </div>

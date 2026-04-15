@@ -106,7 +106,7 @@ async function handleSend() {
             <button
               @click="handleSend"
               :disabled="sending"
-              class="w-full py-2.5 px-4 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              class="btn btn-primary w-full justify-center"
             >
               {{ sending ? 'Sending...' : 'Send Test Message' }}
             </button>

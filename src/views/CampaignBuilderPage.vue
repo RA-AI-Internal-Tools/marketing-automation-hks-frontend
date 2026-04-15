@@ -473,12 +473,10 @@ onMounted(async () => {
     <PageHeader :title="campaignName || 'Campaign builder'" :description="slug ? `#${slug}` : ''">
       <template #actions>
         <span v-if="dirty" class="text-xs text-[var(--color-warning-text)] dark:text-amber-400">● unsaved</span>
-        <button @click="router.push(`/campaigns/${route.params.id}/edit`)"
-                class="inline-flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800">
+        <button @click="router.push(`/campaigns/${route.params.id}/edit`)" class="btn btn-ghost">
           <ArrowLeftIcon class="h-4 w-4" /> List editor
         </button>
-        <button @click="save" :disabled="saving || !dirty"
-                class="inline-flex items-center gap-2 rounded-md bg-ma-accent px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-ma-accent-hover disabled:opacity-50">
+        <button @click="save" :disabled="saving || !dirty" class="btn btn-primary">
           <ArrowPathIcon v-if="saving" class="h-4 w-4 animate-spin" />
           Save
         </button>
@@ -545,10 +543,10 @@ onMounted(async () => {
         <div class="mb-3 flex items-center justify-between">
           <h3 class="text-sm font-semibold">Properties</h3>
           <div class="flex gap-1">
-            <button @click="deleteSelected" class="rounded p-1 text-[var(--color-error-text)] hover:bg-[var(--color-error-soft)] dark:hover:bg-rose-950/40" aria-label="Delete selected node" title="Delete node">
+            <button @click="deleteSelected" class="btn-icon" aria-label="Delete selected node" title="Delete node">
               <TrashIcon class="h-4 w-4" />
             </button>
-            <button @click="selectedNodeId = null" class="rounded p-1 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800" aria-label="Deselect node">
+            <button @click="selectedNodeId = null" class="btn-icon" aria-label="Deselect node">
               <XMarkIcon class="h-4 w-4" />
             </button>
           </div>
@@ -564,7 +562,7 @@ onMounted(async () => {
             <div>
               <label class="block text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Channel</label>
               <select :value="selectedNode.data.channel" @change="updateSelectedData({ channel: ($event.target as HTMLSelectElement).value })"
-                      class="mt-1 w-full rounded border border-neutral-300 bg-white px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-800">
+                      class="form-select mt-1">
                 <option v-for="c in channelOptions()" :key="c" :value="c">{{ c }}</option>
               </select>
             </div>
@@ -572,12 +570,12 @@ onMounted(async () => {
               <label class="block text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Template key</label>
               <input :value="selectedNode.data.template_key" @input="updateSelectedData({ template_key: ($event.target as HTMLInputElement).value })"
                      placeholder="welcome_email"
-                     class="mt-1 w-full rounded border border-neutral-300 bg-white px-2 py-1.5 font-mono text-sm dark:border-neutral-700 dark:bg-neutral-800" />
+                     class="form-input font-mono mt-1" />
             </div>
             <div>
               <label class="block text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Delay (minutes)</label>
               <input type="number" min="0" :value="selectedNode.data.delay_minutes" @input="updateSelectedData({ delay_minutes: Number(($event.target as HTMLInputElement).value) })"
-                     class="mt-1 w-full rounded border border-neutral-300 bg-white px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-800" />
+                     class="form-input mt-1" />
             </div>
           </template>
 
@@ -586,13 +584,13 @@ onMounted(async () => {
               <label class="block text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Wait for event</label>
               <input :value="selectedNode.data.wait_for_event" @input="updateSelectedData({ wait_for_event: ($event.target as HTMLInputElement).value })"
                      placeholder="order_placed"
-                     class="mt-1 w-full rounded border border-neutral-300 bg-white px-2 py-1.5 font-mono text-sm dark:border-neutral-700 dark:bg-neutral-800" />
+                     class="form-input font-mono mt-1" />
               <p class="mt-1 text-[10px] text-neutral-500">Leave blank for a pure time delay.</p>
             </div>
             <div>
               <label class="block text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Timeout (minutes)</label>
               <input type="number" min="0" :value="selectedNode.data.wait_for_event_timeout" @input="updateSelectedData({ wait_for_event_timeout: Number(($event.target as HTMLInputElement).value) })"
-                     class="mt-1 w-full rounded border border-neutral-300 bg-white px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-800" />
+                     class="form-input mt-1" />
               <p class="mt-1 text-[10px] text-neutral-500">0 = wait forever.</p>
             </div>
           </template>
@@ -602,7 +600,7 @@ onMounted(async () => {
               <label class="block text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Condition expression</label>
               <input :value="selectedNode.data.condition" @input="updateSelectedData({ condition: ($event.target as HTMLInputElement).value })"
                      placeholder="event.opened == true"
-                     class="mt-1 w-full rounded border border-neutral-300 bg-white px-2 py-1.5 font-mono text-sm dark:border-neutral-700 dark:bg-neutral-800" />
+                     class="form-input font-mono mt-1" />
               <p class="mt-1 text-[10px] text-neutral-500">Wire the true and false handles below the node to their respective follow-ups.</p>
             </div>
           </template>
@@ -612,12 +610,12 @@ onMounted(async () => {
               <label class="block text-[10px] font-semibold uppercase tracking-wide text-neutral-500">URL</label>
               <input :value="selectedNode.data.webhook_url" @input="updateSelectedData({ webhook_url: ($event.target as HTMLInputElement).value })"
                      placeholder="https://api.example.com/hook"
-                     class="mt-1 w-full rounded border border-neutral-300 bg-white px-2 py-1.5 font-mono text-sm dark:border-neutral-700 dark:bg-neutral-800" />
+                     class="form-input font-mono mt-1" />
             </div>
             <div>
               <label class="block text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Method</label>
               <select :value="selectedNode.data.webhook_method" @change="updateSelectedData({ webhook_method: ($event.target as HTMLSelectElement).value })"
-                      class="mt-1 w-full rounded border border-neutral-300 bg-white px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-800">
+                      class="form-select mt-1">
                 <option>POST</option><option>PUT</option><option>PATCH</option>
               </select>
             </div>

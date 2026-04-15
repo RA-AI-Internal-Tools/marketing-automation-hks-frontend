@@ -454,7 +454,7 @@ const totalMembers = computed(() =>
               <div v-if="form.entry_events.length" class="seg-event-list">
                 <span v-for="evt in form.entry_events" :key="evt" class="seg-event-chip">
                   {{ evt }}
-                  <button type="button" @click="removeEvent(evt)" aria-label="Remove">
+                  <button type="button" @click="removeEvent(evt)" aria-label="Remove event" class="btn-icon">
                     <XMarkIcon class="h-3 w-3" />
                   </button>
                 </span>

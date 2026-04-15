@@ -69,7 +69,7 @@ function close() { emit('update:open', false) }
           <SparklesIcon class="h-5 w-5 text-ma-accent" aria-hidden="true" />
           Generate subject lines
         </h2>
-        <button @click="close" aria-label="Close" class="rounded p-1 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+        <button @click="close" aria-label="Close" class="btn-icon">
           <XMarkIcon class="h-5 w-5" />
         </button>
       </div>
@@ -77,32 +77,31 @@ function close() { emit('update:open', false) }
       <div class="space-y-3 p-4">
         <div>
           <label class="block text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Campaign name</label>
-          <input v-model="form.campaign_name" class="mt-1 w-full rounded border border-neutral-300 bg-white px-3 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-800" placeholder="e.g. Spring sale 2026" />
+          <input v-model="form.campaign_name" class="form-input mt-1" placeholder="e.g. Spring sale 2026" />
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Audience</label>
-            <input v-model="form.audience" class="mt-1 w-full rounded border border-neutral-300 bg-white px-3 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-800" placeholder="VIP customers" />
+            <input v-model="form.audience" class="form-input mt-1" placeholder="VIP customers" />
           </div>
           <div>
             <label class="block text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Tone</label>
-            <select v-model="form.tone" class="mt-1 w-full rounded border border-neutral-300 bg-white px-3 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-800">
+            <select v-model="form.tone" class="form-select mt-1">
               <option v-for="t in tones" :key="t" :value="t">{{ t }}</option>
             </select>
           </div>
         </div>
         <div>
           <label class="block text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Product / offer</label>
-          <input v-model="form.product_context" class="mt-1 w-full rounded border border-neutral-300 bg-white px-3 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-800" placeholder="20% off sitewide with code SPRING20" />
+          <input v-model="form.product_context" class="form-input mt-1" placeholder="20% off sitewide with code SPRING20" />
         </div>
         <div>
           <label class="block text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Brand voice</label>
-          <input v-model="form.brand_voice" class="mt-1 w-full rounded border border-neutral-300 bg-white px-3 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-800" />
+          <input v-model="form.brand_voice" class="form-input mt-1" />
         </div>
 
         <div class="flex justify-end pt-2">
-          <button @click="run" :disabled="generateAction.pending.value"
-                  class="inline-flex items-center gap-2 rounded-md bg-ma-accent px-4 py-2 text-sm font-medium text-white hover:bg-ma-accent-hover disabled:opacity-50">
+          <button @click="run" :disabled="generateAction.pending.value" class="btn btn-primary">
             <SparklesIcon class="h-4 w-4" />
             {{ generateAction.pending.value ? 'Generating…' : 'Generate' }}
           </button>

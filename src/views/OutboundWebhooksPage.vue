@@ -196,7 +196,7 @@ function formatDate(s?: string | null): string {
       <template #actions>
         <button
           @click="openCreate"
-          class="inline-flex items-center gap-2 rounded-md bg-ma-accent px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-ma-accent-hover"
+          class="btn btn-primary"
         >
           <PlusIcon class="h-4 w-4" /> New webhook
         </button>
@@ -279,16 +279,16 @@ function formatDate(s?: string | null): string {
             </td>
             <td class="px-4 py-3 text-right">
               <div class="flex items-center justify-end gap-1">
-                <button @click="fireTest(w)" class="rounded p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-white" :aria-label="`Fire test event for ${w.name}`" title="Fire test event">
+                <button @click="fireTest(w)" class="btn-icon" :aria-label="`Fire test event for ${w.name}`" title="Fire test event">
                   <BoltIcon class="h-4 w-4" />
                 </button>
-                <button @click="openDeliveries(w)" class="rounded p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-white" :aria-label="`Delivery log for ${w.name}`" title="Delivery log">
+                <button @click="openDeliveries(w)" class="btn-icon" :aria-label="`Delivery log for ${w.name}`" title="Delivery log">
                   <ClockIcon class="h-4 w-4" />
                 </button>
-                <button @click="openEdit(w)" class="rounded p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-white" :aria-label="`Edit webhook ${w.name}`" title="Edit">
+                <button @click="openEdit(w)" class="btn-icon" :aria-label="`Edit webhook ${w.name}`" title="Edit">
                   <PencilSquareIcon class="h-4 w-4" />
                 </button>
-                <button @click="deleteTarget = w" class="rounded p-1.5 text-neutral-500 hover:bg-[var(--color-error-soft)] hover:text-[var(--color-error-text)] dark:hover:bg-rose-900/30" :aria-label="`Delete webhook ${w.name}`" title="Delete">
+                <button @click="deleteTarget = w" class="btn-icon" :aria-label="`Delete webhook ${w.name}`" title="Delete">
                   <TrashIcon class="h-4 w-4" />
                 </button>
               </div>
@@ -303,7 +303,7 @@ function formatDate(s?: string | null): string {
       <div class="mt-12 w-full max-w-2xl rounded-lg bg-white shadow-xl dark:bg-neutral-900">
         <div class="flex items-center justify-between border-b border-neutral-200 p-4 dark:border-neutral-800">
           <h2 class="text-lg font-semibold">{{ editing ? 'Edit webhook' : 'New webhook' }}</h2>
-          <button @click="editorOpen = false" class="rounded p-1 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+          <button @click="editorOpen = false" class="btn-icon" aria-label="Close">
             <XMarkIcon class="h-5 w-5" />
           </button>
         </div>
@@ -321,17 +321,17 @@ function formatDate(s?: string | null): string {
           </div>
 
           <div>
-            <label class="block text-xs font-medium uppercase tracking-wide text-neutral-500">Name</label>
-            <input v-model="form.name" class="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-ma-accent focus:outline-none focus:ring-1 focus:ring-ma-accent dark:border-neutral-700 dark:bg-neutral-800" placeholder="CRM sync" />
+            <label class="form-label">Name</label>
+            <input v-model="form.name" class="form-input mt-1" placeholder="CRM sync" />
           </div>
 
           <div>
-            <label class="block text-xs font-medium uppercase tracking-wide text-neutral-500">URL</label>
-            <input v-model="form.url" class="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 font-mono text-sm focus:border-ma-accent focus:outline-none focus:ring-1 focus:ring-ma-accent dark:border-neutral-700 dark:bg-neutral-800" placeholder="https://api.example.com/ma/webhook" />
+            <label class="form-label">URL</label>
+            <input v-model="form.url" class="form-input font-mono mt-1" placeholder="https://api.example.com/ma/webhook" />
           </div>
 
           <div>
-            <label class="block text-xs font-medium uppercase tracking-wide text-neutral-500">Event types</label>
+            <label class="form-label">Event types</label>
             <div class="mt-2 grid grid-cols-2 gap-2">
               <label v-for="ev in eventTypeCatalog" :key="ev"
                      class="flex cursor-pointer items-center gap-2 rounded-md border border-neutral-200 px-2 py-1.5 text-xs font-mono hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
@@ -343,8 +343,8 @@ function formatDate(s?: string | null): string {
           </div>
 
           <div>
-            <label class="block text-xs font-medium uppercase tracking-wide text-neutral-500">Description</label>
-            <textarea v-model="form.description" rows="2" class="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-ma-accent focus:outline-none focus:ring-1 focus:ring-ma-accent dark:border-neutral-700 dark:bg-neutral-800" placeholder="Optional notes" />
+            <label class="form-label">Description</label>
+            <textarea v-model="form.description" rows="2" class="form-textarea mt-1" placeholder="Optional notes" />
           </div>
 
           <label class="flex items-center gap-2 text-sm">
@@ -427,7 +427,7 @@ func verify(rawBody []byte, h http.Header, secret string) bool {
         </div>
 
         <div class="flex items-center justify-end gap-2 border-t border-neutral-200 p-4 dark:border-neutral-800">
-          <button @click="editorOpen = false" class="rounded-md px-3 py-2 text-sm text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800">Close</button>
+          <button @click="editorOpen = false" class="btn btn-ghost">Close</button>
           <!-- Once the secret is revealed, Create has already succeeded;
                the only remaining action is "Done" which dismisses the
                modal. Leaving the Create button active re-posts the same
@@ -435,7 +435,7 @@ func verify(rawBody []byte, h http.Header, secret string) bool {
           <button
             v-if="revealedSecret"
             @click="editorOpen = false"
-            class="inline-flex items-center gap-2 rounded-md bg-ma-accent px-4 py-2 text-sm font-medium text-white hover:bg-ma-accent-hover"
+            class="btn btn-primary"
           >
             Done
           </button>
@@ -443,7 +443,7 @@ func verify(rawBody []byte, h http.Header, secret string) bool {
             v-else
             @click="save"
             :disabled="saving"
-            class="inline-flex items-center gap-2 rounded-md bg-ma-accent px-4 py-2 text-sm font-medium text-white hover:bg-ma-accent-hover disabled:opacity-50"
+            class="btn btn-primary"
           >
             <ArrowPathIcon v-if="saving" class="h-4 w-4 animate-spin" />
             {{ editing ? 'Save' : 'Create' }}
@@ -460,7 +460,7 @@ func verify(rawBody []byte, h http.Header, secret string) bool {
             <h2 class="text-lg font-semibold">Delivery log</h2>
             <p class="text-xs text-neutral-500">{{ deliveriesFor?.name }}</p>
           </div>
-          <button @click="deliveriesOpen = false" class="rounded p-1 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+          <button @click="deliveriesOpen = false" class="btn-icon" aria-label="Close delivery log">
             <XMarkIcon class="h-5 w-5" />
           </button>
         </div>

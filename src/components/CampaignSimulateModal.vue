@@ -100,7 +100,7 @@ function formatHours(min: number): string {
         <h2 class="flex items-center gap-2 text-lg font-semibold">
           <BeakerIcon class="h-5 w-5 text-ma-accent" aria-hidden="true" /> Simulate campaign
         </h2>
-        <button @click="close" aria-label="Close" class="rounded p-1 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+        <button @click="close" aria-label="Close" class="btn-icon">
           <XMarkIcon class="h-5 w-5" />
         </button>
       </div>
@@ -109,11 +109,9 @@ function formatHours(min: number): string {
         <div class="flex items-end gap-3">
           <label class="flex-1">
             <span class="block text-xs font-medium uppercase tracking-wide text-neutral-500">Audience size</span>
-            <input v-model.number="audience" type="number" min="1" max="10000000"
-                   class="mt-1 w-full rounded border border-neutral-300 bg-white px-3 py-2 font-mono text-sm dark:border-neutral-700 dark:bg-neutral-800" />
+            <input v-model.number="audience" type="number" min="1" max="10000000" class="form-input font-mono mt-1" />
           </label>
-          <button @click="run" :disabled="runAction.pending.value"
-                  class="rounded-md bg-ma-accent px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-ma-accent-hover disabled:opacity-50">
+          <button @click="run" :disabled="runAction.pending.value" class="btn btn-primary">
             {{ runAction.pending.value ? 'Running…' : 'Run simulation' }}
           </button>
         </div>
@@ -198,7 +196,7 @@ function formatHours(min: number): string {
       </div>
 
       <div class="flex items-center justify-end border-t border-neutral-200 p-4 dark:border-neutral-800">
-        <button @click="close" class="rounded-md px-3 py-2 text-sm text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800">Close</button>
+        <button @click="close" class="btn btn-ghost">Close</button>
       </div>
     </div>
   </div>

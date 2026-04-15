@@ -134,7 +134,7 @@ onMounted(load)
       <button
         v-if="auth.isAdmin"
         @click="openCreate"
-        class="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors"
+        class="btn btn-primary"
       >
         <PlusIcon class="h-4 w-4" />
         Add User
@@ -177,10 +177,10 @@ onMounted(load)
             <td class="px-6 py-4 text-sm text-[var(--color-text-tertiary)]">{{ formatDate(user.last_login_at) }}</td>
             <td class="px-6 py-4 text-right">
               <div v-if="auth.isAdmin" class="flex items-center justify-end gap-2">
-                <button @click="openEdit(user)" class="text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors" :aria-label="`Edit user ${user.email}`" title="Edit">
+                <button @click="openEdit(user)" class="btn-icon" :aria-label="`Edit user ${user.email}`" title="Edit">
                   <PencilSquareIcon class="h-4 w-4" />
                 </button>
-                <button @click="confirmDelete = user" class="text-[var(--color-text-muted)] hover:text-[var(--color-error-text)] transition-colors" :aria-label="`Delete user ${user.email}`" title="Delete">
+                <button @click="confirmDelete = user" class="btn-icon" :aria-label="`Delete user ${user.email}`" title="Delete">
                   <TrashIcon class="h-4 w-4" />
                 </button>
               </div>
@@ -202,7 +202,7 @@ onMounted(load)
             <h2 class="text-lg font-semibold tracking-tight text-[var(--color-text-primary)]">
               {{ editingUser ? 'Edit User' : 'Create User' }}
             </h2>
-            <button @click="showModal = false" class="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]">
+            <button @click="showModal = false" class="btn-icon" aria-label="Close">
               <XMarkIcon class="h-5 w-5" />
             </button>
           </div>
@@ -210,25 +210,21 @@ onMounted(load)
           <form @submit.prevent="handleSave" class="space-y-4">
             <div>
               <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Name</label>
-              <input v-model="form.name" type="text" required
-                class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)]" />
+              <input v-model="form.name" type="text" required class="form-input" />
             </div>
             <div>
               <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Email</label>
-              <input v-model="form.email" type="email" required
-                class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)]" />
+              <input v-model="form.email" type="email" required class="form-input" />
             </div>
             <div>
               <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
                 Password {{ editingUser ? '(leave blank to keep current)' : '' }}
               </label>
-              <input v-model="form.password" type="password" :required="!editingUser"
-                class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)]" />
+              <input v-model="form.password" type="password" :required="!editingUser" class="form-input" />
             </div>
             <div>
               <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Role</label>
-              <select v-model="form.role"
-                class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)]">
+              <select v-model="form.role" class="form-select">
                 <option value="admin">Admin</option>
                 <option value="editor">Editor</option>
                 <option value="viewer">Viewer</option>
@@ -248,12 +244,10 @@ onMounted(load)
             <div v-if="formError" class="text-sm text-[var(--color-error-text)]">{{ formError }}</div>
 
             <div class="flex justify-end gap-3 pt-2">
-              <button type="button" @click="showModal = false"
-                class="px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-bg-hover)] transition-colors">
+              <button type="button" @click="showModal = false" class="btn btn-ghost">
                 Cancel
               </button>
-              <button type="submit" :disabled="saving"
-                class="px-4 py-2 text-sm font-medium text-white bg-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary-hover)] disabled:opacity-50">
+              <button type="submit" :disabled="saving" class="btn btn-primary">
                 {{ saving ? 'Saving...' : (editingUser ? 'Update' : 'Create') }}
               </button>
             </div>

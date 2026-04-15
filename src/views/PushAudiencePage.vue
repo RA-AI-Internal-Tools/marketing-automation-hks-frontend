@@ -201,13 +201,12 @@ onMounted(load)
       <div>
         <label class="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1">Search Client ID</label>
         <input v-model="searchInput" type="text" placeholder="e.g. 1234"
-          class="px-3 py-1.5 text-sm border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)] w-40"
+          class="form-input w-40"
           @keydown.enter="applyFilters" />
       </div>
       <div>
         <label class="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1">Platform</label>
-        <select v-model="filterPlatform"
-          class="px-3 py-1.5 text-sm border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)]">
+        <select v-model="filterPlatform" class="form-select">
           <option value="">All platforms</option>
           <option value="android">Android</option>
           <option value="ios">iOS</option>
@@ -216,19 +215,16 @@ onMounted(load)
       </div>
       <div>
         <label class="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1">Status</label>
-        <select v-model="filterActive"
-          class="px-3 py-1.5 text-sm border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)]">
+        <select v-model="filterActive" class="form-select">
           <option value="">All</option>
           <option value="true">Active</option>
           <option value="false">Inactive</option>
         </select>
       </div>
-      <button @click="applyFilters"
-        class="px-4 py-1.5 text-sm font-medium text-white bg-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors">
+      <button @click="applyFilters" class="btn btn-primary">
         Apply
       </button>
-      <button @click="clearFilters"
-        class="px-4 py-1.5 text-sm font-medium text-[var(--color-text-secondary)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-bg-page)] transition-colors">
+      <button @click="clearFilters" class="btn btn-ghost">
         Clear
       </button>
       <div v-if="selected.size > 0" class="ml-auto text-sm font-medium text-[var(--color-accent)]">
@@ -299,13 +295,11 @@ onMounted(load)
       <div class="flex items-center justify-between px-4 py-3 border-t border-[var(--color-border)] bg-[var(--color-bg-page)]">
         <span class="text-xs text-[var(--color-text-tertiary)]">{{ total }} total client{{ total === 1 ? '' : 's' }}</span>
         <div class="flex gap-2">
-          <button @click="prevPage" :disabled="page <= 1"
-            class="px-3 py-1 text-xs rounded border border-[var(--color-border)] bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-page)] disabled:opacity-50">
+          <button @click="prevPage" :disabled="page <= 1" class="btn btn-ghost btn-sm">
             Previous
           </button>
           <span class="px-3 py-1 text-xs text-[var(--color-text-secondary)]">Page {{ page }}</span>
-          <button @click="nextPage" :disabled="page * perPage >= total"
-            class="px-3 py-1 text-xs rounded border border-[var(--color-border)] bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-page)] disabled:opacity-50">
+          <button @click="nextPage" :disabled="page * perPage >= total" class="btn btn-ghost btn-sm">
             Next
           </button>
         </div>
@@ -319,28 +313,24 @@ onMounted(load)
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1">Title *</label>
-          <input v-model="pushTitle" type="text" placeholder="Notification title"
-            class="w-full px-3 py-2 text-sm border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)]" />
+          <input v-model="pushTitle" type="text" placeholder="Notification title" class="form-input" />
         </div>
         <div>
           <label class="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1">Link (optional)</label>
-          <input v-model="pushLink" type="url" placeholder="https://..."
-            class="w-full px-3 py-2 text-sm border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)]" />
+          <input v-model="pushLink" type="url" placeholder="https://..." class="form-input" />
         </div>
       </div>
 
       <div>
         <label class="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1">Body *</label>
-        <textarea v-model="pushBody" rows="3" placeholder="Notification body text"
-          class="w-full px-3 py-2 text-sm border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)] resize-y" />
+        <textarea v-model="pushBody" rows="3" placeholder="Notification body text" class="form-textarea" />
       </div>
 
       <div class="flex items-center justify-between pt-2">
         <span class="text-sm text-[var(--color-text-tertiary)]">
           {{ selected.size > 0 ? `${selected.size} client${selected.size === 1 ? '' : 's'} selected` : 'No clients selected' }}
         </span>
-        <button @click="requestSend" :disabled="!canSend"
-          class="px-5 py-2 text-sm font-medium text-white bg-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+        <button @click="requestSend" :disabled="!canSend" class="btn btn-primary">
           {{ sending ? 'Sending...' : `Send to ${selected.size} client${selected.size === 1 ? '' : 's'}` }}
         </button>
       </div>
@@ -401,8 +391,7 @@ onMounted(load)
 
           <!-- Footer -->
           <div class="px-6 py-3 border-t border-[var(--color-border)] flex justify-end">
-            <button @click="closeResultModal"
-              class="px-4 py-2 text-sm font-medium text-white bg-[var(--color-primary)] rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors">
+            <button @click="closeResultModal" class="btn btn-primary">
               Close
             </button>
           </div>

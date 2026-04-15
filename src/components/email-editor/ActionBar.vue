@@ -49,7 +49,7 @@ function handleFileChange(e: Event) {
       <!-- Cancel / Back -->
       <button
         @click="emit('cancel')"
-        class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-[var(--color-text-secondary)] bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-bg-subtle)] transition-colors"
+        class="btn btn-ghost btn-sm"
       >
         <ArrowLeftIcon class="h-3.5 w-3.5" />
         <span class="hidden sm:inline">Cancel</span>
@@ -60,7 +60,7 @@ function handleFileChange(e: Event) {
         @click="emit('save')"
         :disabled="props.saving || props.hasErrors"
         :title="props.hasErrors ? 'Fix validation errors before saving' : undefined"
-        class="px-5 py-2 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+        class="btn btn-primary"
       >
         {{ props.saving ? 'Saving...' : props.isEdit ? 'Update Template' : 'Create Template' }}
       </button>
@@ -76,7 +76,7 @@ function handleFileChange(e: Event) {
       <!-- Export HTML -->
       <button
         @click="emit('exportHtml')"
-        class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-[var(--color-text-secondary)] bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-bg-subtle)] transition-colors"
+        class="btn btn-ghost btn-sm"
         title="Export HTML file"
       >
         <ArrowDownTrayIcon class="h-3.5 w-3.5" />
@@ -86,7 +86,7 @@ function handleFileChange(e: Event) {
       <!-- Import HTML -->
       <button
         @click="triggerImport"
-        class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-[var(--color-text-secondary)] bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-bg-subtle)] transition-colors"
+        class="btn btn-ghost btn-sm"
         title="Import HTML file"
       >
         <ArrowUpTrayIcon class="h-3.5 w-3.5" />
@@ -104,7 +104,7 @@ function handleFileChange(e: Event) {
       <button
         v-if="props.isEdit"
         @click="emit('duplicate')"
-        class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-[var(--color-text-secondary)] bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-bg-subtle)] transition-colors"
+        class="btn btn-ghost btn-sm"
         title="Duplicate template"
       >
         <DocumentDuplicateIcon class="h-3.5 w-3.5" />

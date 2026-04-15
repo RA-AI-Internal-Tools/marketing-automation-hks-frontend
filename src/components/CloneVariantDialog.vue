@@ -133,7 +133,7 @@ function submit() {
           <div class="px-6 py-4 bg-[var(--color-bg-page)] border-t border-[var(--color-border)] flex items-center justify-end gap-2">
             <button
               type="button"
-              class="px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-bg-hover)]"
+              class="btn btn-ghost"
               @click="emit('cancel')"
             >
               Cancel
@@ -141,7 +141,7 @@ function submit() {
             <button
               type="button"
               :disabled="!selected"
-              class="px-4 py-2 text-sm font-medium text-white bg-[var(--color-primary)] rounded-lg shadow-sm hover:bg-[var(--color-primary-hover)] disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:ring-offset-1 focus:ring-offset-[var(--color-bg-card)]"
+              class="btn btn-primary"
               @click="submit"
             >
               Create draft variant

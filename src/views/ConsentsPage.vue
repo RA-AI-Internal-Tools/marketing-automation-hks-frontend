@@ -113,7 +113,7 @@ function createOptOut(channel: string) {
         </div>
         <button
           @click="lookupConsents"
-          class="px-4 py-2 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)]"
+          class="btn btn-primary"
         >
           Lookup
         </button>

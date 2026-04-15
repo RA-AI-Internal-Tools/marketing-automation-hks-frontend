@@ -271,23 +271,23 @@ function formatTime(iso: string) {
           <div class="bc-modal">
             <div class="bc-modal-head">
               <h3>{{ editing ? 'Edit broadcast' : 'New broadcast' }}</h3>
-              <button @click="editorOpen = false" class="bc-modal-close"><XMarkIcon class="h-5 w-5" /></button>
+              <button @click="editorOpen = false" class="btn-icon" aria-label="Close"><XMarkIcon class="h-5 w-5" /></button>
             </div>
             <div class="bc-modal-body">
               <label class="bc-field">
                 <span class="bc-field-lbl">Name</span>
-                <input v-model="form.name" type="text" placeholder="April newsletter" class="bc-input" />
+                <input v-model="form.name" type="text" placeholder="April newsletter" class="form-input" />
               </label>
               <div class="bc-grid grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <label class="bc-field">
                   <span class="bc-field-lbl">Channel</span>
-                  <select v-model="form.channel" class="bc-input">
+                  <select v-model="form.channel" class="form-select">
                     <option v-for="ch in availableChannels" :key="ch" :value="ch">{{ ch }}</option>
                   </select>
                 </label>
                 <label class="bc-field">
                   <span class="bc-field-lbl">Template</span>
-                  <select v-model="form.template_key" class="bc-input">
+                  <select v-model="form.template_key" class="form-select">
                     <option value="">— pick a template —</option>
                     <option v-for="t in templatesForChannel" :key="t.id" :value="t.template_key">
                       {{ t.name }} ({{ t.template_key }})
@@ -298,12 +298,12 @@ function formatTime(iso: string) {
               <div class="bc-grid grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <label class="bc-field">
                   <span class="bc-field-lbl">Segment</span>
-                  <input v-model="form.segment_filter" type="text" placeholder="all" class="bc-input" />
+                  <input v-model="form.segment_filter" type="text" placeholder="all" class="form-input" />
                   <span class="bc-field-hint">Use "all" for everyone, or a segment slug (e.g. "vip", "dormant").</span>
                 </label>
                 <label class="bc-field">
                   <span class="bc-field-lbl">Scheduled for</span>
-                  <input v-model="form.scheduled_at" type="datetime-local" class="bc-input" />
+                  <input v-model="form.scheduled_at" type="datetime-local" class="form-input" />
                   <span class="bc-field-hint">Local time — the server will convert to UTC.</span>
                 </label>
               </div>
@@ -468,15 +468,6 @@ function formatTime(iso: string) {
 .bc-field { display: flex; flex-direction: column; gap: 4px; }
 .bc-field-lbl { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-text-tertiary); }
 .bc-field-hint { font-size: 11px; color: var(--color-text-muted); margin-top: 2px; }
-
-.bc-input {
-  font-family: var(--font-sans); font-size: 14px;
-  padding: 8px 11px;
-  color: var(--color-text-primary); background: var(--color-bg-input);
-  border: 1px solid var(--color-border); border-radius: var(--radius-md);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-}
-.bc-input:focus { outline: none; border-color: var(--hks-cyan); box-shadow: 0 0 0 3px var(--color-accent-light); }
 
 .bc-modal-foot {
   display: flex; justify-content: flex-end; gap: 8px;

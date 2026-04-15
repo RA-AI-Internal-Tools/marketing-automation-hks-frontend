@@ -160,7 +160,7 @@ const cloneAction = useAction(async (bp: Blueprint) => {
               <button
                 @click="cloneAction.execute(bp)"
                 :disabled="cloningKey === bp.key"
-                class="inline-flex items-center gap-1 rounded-md bg-ma-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-ma-accent-hover disabled:opacity-50"
+                class="btn btn-primary btn-sm"
                 :aria-label="`Use blueprint ${bp.name}`"
               >
                 <span v-if="cloningKey === bp.key">Creating…</span>

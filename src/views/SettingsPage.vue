@@ -280,7 +280,7 @@ async function handleChangePassword() {
           <button
             type="submit"
             :disabled="saving"
-            class="px-6 py-2.5 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] disabled:opacity-50 transition-colors"
+            class="btn btn-primary"
           >
             {{ saving ? 'Updating...' : 'Update Password' }}
           </button>
@@ -303,7 +303,7 @@ async function handleChangePassword() {
         <button
           @click="requestFlushCache"
           :disabled="flushing"
-          class="px-6 py-2.5 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] disabled:opacity-50 transition-colors"
+          class="btn btn-primary"
         >
           {{ flushing ? 'Flushing...' : 'Flush Analytics Cache' }}
         </button>
@@ -410,7 +410,7 @@ async function handleChangePassword() {
                         type="button"
                         :disabled="flagSaving[flag.key] || draftFor(flag) === flag.value"
                         @click="saveFlag(flag)"
-                        class="px-2 py-1 text-[11px] font-medium rounded bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)] disabled:opacity-40 disabled:cursor-not-allowed"
+                        class="btn btn-primary btn-sm"
                       >
                         {{ flagSaving[flag.key] ? 'Saving...' : 'Save' }}
                       </button>

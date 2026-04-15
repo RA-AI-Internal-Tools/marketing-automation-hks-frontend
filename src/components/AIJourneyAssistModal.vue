@@ -62,7 +62,7 @@ function close() { emit('update:open', false) }
           <SparklesIcon class="h-5 w-5 text-ma-accent" aria-hidden="true" />
           AI journey assist
         </h2>
-        <button @click="close" aria-label="Close" class="rounded p-1 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+        <button @click="close" aria-label="Close" class="btn-icon">
           <XMarkIcon class="h-5 w-5" />
         </button>
       </div>
@@ -70,7 +70,7 @@ function close() { emit('update:open', false) }
       <div class="space-y-3 p-4">
         <div>
           <label class="block text-[10px] font-semibold uppercase tracking-wide text-neutral-500">What's your goal?</label>
-          <input v-model="goal" class="mt-1 w-full rounded border border-neutral-300 bg-white px-3 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-800" placeholder="Reduce cart abandonment" />
+          <input v-model="goal" class="form-input mt-1" placeholder="Reduce cart abandonment" />
           <div class="mt-1 flex flex-wrap gap-1">
             <button v-for="e in examples" :key="e" type="button" @click="goal = e"
                     class="rounded-full border border-neutral-300 bg-neutral-50 px-2 py-0.5 text-[11px] text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">
@@ -80,12 +80,11 @@ function close() { emit('update:open', false) }
         </div>
         <div>
           <label class="block text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Audience (optional)</label>
-          <input v-model="audience" class="mt-1 w-full rounded border border-neutral-300 bg-white px-3 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-800" placeholder="First-time buyers" />
+          <input v-model="audience" class="form-input mt-1" placeholder="First-time buyers" />
         </div>
 
         <div class="flex justify-end pt-1">
-          <button @click="run" :disabled="runAction.pending.value"
-                  class="inline-flex items-center gap-2 rounded-md bg-ma-accent px-4 py-2 text-sm font-medium text-white hover:bg-ma-accent-hover disabled:opacity-50">
+          <button @click="run" :disabled="runAction.pending.value" class="btn btn-primary">
             <SparklesIcon class="h-4 w-4" />
             {{ runAction.pending.value ? 'Thinking…' : 'Suggest' }}
           </button>

@@ -115,7 +115,7 @@
 
   /* ---- Focus ring (single source of truth) ---- */
   --color-focus-ring: var(--hks-cyan);
-  --color-focus-ring-rgb: 0, 153, 219;
+  --color-focus-ring-rgb: 0 153 219;
 
   /* ---- Campaign builder canvas ---- */
   --color-canvas-bg: var(--color-bg-page);
@@ -627,6 +627,84 @@ body::before {
 }
 .btn-danger:hover { background: var(--color-error-text); border-color: var(--color-error-text); }
 .btn-danger:focus-visible { outline-color: var(--color-error); }
+
+/* Shared disabled state for .btn variants */
+.btn:disabled,
+.btn[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Size variants (apply on top of .btn) */
+.btn-sm { padding: 4px 10px; font-size: var(--text-xs); }
+.btn-lg { padding: 12px 20px; font-size: var(--text-base); }
+
+/* Icon-only variant — subtle, accessible */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+.btn-icon:hover {
+  background: var(--color-bg-subtle);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+.btn-icon:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+.btn-icon:disabled,
+.btn-icon[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+/* Accent button (cyan, not deep-blue) */
+.btn-accent {
+  background: var(--hks-cyan);
+  color: #fff;
+  border-color: var(--hks-cyan);
+}
+.btn-accent:hover { background: var(--color-accent-hover, var(--hks-cyan)); border-color: var(--color-accent-hover, var(--hks-cyan)); filter: brightness(1.05); }
+
+/* ----------------------------------------------------------
+   10e. FORM INPUTS — shared base for text inputs, selects, textareas
+   ---------------------------------------------------------- */
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  font-family: inherit;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--color-focus-ring);
+  box-shadow: 0 0 0 3px rgb(var(--color-focus-ring-rgb) / 0.15);
+  outline: none;
+}
+.form-input:disabled, .form-select:disabled, .form-textarea:disabled,
+.form-input[disabled], .form-select[disabled], .form-textarea[disabled] {
+  opacity: 0.6; cursor: not-allowed; background: var(--color-bg-subtle);
+}
+.form-textarea { resize: vertical; min-height: 80px; font-family: inherit; }
+.form-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
 
 /* ----------------------------------------------------------
    11. STAGGERED FADE — for lists/grids
