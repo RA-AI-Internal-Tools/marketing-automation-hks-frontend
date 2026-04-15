@@ -6,6 +6,7 @@ import EmptyState from '@/components/EmptyState.vue'
 import SkeletonTable from '@/components/SkeletonTable.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import ChannelChip from '@/components/ChannelChip.vue'
+import BaseCard from '@/components/BaseCard.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useTemplatesStore } from '@/stores/templates'
 import { useToast } from '@/composables/useToast'
@@ -222,7 +223,8 @@ function formatTime(iso: string) {
     </EmptyState>
 
     <div v-else class="bc-list">
-      <div v-for="b in rows" :key="b.id" class="bc-row" :data-status="b.status">
+      <BaseCard v-for="b in rows" :key="b.id" interactive class="bc-row" :data-status="b.status">
+        <span class="bc-accent" aria-hidden="true" />
         <div class="bc-row-main">
           <div class="bc-row-top">
             <StatusBadge :status="b.status" />
@@ -259,7 +261,7 @@ function formatTime(iso: string) {
             <TrashIcon class="h-4 w-4" />
           </button>
         </div>
-      </div>
+      </BaseCard>
     </div>
 
     <!-- Editor modal -->
@@ -371,17 +373,21 @@ function formatTime(iso: string) {
 /* ─── List rows ─── */
 .bc-list { display: flex; flex-direction: column; gap: 10px; }
 .bc-row {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 16px 18px;
+  position: relative;
   display: flex; align-items: flex-start; gap: 14px;
-  transition: border-color var(--transition-fast);
 }
-.bc-row:hover { border-color: var(--color-border-strong); }
-.bc-row[data-status="running"] { border-left: 3px solid var(--color-success); }
 .bc-row[data-status="completed"] { opacity: 0.85; }
 .bc-row[data-status="cancelled"], .bc-row[data-status="failed"] { opacity: 0.7; }
+.bc-accent {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  border-top-left-radius: var(--radius-lg);
+  border-bottom-left-radius: var(--radius-lg);
+  background: transparent;
+  transition: background var(--transition-fast);
+}
+.bc-row[data-status="running"] .bc-accent { background: var(--color-success); }
 
 .bc-row-main { flex: 1; min-width: 0; }
 .bc-row-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }

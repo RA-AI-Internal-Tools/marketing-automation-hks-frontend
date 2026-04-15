@@ -15,6 +15,7 @@ import BlueprintPickerModal from '@/components/BlueprintPickerModal.vue'
 import ChannelChip from '@/components/ChannelChip.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
+import BaseCard from '@/components/BaseCard.vue'
 
 const router = useRouter()
 const store = useCampaignsStore()
@@ -95,14 +96,16 @@ const totalActive = computed(() => store.campaigns.filter(c => c.is_active).leng
     </div>
 
     <!-- Skeletons -->
-    <div v-if="store.loading" class="camp-list">
-      <div v-for="i in 3" :key="i" class="camp-card">
-        <div class="skeleton h-5 w-48 mb-3"></div>
-        <div class="skeleton h-3.5 w-72 mb-5"></div>
-        <div class="flex gap-2">
-          <div v-for="j in 3" :key="j" class="skeleton h-16 w-28 rounded"></div>
+    <div v-if="store.loading" class="camp-list grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <BaseCard v-for="i in 3" :key="i" class="camp-card">
+        <div class="camp-card-inner">
+          <div class="skeleton h-5 w-48 mb-3"></div>
+          <div class="skeleton h-3.5 w-72 mb-5"></div>
+          <div class="flex gap-2">
+            <div v-for="j in 3" :key="j" class="skeleton h-16 w-28 rounded"></div>
+          </div>
         </div>
-      </div>
+      </BaseCard>
     </div>
 
     <!-- Empty -->
@@ -123,13 +126,16 @@ const totalActive = computed(() => store.campaigns.filter(c => c.is_active).leng
     </EmptyState>
 
     <!-- Campaign cards -->
-    <div v-else class="camp-list stagger">
-      <article
+    <div v-else class="camp-list stagger grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <BaseCard
         v-for="campaign in store.campaigns"
         :key="campaign.id"
+        interactive
         class="camp-card"
         :data-active="campaign.is_active"
       >
+        <span class="camp-accent" aria-hidden="true" />
+        <div class="camp-card-inner">
         <!-- Header -->
         <header class="camp-head">
           <div class="camp-head-main">
@@ -217,7 +223,8 @@ const totalActive = computed(() => store.campaigns.filter(c => c.is_active).leng
             <span class="camp-foot-val num-tabular">{{ campaign.steps.length }}</span>
           </div>
         </footer>
-      </article>
+        </div>
+      </BaseCard>
     </div>
 
     <ConfirmDialog
@@ -253,40 +260,26 @@ const totalActive = computed(() => store.campaigns.filter(c => c.is_active).leng
 .camp-meta-rule { flex: 1; height: 1px; background: var(--color-divider); margin-left: 8px; }
 
 /* ── List ──
- * Campaign cards stack full-width by default (mobile + dense desktop). The
- * card bodies are long (flow visualiser + footer meta) so 2-up or 3-up grids
- * create excessive horizontal bleed + clipped step arrows on mid-widths.
- * Single column remains the editorial default; grid kicks in only on very
- * wide screens where two-up no longer cramps the flow strip. */
-.camp-list { display: flex; flex-direction: column; gap: 16px; }
+ * Responsive grid: single column on mobile, 2-up at md, 3-up at xl. Layout
+ * classes live on the element (grid/grid-cols-*); this rule just ensures
+ * long flow strips can shrink inside grid cells. */
+.camp-list { min-width: 0; }
+.camp-list > * { min-width: 0; }
 
 /* ── Card ── */
 .camp-card {
   position: relative;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 22px 24px 18px;
-  transition: border-color var(--transition-fast), transform var(--transition-fast);
 }
-.camp-card:hover { border-color: var(--color-border-strong); }
 .camp-card[data-active="false"] { opacity: 0.86; }
-.camp-card[data-active="false"]::before {
-  content: '';
+.camp-card-inner { min-width: 0; }
+.camp-accent {
   position: absolute;
   left: 0; top: 16px; bottom: 16px;
-  width: 2px;
+  width: 3px; border-radius: 2px;
   background: var(--color-border-strong);
-  border-radius: 1px;
+  transition: background var(--transition-fast);
 }
-.camp-card[data-active="true"]::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 16px; bottom: 16px;
-  width: 2px;
-  background: var(--hks-cyan);
-  border-radius: 1px;
-}
+.camp-card[data-active="true"] .camp-accent { background: var(--hks-cyan); }
 
 .camp-head {
   display: flex;
@@ -422,13 +415,17 @@ const totalActive = computed(() => store.campaigns.filter(c => c.is_active).leng
   align-items: stretch;
   gap: 0;
   overflow-x: auto;
+  scrollbar-width: thin;
   padding: 2px 0 10px;
   margin-bottom: 14px;
   border-top: 1px solid var(--color-divider);
   border-bottom: 1px solid var(--color-divider);
   padding-top: 16px;
   padding-bottom: 16px;
+  min-width: 0;
 }
+.camp-flow::-webkit-scrollbar { height: 4px; }
+.camp-flow::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 2px; }
 .camp-step-wrap { display: inline-flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .camp-step {
   display: flex;
