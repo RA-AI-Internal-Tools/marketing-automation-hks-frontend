@@ -16,12 +16,17 @@ import {
   LanguageIcon, MagnifyingGlassIcon, ChevronRightIcon,
 } from '@heroicons/vue/24/outline'
 import type { MessageTemplate } from '@/api/types'
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 
 const router = useRouter()
 const route = useRoute()
 const store = useTemplatesStore()
 const auth = useAuthStore()
 const { showToast } = useToast()
+
+useKeyboardShortcuts([
+  { key: 'n', handler: () => router.push('/templates/new'), description: 'New template' },
+])
 
 // Filters are URL-synced so bookmarks, refresh and back-navigation preserve
 // the view. Query params: ?channel=email&locale=ar-iq&q=welcome

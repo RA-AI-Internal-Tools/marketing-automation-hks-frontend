@@ -1,9 +1,25 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { Bars3Icon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
+import { Bars3Icon, BellIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
 import EnvironmentSwitcher from './EnvironmentSwitcher.vue'
 import EnvironmentBadge from './EnvironmentBadge.vue'
+import NotificationPanel from './NotificationPanel.vue'
+import ShortcutCheatSheet from './ShortcutCheatSheet.vue'
+import { useNotificationsStore } from '@/stores/notifications'
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
+
+const notifications = useNotificationsStore()
+const panelOpen = ref(false)
+const cheatSheetOpen = ref(false)
+
+function togglePanel() { panelOpen.value = !panelOpen.value }
+
+// Global `?` opens shortcut cheat sheet. Registered here so it's live on
+// every route without each page needing to opt in.
+useKeyboardShortcuts([
+  { key: '?', handler: () => { cheatSheetOpen.value = true }, description: 'Show keyboard shortcuts', global: true },
+])
 
 defineProps<{
   sidebarCollapsed: boolean
@@ -140,9 +156,25 @@ function openPalette() {
         <span class="ma-search-hint-label">Search</span>
         <kbd class="ma-search-hint-kbd">{{ macMeta ? '⌘K' : 'Ctrl K' }}</kbd>
       </button>
+      <div class="ma-bell-wrap">
+        <button
+          type="button"
+          class="btn-icon ma-bell"
+          data-notification-bell
+          aria-label="Notifications"
+          @click="togglePanel"
+        >
+          <BellIcon class="h-5 w-5" />
+          <span v-if="notifications.unreadCount > 0" class="ma-bell-badge">
+            {{ notifications.unreadCount > 9 ? '9+' : notifications.unreadCount }}
+          </span>
+        </button>
+        <NotificationPanel :open="panelOpen" @close="panelOpen = false" />
+      </div>
       <EnvironmentSwitcher />
       <EnvironmentBadge />
     </div>
+    <ShortcutCheatSheet v-model="cheatSheetOpen" />
   </header>
 
   <!-- Mobile header — shown < lg, hidden ≥ lg -->
@@ -284,6 +316,25 @@ function openPalette() {
   border-radius: 3px;
   margin-left: 2px;
 }
+/* ─── Notification bell ─── */
+.ma-bell-wrap { position: relative; }
+.ma-bell { position: relative; }
+.ma-bell-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  color: var(--color-on-brand, #fff);
+  background: var(--color-error);
+  border-radius: 9999px;
+}
+
 .ma-crumb-sep {
   color: var(--color-text-muted);
   font-weight: 300;

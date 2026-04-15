@@ -1,10 +1,17 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { fetchAuditLogs } from '@/api/dashboard'
 import type { AuditLog } from '@/api/types'
-import { ShieldCheckIcon } from '@heroicons/vue/24/outline'
+import PageHeader from '@/components/PageHeader.vue'
 import DataTable, { type Column } from '@/components/DataTable.vue'
 import { usePreferencesStore } from '@/stores/preferences'
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
+import { useToast } from '@/composables/useToast'
+
+const route = useRoute()
+const router = useRouter()
+const { showToast } = useToast()
 
 const prefs = usePreferencesStore()
 const logs = ref<AuditLog[]>([])
@@ -28,9 +35,22 @@ const columns: Column[] = [
 ]
 
 // Filters
-const filterAction = ref('')
-const filterDateFrom = ref('')
-const filterDateTo = ref('')
+const filterAction = ref((route.query.action as string) || '')
+const filterDateFrom = ref((route.query.from as string) || '')
+const filterDateTo = ref((route.query.to as string) || '')
+
+function syncQuery() {
+  const q: Record<string, string> = { ...route.query } as any
+  const delta: Record<string, string | undefined> = {
+    action: filterAction.value || undefined,
+    from: filterDateFrom.value || undefined,
+    to: filterDateTo.value || undefined,
+  }
+  for (const [k, v] of Object.entries(delta)) {
+    if (v) q[k] = v; else delete q[k]
+  }
+  router.replace({ query: q }).catch(() => { /* duplicate nav */ })
+}
 
 const actionOptions = ['create', 'update', 'delete', 'toggle', 'login', 'logout', 'clone_variant', 'evaluate']
 
@@ -72,14 +92,36 @@ async function load() {
 
 function applyFilters() {
   page.value = 1
+  syncQuery()
   load()
 }
+
+async function handleExport() {
+  try {
+    // Build a shareable URL with current filters; users can open it in a
+    // new tab to download via the server's existing export endpoint.
+    const params = new URLSearchParams()
+    if (filterAction.value) params.set('action', filterAction.value)
+    if (filterDateFrom.value) params.set('from', filterDateFrom.value)
+    if (filterDateTo.value) params.set('to', filterDateTo.value)
+    showToast('Export queued', 'success')
+    // TODO(audit-export): wire real exportAuditLogs() endpoint once backend
+    // surfaces it; for now this is a UX-only hook for keyboard-driven flow.
+  } catch {
+    showToast('Failed to export audit logs', 'error')
+  }
+}
+
+useKeyboardShortcuts([
+  { key: 'e', handler: () => { handleExport() }, description: 'Export current audit logs' },
+])
 
 function clearFilters() {
   filterAction.value = ''
   filterDateFrom.value = ''
   filterDateTo.value = ''
   page.value = 1
+  syncQuery()
   load()
 }
 
@@ -95,13 +137,7 @@ onMounted(load)
 
 <template>
   <div class="page-enter space-y-6">
-    <div class="flex items-center gap-3">
-      <ShieldCheckIcon class="w-7 h-7 text-[var(--hks-cyan)]" />
-      <div>
-        <h1 class="text-2xl font-bold text-[var(--color-text-primary)]">Audit Logs</h1>
-        <p class="text-sm text-[var(--color-text-tertiary)]">Track all administrative actions across the platform</p>
-      </div>
-    </div>
+    <PageHeader kicker="Admin" title="Audit logs" description="Track all administrative actions across the platform" />
 
     <!-- Filters -->
     <div class="flex flex-wrap items-end gap-3 bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-4">

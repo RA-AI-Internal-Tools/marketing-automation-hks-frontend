@@ -16,11 +16,17 @@ import ChannelChip from '@/components/ChannelChip.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import BaseCard from '@/components/BaseCard.vue'
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 
 const router = useRouter()
 const store = useCampaignsStore()
 const auth = useAuthStore()
 const { showToast } = useToast()
+
+// `n` → new campaign. Skipped when focus is in a field or any modal is open.
+useKeyboardShortcuts([
+  { key: 'n', handler: () => router.push('/campaigns/new'), description: 'New campaign' },
+])
 
 const blueprintOpen = ref(false)
 const deleteTarget = ref<{ id: number; name: string } | null>(null)

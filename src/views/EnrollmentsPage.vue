@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import PageHeader from '@/components/PageHeader.vue'
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 import StatusBadge from '@/components/StatusBadge.vue'
 import DataTable, { type Column } from '@/components/DataTable.vue'
 import { usePreferencesStore } from '@/stores/preferences'
@@ -43,9 +45,24 @@ const displayRows = computed(() => enrollments.value.map(e => ({
   campaign_slug: e.definition?.slug ?? e.campaign_definition_id,
 })))
 
-const filterStatus = ref('')
-const filterCampaign = ref('')
+const route = useRoute()
+const router = useRouter()
+
+const filterStatus = ref((route.query.status as string) || '')
+const filterCampaign = ref((route.query.campaign as string) || '')
 const filterClient = ref('')
+
+function syncQuery() {
+  const q: Record<string, string> = { ...route.query } as any
+  const delta: Record<string, string | undefined> = {
+    status: filterStatus.value || undefined,
+    campaign: filterCampaign.value || undefined,
+  }
+  for (const [k, v] of Object.entries(delta)) {
+    if (v) q[k] = v; else delete q[k]
+  }
+  router.replace({ query: q }).catch(() => { /* duplicate nav */ })
+}
 const statusOptions = ref<string[]>([...DEFAULT_ENROLLMENT_STATUSES])
 
 function statusLabel(s: string): string {
@@ -88,9 +105,14 @@ watch([filterStatus, filterCampaign, filterClient], () => {
   if (debounceTimer) clearTimeout(debounceTimer)
   debounceTimer = setTimeout(() => {
     page.value = 1
+    syncQuery()
     load()
   }, 300)
 })
+
+useKeyboardShortcuts([
+  { key: 'e', handler: () => { handleExport() }, description: 'Export current enrollments' },
+])
 watch([sortKey, sortDir, page, pageSize], () => load())
 
 // Prevent a pending debounced fetch from firing after the component is

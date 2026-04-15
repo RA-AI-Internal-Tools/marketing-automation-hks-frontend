@@ -17,6 +17,7 @@ import {
 } from '@/api/broadcasts'
 import { getChannelVocabulary } from '@/api/channels'
 import { PlusIcon, PlayIcon, StopIcon, TrashIcon, PencilSquareIcon, XMarkIcon, MegaphoneIcon } from '@heroicons/vue/24/outline'
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 
 const auth = useAuthStore()
 const templatesStore = useTemplatesStore()
@@ -74,6 +75,10 @@ onMounted(() => {
 })
 
 watch(statusFilter, load)
+
+useKeyboardShortcuts([
+  { key: 'n', handler: () => openNew(), description: 'New broadcast' },
+])
 
 const templatesForChannel = computed(() =>
   templatesStore.templates.filter(t => t.channel === form.value.channel && !t.template_key.includes('.')),

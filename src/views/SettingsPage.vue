@@ -218,7 +218,7 @@ async function handleChangePassword() {
 
 <template>
   <div class="page-enter">
-    <PageHeader title="Settings" description="Application configuration and account settings" />
+    <PageHeader kicker="Admin" title="Settings" description="Application configuration and account settings" />
 
     <div v-if="loading" class="text-center py-12 text-[var(--color-text-muted)]">Loading...</div>
 

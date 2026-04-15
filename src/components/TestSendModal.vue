@@ -1,10 +1,16 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { testSend } from '@/api/dashboard'
-import { XMarkIcon } from '@heroicons/vue/24/outline'
+import ModalWrapper from './ModalWrapper.vue'
 
-defineProps<{ open: boolean }>()
+const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ close: [] }>()
+
+// ModalWrapper uses v-model — bridge to the parent's existing `:open` prop.
+const isOpen = computed({
+  get: () => props.open,
+  set: (v) => { if (!v) emit('close') },
+})
 
 const channel = ref('email')
 const templateKey = ref('')
@@ -54,65 +60,40 @@ async function handleSend() {
 </script>
 
 <template>
-  <Teleport to="body">
-    <Transition
-      enter-active-class="duration-200 ease-out"
-      enter-from-class="opacity-0"
-      enter-to-class="opacity-100"
-      leave-active-class="duration-150 ease-in"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
-    >
-      <div v-if="open" class="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center">
-        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" @click="emit('close')" />
-        <div class="relative bg-[var(--color-bg-card)] rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
-          <!-- Header -->
-          <div class="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border-muted)]">
-            <h3 class="text-lg font-semibold tracking-tight text-[var(--color-text-primary)]">Test Send</h3>
-            <button @click="emit('close')" class="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors p-1 hover:bg-[var(--color-bg-subtle)] rounded-lg">
-              <XMarkIcon class="h-5 w-5" />
-            </button>
-          </div>
+  <ModalWrapper v-model="isOpen" title="Test Send" size="md">
+    <template #body>
+      <div class="space-y-4">
+        <div>
+          <label class="form-label">Channel</label>
+          <select v-model="channel" class="form-select">
+            <option v-for="ch in channels" :key="ch" :value="ch">{{ ch }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Template Key</label>
+          <input v-model="templateKey" class="form-input" placeholder="e.g. welcome_email" />
+        </div>
+        <div>
+          <label class="form-label">Client ID</label>
+          <input v-model.number="clientId" type="number" class="form-input" placeholder="123" />
+        </div>
+        <div>
+          <label class="form-label">Params (JSON)</label>
+          <textarea v-model="paramsJson" rows="3" class="form-textarea font-mono" placeholder='{"first_name": "John"}'></textarea>
+        </div>
 
-          <!-- Body -->
-          <div class="p-6 space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">Channel</label>
-              <select v-model="channel" class="w-full px-3 py-2.5 border border-[var(--color-border)] rounded-lg text-sm bg-[var(--color-bg-input)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)] transition-shadow">
-                <option v-for="ch in channels" :key="ch" :value="ch">{{ ch }}</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">Template Key</label>
-              <input v-model="templateKey" class="w-full px-3 py-2.5 border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)] transition-shadow placeholder:text-[var(--color-text-muted)]" placeholder="e.g. welcome_email" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">Client ID</label>
-              <input v-model.number="clientId" type="number" class="w-full px-3 py-2.5 border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)] transition-shadow placeholder:text-[var(--color-text-muted)]" placeholder="123" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">Params (JSON)</label>
-              <textarea v-model="paramsJson" rows="3" class="w-full px-3 py-2.5 border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)] transition-shadow placeholder:text-[var(--color-text-muted)]" placeholder='{"first_name": "John"}'></textarea>
-            </div>
-
-            <div v-if="error" class="text-sm text-[var(--color-error-text)] bg-[var(--color-error-bg)] border border-[var(--color-error-border)] px-4 py-3 rounded-lg">{{ error }}</div>
-            <div v-if="result" class="text-sm text-[var(--color-success-text)] bg-[var(--color-success-bg)] border border-[var(--color-success-border)] px-4 py-3 rounded-lg">
-              <pre class="whitespace-pre-wrap font-mono text-xs">{{ result }}</pre>
-            </div>
-          </div>
-
-          <!-- Footer -->
-          <div class="px-6 py-4 bg-[var(--color-bg-subtle)] border-t border-[var(--color-border-muted)]">
-            <button
-              @click="handleSend"
-              :disabled="sending"
-              class="btn btn-primary w-full justify-center"
-            >
-              {{ sending ? 'Sending...' : 'Send Test Message' }}
-            </button>
-          </div>
+        <div v-if="error" class="text-sm text-[var(--color-error-text)] bg-[var(--color-error-bg)] border border-[var(--color-error-border)] px-4 py-3 rounded-lg">{{ error }}</div>
+        <div v-if="result" class="text-sm text-[var(--color-success-text)] bg-[var(--color-success-bg)] border border-[var(--color-success-border)] px-4 py-3 rounded-lg">
+          <pre class="whitespace-pre-wrap font-mono text-xs">{{ result }}</pre>
         </div>
       </div>
-    </Transition>
-  </Teleport>
+    </template>
+    <template #footer>
+      <button
+        @click="handleSend"
+        :disabled="sending"
+        class="btn btn-primary"
+      >{{ sending ? 'Sending...' : 'Send Test Message' }}</button>
+    </template>
+  </ModalWrapper>
 </template>

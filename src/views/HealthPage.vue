@@ -103,7 +103,7 @@ const serviceGroups = computed(() => [
 
 <template>
   <div class="page-enter">
-    <PageHeader title="Health Monitor" description="Real-time infrastructure and integration health status" />
+    <PageHeader kicker="System" title="Health" description="Real-time status of infrastructure and integrations" />
 
     <div v-if="loading" class="text-center py-12 text-[var(--color-text-muted)]">Checking health...</div>
 

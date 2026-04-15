@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import ChannelChip from '@/components/ChannelChip.vue'
@@ -7,8 +8,12 @@ import DataTable, { type Column } from '@/components/DataTable.vue'
 import { fetchLogs, exportLogs } from '@/api/dashboard'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 import { usePreferencesStore } from '@/stores/preferences'
 import type { CampaignLog } from '@/api/types'
+
+const route = useRoute()
+const router = useRouter()
 
 const auth = useAuthStore()
 const { showToast } = useToast()
@@ -38,9 +43,24 @@ const columns: Column[] = [
   { key: 'error_message', label: 'Error' },
 ]
 
-const filterCampaign = ref('')
-const filterStatus = ref('')
-const filterChannel = ref('')
+const filterCampaign = ref((route.query.campaign as string) || '')
+const filterStatus = ref((route.query.status as string) || '')
+const filterChannel = ref((route.query.channel as string) || '')
+
+// Sync filters → URL so operators can bookmark / share drilled-down views.
+// Empty strings are removed from the query string rather than serialised as ''.
+function syncQuery() {
+  const q: Record<string, string> = { ...route.query } as any
+  const delta: Record<string, string | undefined> = {
+    campaign: filterCampaign.value || undefined,
+    status: filterStatus.value || undefined,
+    channel: filterChannel.value || undefined,
+  }
+  for (const [k, v] of Object.entries(delta)) {
+    if (v) q[k] = v; else delete q[k]
+  }
+  router.replace({ query: q }).catch(() => { /* duplicate nav */ })
+}
 
 async function load() {
   loading.value = true
@@ -77,9 +97,15 @@ watch([filterCampaign, filterStatus, filterChannel], () => {
   if (debounceTimer) clearTimeout(debounceTimer)
   debounceTimer = setTimeout(() => {
     page.value = 1
+    syncQuery()
     load()
   }, 300)
 })
+
+// `e` triggers export — matches Enrollments/AuditLogs for muscle-memory.
+useKeyboardShortcuts([
+  { key: 'e', handler: () => { handleExport() }, description: 'Export current logs' },
+])
 watch([sortKey, sortDir, page, pageSize], () => load())
 
 // Clear any pending debounced fetch so it can't fire after unmount.
