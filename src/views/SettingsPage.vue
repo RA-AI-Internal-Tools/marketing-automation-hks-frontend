@@ -1,9 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import StatusBadge from '@/components/StatusBadge.vue'
+import SkeletonTable from '@/components/SkeletonTable.vue'
+import EmptyState from '@/components/EmptyState.vue'
+import ErrorState from '@/components/ErrorState.vue'
 import { useAuthStore } from '@/stores/auth'
 import { fetchSettings, changePassword, flushCache } from '@/api/dashboard'
+import { listFeatureFlags, type FeatureFlag } from '@/api/featureFlags'
 
 const auth = useAuthStore()
 
@@ -20,12 +25,63 @@ const flushing = ref(false)
 const flushSuccess = ref('')
 const flushError = ref('')
 
+// Feature flags — admin-only read-only view into every operational env var.
+// Useful for verifying staging vs prod diverge only where intended.
+const featureFlags = ref<FeatureFlag[]>([])
+const flagsLoading = ref(false)
+const flagsError = ref('')
+
+// "numeric"/"info" statuses render as plain text; everything else renders as a
+// StatusBadge. Sensitive values already come back redacted so no masking here.
+const nonBadgeStatuses = new Set(['info'])
+
+const groupedFlags = computed(() => {
+  const order = ['environment', 'credentials', 'sto', 'queue', 'broadcasts', 'webhooks', 'ai']
+  const buckets: Record<string, FeatureFlag[]> = {}
+  for (const f of featureFlags.value) {
+    ;(buckets[f.category] ||= []).push(f)
+  }
+  const known = order.filter((c) => buckets[c]).map((c) => ({ category: c, flags: buckets[c] }))
+  const extras = Object.keys(buckets)
+    .filter((c) => !order.includes(c))
+    .sort()
+    .map((c) => ({ category: c, flags: buckets[c] }))
+  return [...known, ...extras]
+})
+
+function categoryLabel(c: string): string {
+  const map: Record<string, string> = {
+    environment: 'Environment',
+    credentials: 'Credentials',
+    sto: 'Send-Time Optimization',
+    queue: 'Queue',
+    broadcasts: 'Broadcasts',
+    webhooks: 'Webhooks',
+    ai: 'AI',
+  }
+  return map[c] || c.charAt(0).toUpperCase() + c.slice(1)
+}
+
+async function loadFeatureFlags() {
+  if (!auth.isAdmin) return
+  flagsLoading.value = true
+  flagsError.value = ''
+  try {
+    featureFlags.value = await listFeatureFlags()
+  } catch (e: any) {
+    flagsError.value = e?.response?.data?.error || 'Failed to load feature flags'
+  } finally {
+    flagsLoading.value = false
+  }
+}
+
 onMounted(async () => {
   try {
     settings.value = await fetchSettings()
   } finally {
     loading.value = false
   }
+  loadFeatureFlags()
 })
 
 // Flushing the analytics cache evicts every cached aggregate and forces
@@ -168,6 +224,51 @@ async function handleChangePassword() {
         >
           {{ flushing ? 'Flushing...' : 'Flush Analytics Cache' }}
         </button>
+      </div>
+
+      <!-- Feature flags — admin-only read-only operational surface.
+           Grouped by category so related switches sit next to each other
+           and divergence from defaults is visible at a glance. -->
+      <div v-if="auth.isAdmin" class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+        <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-1">Feature Flags</h3>
+        <p class="text-sm text-[var(--color-text-tertiary)] mb-4">Current values of every operational env var. Read-only — change via deployment.</p>
+
+        <SkeletonTable v-if="flagsLoading" :rows="6" />
+        <ErrorState v-else-if="flagsError" :message="flagsError" :retryable="true" @retry="loadFeatureFlags" />
+        <EmptyState
+          v-else-if="!featureFlags.length"
+          title="No feature flags"
+          description="The backend registry is empty."
+        />
+        <div v-else class="space-y-6">
+          <div v-for="group in groupedFlags" :key="group.category">
+            <h4 class="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-tertiary)] mb-2">
+              {{ categoryLabel(group.category) }}
+            </h4>
+            <div class="divide-y divide-[var(--color-border)] border border-[var(--color-border)] rounded-lg overflow-hidden">
+              <div
+                v-for="flag in group.flags"
+                :key="flag.key"
+                class="flex items-start gap-4 px-4 py-3 bg-[var(--color-bg-card)]"
+              >
+                <div class="flex-1 min-w-0">
+                  <div class="font-mono text-xs text-[var(--color-text-primary)]">{{ flag.key }}</div>
+                  <div class="text-xs text-[var(--color-text-tertiary)] mt-1 leading-relaxed">{{ flag.description }}</div>
+                </div>
+                <div class="flex-shrink-0 flex flex-col items-end gap-1">
+                  <StatusBadge v-if="!nonBadgeStatuses.has(flag.status)" :status="flag.status" />
+                  <span v-else class="font-mono text-xs text-[var(--color-text-primary)]">{{ flag.value }}</span>
+                  <span
+                    v-if="flag.value !== flag.default"
+                    class="text-[10px] text-[var(--color-text-muted)]"
+                  >
+                    Default: {{ flag.default }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
