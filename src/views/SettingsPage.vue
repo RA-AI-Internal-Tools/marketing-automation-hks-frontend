@@ -8,7 +8,12 @@ import EmptyState from '@/components/EmptyState.vue'
 import ErrorState from '@/components/ErrorState.vue'
 import { useAuthStore } from '@/stores/auth'
 import { fetchSettings, changePassword, flushCache } from '@/api/dashboard'
-import { listFeatureFlags, type FeatureFlag } from '@/api/featureFlags'
+import {
+  listFeatureFlags,
+  setFeatureFlag,
+  resetFeatureFlag,
+  type FeatureFlag,
+} from '@/api/featureFlags'
 
 const auth = useAuthStore()
 
@@ -60,6 +65,83 @@ function categoryLabel(c: string): string {
     ai: 'AI',
   }
   return map[c] || c.charAt(0).toUpperCase() + c.slice(1)
+}
+
+// Per-flag edit state. Keyed by flag.key so each input has its own
+// local draft value + save state without rerunning the whole list.
+const flagDrafts = ref<Record<string, string>>({})
+const flagSaving = ref<Record<string, boolean>>({})
+const flagFeedback = ref<Record<string, { type: 'ok' | 'err'; message: string }>>({})
+
+// inputTypeFor decides which control to render. Matches the backend's
+// allowlist: enum (allowed_values present) → select; value==="true"/"false"
+// → bool toggle; numeric value → number input; otherwise text.
+function inputTypeFor(flag: FeatureFlag): 'enum' | 'bool' | 'int' | 'text' {
+  if (flag.allowed_values && flag.allowed_values.length > 0) return 'enum'
+  if (flag.value === 'true' || flag.value === 'false') return 'bool'
+  if (/^-?\d+$/.test(flag.value)) return 'int'
+  return 'text'
+}
+
+function draftFor(flag: FeatureFlag): string {
+  return flagDrafts.value[flag.key] ?? flag.value
+}
+
+function setDraft(key: string, value: string) {
+  flagDrafts.value = { ...flagDrafts.value, [key]: value }
+}
+
+function replaceFlag(updated: FeatureFlag) {
+  const idx = featureFlags.value.findIndex((f) => f.key === updated.key)
+  if (idx >= 0) {
+    featureFlags.value.splice(idx, 1, updated)
+  }
+  // Clear draft so inputs re-sync to the new authoritative value.
+  delete flagDrafts.value[updated.key]
+  flagDrafts.value = { ...flagDrafts.value }
+}
+
+async function saveFlag(flag: FeatureFlag) {
+  const draft = draftFor(flag)
+  if (draft === flag.value) {
+    flagFeedback.value = { ...flagFeedback.value, [flag.key]: { type: 'ok', message: 'No change' } }
+    return
+  }
+  flagSaving.value = { ...flagSaving.value, [flag.key]: true }
+  try {
+    const res = await setFeatureFlag(flag.key, draft)
+    replaceFlag(res.flag)
+    const msg = res.requires_restart
+      ? (res.note || 'Saved. Requires server restart to take effect.')
+      : 'Saved'
+    flagFeedback.value = { ...flagFeedback.value, [flag.key]: { type: 'ok', message: msg } }
+  } catch (e: any) {
+    flagFeedback.value = {
+      ...flagFeedback.value,
+      [flag.key]: { type: 'err', message: e?.response?.data?.error || 'Failed to save' },
+    }
+  } finally {
+    flagSaving.value = { ...flagSaving.value, [flag.key]: false }
+  }
+}
+
+async function revertFlag(flag: FeatureFlag) {
+  flagSaving.value = { ...flagSaving.value, [flag.key]: true }
+  try {
+    const res = await resetFeatureFlag(flag.key)
+    replaceFlag(res.flag)
+    const msg = res.requires_restart
+      ? (res.note || 'Reset. Requires server restart to take effect.')
+      : 'Reset to default'
+    flagFeedback.value = { ...flagFeedback.value, [flag.key]: { type: 'ok', message: msg } }
+  } catch (e: any) {
+    flagFeedback.value = {
+      ...flagFeedback.value,
+      [flag.key]: { type: 'err', message: e?.response?.data?.error || 'Failed to reset' },
+    }
+  } finally {
+    flagSaving.value = { ...flagSaving.value, [flag.key]: false }
+  }
 }
 
 async function loadFeatureFlags() {
@@ -231,7 +313,7 @@ async function handleChangePassword() {
            and divergence from defaults is visible at a glance. -->
       <div v-if="auth.isAdmin" class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
         <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-1">Feature Flags</h3>
-        <p class="text-sm text-[var(--color-text-tertiary)] mb-4">Current values of every operational env var. Read-only — change via deployment.</p>
+        <p class="text-sm text-[var(--color-text-tertiary)] mb-4">Current values of every operational env var. Editable flags can be overridden at runtime; boot-scope flags require a restart to take effect.</p>
 
         <SkeletonTable v-if="flagsLoading" :rows="6" />
         <ErrorState v-else-if="flagsError" :message="flagsError" :retryable="true" @retry="loadFeatureFlags" />
@@ -252,12 +334,96 @@ async function handleChangePassword() {
                 class="flex items-start gap-4 px-4 py-3 bg-[var(--color-bg-card)]"
               >
                 <div class="flex-1 min-w-0">
-                  <div class="font-mono text-xs text-[var(--color-text-primary)]">{{ flag.key }}</div>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <div class="font-mono text-xs text-[var(--color-text-primary)]">{{ flag.key }}</div>
+                    <span
+                      v-if="flag.source === 'override'"
+                      class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                      title="Value is overridden in the database"
+                    >
+                      Source: override
+                    </span>
+                    <span
+                      v-if="flag.scope === 'boot'"
+                      class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+                      title="Requires a server restart to take effect"
+                    >
+                      Requires restart
+                    </span>
+                  </div>
                   <div class="text-xs text-[var(--color-text-tertiary)] mt-1 leading-relaxed">{{ flag.description }}</div>
+                  <div
+                    v-if="flagFeedback[flag.key]"
+                    class="text-[11px] mt-1"
+                    :class="flagFeedback[flag.key]!.type === 'ok' ? 'text-[var(--color-success-text)]' : 'text-[var(--color-error-text)]'"
+                  >
+                    {{ flagFeedback[flag.key]!.message }}
+                  </div>
                 </div>
-                <div class="flex-shrink-0 flex flex-col items-end gap-1">
-                  <StatusBadge v-if="!nonBadgeStatuses.has(flag.status)" :status="flag.status" />
-                  <span v-else class="font-mono text-xs text-[var(--color-text-primary)]">{{ flag.value }}</span>
+                <div class="flex-shrink-0 flex flex-col items-end gap-1 min-w-[180px]">
+                  <!-- Read-only flag: show current value + status only -->
+                  <template v-if="!flag.editable">
+                    <StatusBadge v-if="!nonBadgeStatuses.has(flag.status)" :status="flag.status" />
+                    <span v-else class="font-mono text-xs text-[var(--color-text-primary)]">{{ flag.value }}</span>
+                  </template>
+
+                  <!-- Editable flag: inline control matched to value type -->
+                  <template v-else>
+                    <div class="flex items-center gap-2">
+                      <!-- Enum: select -->
+                      <select
+                        v-if="inputTypeFor(flag) === 'enum'"
+                        :value="draftFor(flag)"
+                        @change="setDraft(flag.key, ($event.target as HTMLSelectElement).value)"
+                        class="px-2 py-1 text-xs font-mono border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded"
+                      >
+                        <option v-for="opt in flag.allowed_values" :key="opt" :value="opt">{{ opt }}</option>
+                      </select>
+                      <!-- Bool: select true/false (simpler than a custom toggle) -->
+                      <select
+                        v-else-if="inputTypeFor(flag) === 'bool'"
+                        :value="draftFor(flag)"
+                        @change="setDraft(flag.key, ($event.target as HTMLSelectElement).value)"
+                        class="px-2 py-1 text-xs font-mono border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded"
+                      >
+                        <option value="true">true</option>
+                        <option value="false">false</option>
+                      </select>
+                      <!-- Int -->
+                      <input
+                        v-else-if="inputTypeFor(flag) === 'int'"
+                        type="number"
+                        :value="draftFor(flag)"
+                        @input="setDraft(flag.key, ($event.target as HTMLInputElement).value)"
+                        class="w-24 px-2 py-1 text-xs font-mono border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded"
+                      />
+                      <!-- Text -->
+                      <input
+                        v-else
+                        type="text"
+                        :value="draftFor(flag)"
+                        @input="setDraft(flag.key, ($event.target as HTMLInputElement).value)"
+                        class="w-40 px-2 py-1 text-xs font-mono border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text-primary)] rounded"
+                      />
+                      <button
+                        type="button"
+                        :disabled="flagSaving[flag.key] || draftFor(flag) === flag.value"
+                        @click="saveFlag(flag)"
+                        class="px-2 py-1 text-[11px] font-medium rounded bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)] disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        {{ flagSaving[flag.key] ? 'Saving...' : 'Save' }}
+                      </button>
+                    </div>
+                    <button
+                      v-if="flag.source === 'override'"
+                      type="button"
+                      :disabled="flagSaving[flag.key]"
+                      @click="revertFlag(flag)"
+                      class="text-[10px] text-[var(--color-text-muted)] underline hover:text-[var(--color-text-primary)]"
+                    >
+                      Reset to default
+                    </button>
+                  </template>
                   <span
                     v-if="flag.value !== flag.default"
                     class="text-[10px] text-[var(--color-text-muted)]"
