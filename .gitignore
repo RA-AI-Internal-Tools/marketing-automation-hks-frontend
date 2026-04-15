@@ -41,3 +41,6 @@ __screenshots__/
 # playwright
 test-results/
 playwright-report/
+# Visual-regression diff artifacts — keep baselines (…-snapshots/) but
+# never commit failure diffs.
+e2e/**/*.spec.ts-diffs/

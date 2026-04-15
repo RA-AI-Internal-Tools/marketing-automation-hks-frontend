@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, defineAsyncComponent } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import PageHeader from '@/components/PageHeader.vue'
-import EmailTemplateEditor from '@/components/email-editor/EmailTemplateEditor.vue'
+// Lazy-load the email editor — its transitive deps (codemirror, grapesjs via
+// VisualEditor) are large and only needed when editing email templates.
+const EmailTemplateEditor = defineAsyncComponent(
+  () => import('@/components/email-editor/EmailTemplateEditor.vue'),
+)
 import { useTemplatesStore } from '@/stores/templates'
 import type { MessageTemplate, TemplateRequest } from '@/api/types'
 import { TEMPLATE_LANGUAGES, buildLocalizedTemplateKey } from '@/utils/email-template'

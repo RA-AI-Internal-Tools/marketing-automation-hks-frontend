@@ -30,6 +30,24 @@ If browsers are missing, run `npx playwright install chromium` once.
 | --- | --- |
 | `auth.spec.ts` | Valid login lands authenticated; wrong password keeps user on `/login` with an error; unauthenticated `/overview` visit redirects to `/login`. |
 | `smoke.spec.ts` | End-to-end happy path: login → campaigns list → create a campaign → analytics executive page renders. |
+| `visual.spec.ts` | Full-page light + dark screenshots for 17 key routes (34 tests). Masks volatile regions. Requires baselines; see below. |
+
+## Visual regression baselines
+
+`visual.spec.ts` compares each run against PNG baselines stored in
+`e2e/visual.spec.ts-snapshots/`. The baselines aren't committed yet — the
+snapshot folder must be generated against a **seeded staging** instance so
+the reference images reflect real fixture data, not arbitrary state.
+
+```bash
+E2E_BASE_URL=https://staging.ma.internal.hksglobal.group \
+E2E_EMAIL=... E2E_PASSWORD=... \
+npx playwright test e2e/visual.spec.ts --update-snapshots
+```
+
+Commit the resulting `e2e/visual.spec.ts-snapshots/*.png`. Diff artifacts
+(`*-diffs/`) are gitignored — they're only produced on failure and reviewed
+via `npx playwright show-report`.
 
 ## Helpers
 

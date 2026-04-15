@@ -14,7 +14,8 @@ import {
 import type { MessageTemplate, EmailTemplateRequest } from '@/api/types'
 
 import EditorTabs from './EditorTabs.vue'
-import CodeEditor from './CodeEditor.vue'
+// Lazy-load CodeEditor — pulls in codemirror (~500KB) only when the HTML tab opens.
+const CodeEditor = defineAsyncComponent(() => import('./CodeEditor.vue'))
 import EmailPreview from './EmailPreview.vue'
 // Visual editor is lazy so the ~400KB GrapesJS + MJML bundle only loads
 // when someone actually opens the Visual tab.
