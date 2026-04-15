@@ -93,6 +93,9 @@ export interface CampaignPerformance {
   total_sent: number
   total_failed: number
   total_skipped: number
+  total_delivered?: number
+  total_opened?: number
+  total_clicked?: number
   enrollments: number
   completions: number
 }
