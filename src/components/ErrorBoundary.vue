@@ -25,10 +25,7 @@ function reload() {
       <p class="text-sm text-[var(--color-text-muted)] mb-4">
         {{ errorMessage || 'An unexpected error occurred.' }}
       </p>
-      <button
-        class="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity"
-        @click="reload"
-      >
+      <button class="btn btn-primary" @click="reload">
         Reload page
       </button>
     </div>

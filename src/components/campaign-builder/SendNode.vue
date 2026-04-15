@@ -22,8 +22,8 @@ const channelColors: Record<string, string> = {
   email:    'bg-[var(--color-info-soft)] text-[var(--color-info-text)] dark:bg-blue-900/50 dark:text-blue-200',
   sms:      'bg-[var(--color-success-soft)] text-[var(--color-success-text)] dark:bg-green-900/50 dark:text-green-200',
   whatsapp: 'bg-[var(--color-success-soft)] text-[var(--color-success-text)] dark:bg-emerald-900/50 dark:text-emerald-200',
-  push:     'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200',
-  onsite:   'bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900/50 dark:text-fuchsia-200',
+  push:     'bg-[var(--channel-push-soft)] text-[var(--channel-push)]',
+  onsite:   'bg-[var(--channel-onsite-soft)] text-[var(--channel-onsite)]',
 }
 </script>
 

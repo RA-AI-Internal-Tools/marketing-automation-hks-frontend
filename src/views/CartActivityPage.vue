@@ -103,9 +103,7 @@ const currentLabel = computed(() =>
       description="Abandoned carts by client, refreshed every 30 seconds. Jump to a client's journey timeline for full context."
     >
       <template #actions>
-        <button @click="load" :disabled="loading"
-                class="inline-flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800 disabled:opacity-50"
-                aria-label="Refresh now">
+        <button @click="load" :disabled="loading" class="btn btn-ghost btn-sm" aria-label="Refresh now">
           <ArrowPathIcon class="h-4 w-4" :class="{ 'animate-spin': loading }" /> Refresh
         </button>
       </template>

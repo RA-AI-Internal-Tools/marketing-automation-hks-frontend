@@ -114,8 +114,7 @@ function close() { emit('update:open', false) }
             {{ suggestion.notes.join(' · ') }}
           </p>
           <div class="flex justify-end pt-1">
-            <button @click="apply"
-                    class="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
+            <button @click="apply" class="btn btn-primary">
               Apply to campaign →
             </button>
           </div>

@@ -153,6 +153,11 @@
   --channel-onsite: #142e81;
   --channel-onsite-soft: #eaf0fa;
   --channel-onsite-border: #c0cfee;
+  /* Campaign-builder node accents — violet for webhook nodes matches
+     the rainbow legend used in the step palette. */
+  --node-webhook:      #6d28d9;
+  --node-webhook-soft: #ede9fe;
+  --node-webhook-text: #5b21b6;
 
   /* ---- Environment Colors ---- */
   --env-sandbox-bg: #faf1dc;

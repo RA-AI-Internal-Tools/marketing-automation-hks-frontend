@@ -94,7 +94,7 @@ async function handleSend() {
     <button
       @click="handleSend"
       :disabled="sending || !props.templateKey.trim()"
-      class="inline-flex items-center gap-2 px-5 py-2.5 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+      class="btn btn-primary"
     >
       <PaperAirplaneIcon class="h-4 w-4" />
       {{ sending ? 'Sending...' : 'Send Test Email' }}
