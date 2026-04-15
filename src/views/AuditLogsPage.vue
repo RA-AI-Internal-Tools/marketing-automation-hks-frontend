@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { fetchAuditLogs } from '@/api/dashboard'
+import { fetchAuditLogs, exportAuditLogs } from '@/api/dashboard'
 import type { AuditLog } from '@/api/types'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTable, { type Column } from '@/components/DataTable.vue'
@@ -20,6 +20,7 @@ const page = ref(1)
 const pageSize = ref(prefs.pageSize || 50)
 const loading = ref(true)
 const error = ref('')
+const exporting = ref(false)
 
 const sortKey = ref<string | null>('created_at')
 const sortDir = ref<'asc' | 'desc' | null>('desc')
@@ -97,18 +98,30 @@ function applyFilters() {
 }
 
 async function handleExport() {
+  if (exporting.value) return
+  exporting.value = true
   try {
-    // Build a shareable URL with current filters; users can open it in a
-    // new tab to download via the server's existing export endpoint.
-    const params = new URLSearchParams()
-    if (filterAction.value) params.set('action', filterAction.value)
-    if (filterDateFrom.value) params.set('from', filterDateFrom.value)
-    if (filterDateTo.value) params.set('to', filterDateTo.value)
-    showToast('Export queued', 'success')
-    // TODO(audit-export): wire real exportAuditLogs() endpoint once backend
-    // surfaces it; for now this is a UX-only hook for keyboard-driven flow.
+    const params: Record<string, any> = {}
+    if (filterAction.value) params.action = filterAction.value
+    if (filterDateFrom.value) params.from = new Date(filterDateFrom.value).toISOString()
+    if (filterDateTo.value) params.to = new Date(filterDateTo.value + 'T23:59:59').toISOString()
+    const blob = await exportAuditLogs(params)
+    // Trigger an in-page <a download> click rather than window.open: the
+    // latter races the response and on Firefox renders the CSV as text.
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `audit-logs-${new Date().toISOString().slice(0, 10)}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    // Defer revocation by a tick — Safari otherwise cancels the download.
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+    showToast('Export downloaded', 'success')
   } catch {
     showToast('Failed to export audit logs', 'error')
+  } finally {
+    exporting.value = false
   }
 }
 
@@ -185,6 +198,15 @@ onMounted(load)
       v-model:page-size="pageSize"
       @retry="load"
     >
+      <template #actions>
+        <button
+          :disabled="exporting"
+          @click="handleExport"
+          class="px-4 py-2 bg-[var(--color-bg-card)] text-[var(--color-text-secondary)] text-sm font-medium rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-hover)] transition-colors disabled:opacity-50"
+        >
+          {{ exporting ? 'Exporting...' : 'Export CSV' }}
+        </button>
+      </template>
       <template #cell-created_at="{ row }">
         <span class="text-xs text-[var(--color-text-tertiary)] whitespace-nowrap">
           {{ new Date(row.created_at).toLocaleString() }}

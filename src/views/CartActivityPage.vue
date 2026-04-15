@@ -97,7 +97,7 @@ const currentLabel = computed(() =>
 </script>
 
 <template>
-  <div class="mx-auto max-w-7xl space-y-4 p-6">
+  <div class="page-enter mx-auto max-w-7xl space-y-4 p-6">
     <PageHeader
       title="Cart activity"
       description="Abandoned carts by client, refreshed every 30 seconds. Jump to a client's journey timeline for full context."

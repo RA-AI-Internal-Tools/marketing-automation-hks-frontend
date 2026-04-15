@@ -20,7 +20,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
+  <div class="page-enter">
     <PageHeader title="Data Health" description="System connectivity, event freshness, and data quality" />
 
     <div v-if="loading" class="text-center py-12 text-[var(--color-text-muted)]">Loading...</div>

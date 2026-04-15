@@ -352,7 +352,7 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div>
+  <div class="page-enter">
     <PageHeader
       :title="isEdit ? 'Edit Campaign' : 'New Campaign'"
       :description="isEdit ? 'Modify campaign configuration and steps' : 'Create a new campaign workflow'"

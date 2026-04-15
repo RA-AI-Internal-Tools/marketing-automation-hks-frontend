@@ -98,6 +98,24 @@ describe('DataTable', () => {
     expect(w.text()).toContain('Nothing here')
   })
 
+  it('Delete key emits bulk-delete only when rows are selected', async () => {
+    const w = mount(DataTable, {
+      props: { columns, rows, rowKey: 'id', selectable: true },
+      attachTo: document.body,
+    })
+    // No selection → no emit
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete' }))
+    expect(w.emitted('bulk-delete')).toBeFalsy()
+
+    // Select rows via the v-model passthrough
+    await w.setProps({ selected: [1, 2] })
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete' }))
+    const emitted = w.emitted('bulk-delete')
+    expect(emitted).toBeTruthy()
+    expect(emitted![0][0]).toEqual([1, 2])
+    w.unmount()
+  })
+
   it('row-click emits the row', async () => {
     const w = mount(DataTable, {
       props: { columns, rows, rowKey: 'id' },

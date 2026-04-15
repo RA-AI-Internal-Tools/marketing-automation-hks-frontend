@@ -142,7 +142,7 @@ function formatDate(s: string): string {
 </script>
 
 <template>
-  <div class="mx-auto max-w-4xl space-y-6 p-6">
+  <div class="page-enter mx-auto max-w-4xl space-y-6 p-6">
     <PageHeader
       :title="`Journey · client #${clientID}`"
       description="Unified timeline of sends, opens, clicks, and behavioural events."

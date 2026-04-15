@@ -5,8 +5,15 @@
 // PushAudiencePage. Sort-state, page-state and selection are all
 // v-modeled so each page can mirror them into its own API params (or
 // let DataTable manage it client-side via defaults).
+//
+// Optional emit `bulk-delete`: when `selectable` is true and the user
+// presses Delete or Backspace with at least one selected row (and no
+// modal is open and focus isn't in an editable field), this fires.
+// Parents typically open a ConfirmDialog and on confirm hit the same
+// bulk-delete API as the in-bar action button. Pages that don't bind
+// it pay no penalty — the shortcut is a no-op there.
 
-import { computed, ref, watch, getCurrentInstance } from 'vue'
+import { computed, ref, watch, getCurrentInstance, onMounted, onBeforeUnmount } from 'vue'
 import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
 import SkeletonTable from './SkeletonTable.vue'
 import EmptyState from './EmptyState.vue'
@@ -70,6 +77,7 @@ const emit = defineEmits<{
   (e: 'sort', v: { key: string; dir: SortDir }): void
   (e: 'row-click', row: T): void
   (e: 'retry'): void
+  (e: 'bulk-delete', ids: RowId[]): void
 }>()
 
 const prefs = usePreferencesStore()
@@ -188,6 +196,46 @@ function setPageSize(s: number) {
 const _instance = getCurrentInstance()
 const hasRowClickListener = computed(() => {
   return !!(_instance?.vnode?.props as any)?.onRowClick
+})
+
+// Bulk-delete keyboard shortcut. We don't use useKeyboardShortcuts here
+// because that registers in the global cheat sheet; this shortcut is
+// inherently context-sensitive (only meaningful with rows selected) and
+// would clutter the cheat sheet on every list page. Guards mirror the
+// composable's behavior: skip when typing in an editable field and skip
+// when any [role=dialog] modal is visible.
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false
+  const tag = target.tagName
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true
+  if (target.isContentEditable) return true
+  return false
+}
+function isModalOpen(): boolean {
+  if (typeof document === 'undefined') return false
+  const dialogs = document.querySelectorAll('[role="dialog"]')
+  for (const d of Array.from(dialogs)) {
+    if ((d as HTMLElement).dataset.shortcutRoot === 'true') continue
+    const style = window.getComputedStyle(d as HTMLElement)
+    if (style.display !== 'none' && style.visibility !== 'hidden') return true
+  }
+  return false
+}
+function onKeydown(e: KeyboardEvent) {
+  if (!props.selectable) return
+  if (e.key !== 'Delete' && e.key !== 'Backspace') return
+  if (e.metaKey || e.ctrlKey || e.altKey) return
+  if (localSelected.value.length === 0) return
+  if (isEditableTarget(e.target)) return
+  if (isModalOpen()) return
+  e.preventDefault()
+  emit('bulk-delete', [...localSelected.value])
+}
+onMounted(() => {
+  if (typeof document !== 'undefined') document.addEventListener('keydown', onKeydown)
+})
+onBeforeUnmount(() => {
+  if (typeof document !== 'undefined') document.removeEventListener('keydown', onKeydown)
 })
 </script>
 

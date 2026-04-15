@@ -193,6 +193,14 @@ export async function fetchAuditLogs(params: Record<string, any> = {}): Promise<
   return data
 }
 
+// CSV export — server streams text/csv; we ask axios for a blob so the
+// browser download flow can hand it to URL.createObjectURL without us
+// having to re-encode UTF-8 by hand.
+export async function exportAuditLogs(params: Record<string, any> = {}): Promise<Blob> {
+  const { data } = await api.get('/api/audit-logs/export', { params, responseType: 'blob' })
+  return data as Blob
+}
+
 // Test send
 export async function testSend(req: { channel: string; template_key: string; client_id: number; params?: Record<string, any> }): Promise<any> {
   const { data } = await api.post('/api/test-send', req)

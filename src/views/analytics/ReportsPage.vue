@@ -140,7 +140,7 @@ async function confirmDelete() {
 </script>
 
 <template>
-  <div>
+  <div class="page-enter">
     <PageHeader title="Automated Reports" description="Configure scheduled report generation and delivery">
       <button
         v-if="auth.canWrite"

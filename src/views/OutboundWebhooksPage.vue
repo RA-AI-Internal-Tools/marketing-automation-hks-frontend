@@ -192,7 +192,7 @@ function formatDate(s?: string | null): string {
 </script>
 
 <template>
-  <div class="mx-auto max-w-6xl space-y-6 p-6">
+  <div class="page-enter mx-auto max-w-6xl space-y-6 p-6">
     <PageHeader title="Outbound webhooks" description="HTTP notifications for campaign and consent events.">
       <template #actions>
         <button

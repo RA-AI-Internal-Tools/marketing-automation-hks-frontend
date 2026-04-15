@@ -198,6 +198,7 @@ onMounted(load)
       v-model:sort-dir="sortDir"
       v-model:selected="selectedUsers"
       @row-click="(u) => auth.isAdmin && openEdit(u)"
+      @bulk-delete="handleBulkDelete"
     >
       <template #bulk-actions="{ selected }" v-if="auth.isAdmin">
         <button class="btn btn-ghost btn-sm" @click="handleBulkDelete">

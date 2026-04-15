@@ -66,9 +66,9 @@ export const useNotificationsStore = defineStore('notifications', () => {
     items.value = []
   }
 
-  // TODO(sse): subscribe to backend 'notification' events here once the
-  // backend emits them. For now callers push directly via useNotifications().
-  // grep-tag: NOTIFICATIONS_SSE_WIRING
+  // SSE fan-out target: dashboard store forwards every SSE event here; the
+  // switch below filters to the four notification-bearing types and ignores
+  // the rest (log_created, enrollment_*, etc.).
   function ingestSseEvent(evt: { type: string; payload: any }) {
     if (!evt) return
     switch (evt.type) {

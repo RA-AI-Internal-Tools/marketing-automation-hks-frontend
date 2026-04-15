@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue'
 import type { OverviewStats, CampaignLog, CampaignEnrollment } from '@/api/types'
 import { fetchOverviewStats } from '@/api/dashboard'
 import { useSSE, type SSEEvent } from '@/composables/useSSE'
+import { useNotificationsStore } from '@/stores/notifications'
 import api from '@/api/client'
 import { STORAGE_KEYS } from '@/constants/storage'
 
@@ -95,6 +96,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
         sseConnected.value = val
       }, { immediate: true })
 
+      const notifications = useNotificationsStore()
+
       onEvent((evt: SSEEvent) => {
         reconnectAttempts = 0
         if (evt.type === 'log_created') {
@@ -104,6 +107,10 @@ export const useDashboardStore = defineStore('dashboard', () => {
           recentEnrollments.value.unshift(evt.payload)
           if (recentEnrollments.value.length > 50) recentEnrollments.value.pop()
         }
+        // Fan-out: forward every event to the notifications store. Its
+        // mapper internally filters to {notification, campaign_completed,
+        // broadcast_completed, error_alert}; other types are ignored.
+        notifications.ingestSseEvent(evt)
       })
     }
 
