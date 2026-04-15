@@ -19,6 +19,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AnalyticsLayout from '@/components/AnalyticsLayout.vue'
+import BaseCard from '@/components/BaseCard.vue'
 import { Doughnut } from 'vue-chartjs'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
 import { fetchRFMSegmentCounts, type RFMSegment } from '@/api/rfm'
@@ -138,7 +139,7 @@ function createCampaignForSegment(seg: RFMSegment) {
 
       <!-- Donut + table side-by-side on wide screens -->
       <div class="grid gap-4 lg:grid-cols-[420px_1fr]">
-        <div class="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3">
+        <BaseCard>
           <div class="mb-2 text-sm font-medium">Segment share</div>
           <div style="height: 320px;">
             <Doughnut v-if="totalScored > 0" :data="donutData" :options="donutOptions" />
@@ -146,9 +147,9 @@ function createCampaignForSegment(seg: RFMSegment) {
               Nightly job hasn't computed scores yet — check back tomorrow.
             </div>
           </div>
-        </div>
+        </BaseCard>
 
-        <div class="overflow-x-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)]">
+        <BaseCard flush class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead class="bg-[var(--color-bg-subtle)] text-left text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">
               <tr>
@@ -181,7 +182,7 @@ function createCampaignForSegment(seg: RFMSegment) {
               </tr>
             </tbody>
           </table>
-        </div>
+        </BaseCard>
       </div>
     </div>
   </AnalyticsLayout>

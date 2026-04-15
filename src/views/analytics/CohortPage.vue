@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import AnalyticsLayout from '@/components/AnalyticsLayout.vue'
+import BaseCard from '@/components/BaseCard.vue'
 import { useAnalyticsStore } from '@/stores/analytics'
 import { fetchCohort, fetchLTV } from '@/api/analytics'
 
@@ -47,22 +48,22 @@ watch(() => analytics.queryParams, load)
     <div v-else class="space-y-6">
       <!-- LTV Metrics -->
       <div v-if="ltvData" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-4">
+        <BaseCard>
           <p class="text-xs text-[var(--color-text-tertiary)] uppercase font-semibold">Avg LTV</p>
           <p class="text-2xl font-bold text-[var(--color-text-primary)] mt-1">${{ (ltvData.avg_ltv ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
-        </div>
-        <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-4">
+        </BaseCard>
+        <BaseCard>
           <p class="text-xs text-[var(--color-text-tertiary)] uppercase font-semibold">Avg Lifespan</p>
           <p class="text-2xl font-bold text-[var(--color-text-primary)] mt-1">{{ (ltvData.avg_lifespan_months ?? 0).toFixed(1) }} months</p>
-        </div>
-        <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-4">
+        </BaseCard>
+        <BaseCard>
           <p class="text-xs text-[var(--color-text-tertiary)] uppercase font-semibold">Avg Revenue / Month</p>
           <p class="text-2xl font-bold text-[var(--color-text-primary)] mt-1">${{ (ltvData.avg_revenue_per_month ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
-        </div>
+        </BaseCard>
       </div>
 
       <!-- Cohort heatmap -->
-      <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+      <BaseCard>
         <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Cohort Retention Heatmap</h3>
         <div v-if="cohortData?.cohorts?.length" class="overflow-x-auto">
           <table class="w-full text-sm">
@@ -89,7 +90,7 @@ watch(() => analytics.queryParams, load)
           </table>
         </div>
         <p v-else class="text-sm text-[var(--color-text-muted)]">Cohort data requires at least 2 months of registration events to build meaningful retention cohorts.</p>
-      </div>
+      </BaseCard>
     </div>
   </AnalyticsLayout>
 </template>

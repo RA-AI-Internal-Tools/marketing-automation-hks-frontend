@@ -8,6 +8,7 @@
  */
 import { ref, computed, onMounted, watch } from 'vue'
 import AnalyticsLayout from '@/components/AnalyticsLayout.vue'
+import BaseCard from '@/components/BaseCard.vue'
 import { chartPalette, alpha } from '@/utils/chartColors'
 import { Line, Bar } from 'vue-chartjs'
 import {
@@ -184,22 +185,22 @@ const barOptions = {
         </div>
       </div>
 
-      <div class="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3">
+      <BaseCard>
         <div class="mb-2 text-sm font-medium">Daily attributed revenue</div>
         <div style="height: 220px;">
           <Line :data="lineData" :options="lineOptions" />
         </div>
-      </div>
+      </BaseCard>
 
-      <div class="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3">
+      <BaseCard>
         <div class="mb-2 text-sm font-medium">Top campaigns by revenue</div>
         <div style="height: 280px;">
           <Bar v-if="campaignTotals.length > 0" :data="barData" :options="barOptions" />
           <div v-else class="py-10 text-center text-sm text-[var(--color-text-muted)]">No attributed revenue in this window yet.</div>
         </div>
-      </div>
+      </BaseCard>
 
-      <div class="overflow-x-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)]">
+      <BaseCard flush class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead class="bg-[var(--color-bg-subtle)] text-left text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">
             <tr>
@@ -227,7 +228,7 @@ const barOptions = {
             </tr>
           </tbody>
         </table>
-      </div>
+      </BaseCard>
     </div>
   </AnalyticsLayout>
 </template>

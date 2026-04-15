@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import AnalyticsLayout from '@/components/AnalyticsLayout.vue'
+import BaseCard from '@/components/BaseCard.vue'
 import MetricCard from '@/components/MetricCard.vue'
 import DonutChart from '@/components/DonutChart.vue'
 import { useAnalyticsStore } from '@/stores/analytics'
@@ -44,7 +45,7 @@ watch(() => analytics.queryParams, load)
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+        <BaseCard>
           <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Traffic Sources</h3>
           <DonutChart
             v-if="data.sources.length"
@@ -52,8 +53,8 @@ watch(() => analytics.queryParams, load)
             :values="data.sources.map((s) => s.count)"
           />
           <p v-else class="text-sm text-[var(--color-text-muted)]">No data</p>
-        </div>
-        <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+        </BaseCard>
+        <BaseCard>
           <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">UTM Campaigns</h3>
           <table v-if="data.utm_campaigns.length" class="w-full text-sm">
             <thead><tr class="text-left text-[var(--color-text-tertiary)] text-xs uppercase">
@@ -68,7 +69,7 @@ watch(() => analytics.queryParams, load)
             </tbody>
           </table>
           <p v-else class="text-sm text-[var(--color-text-muted)]">No data</p>
-        </div>
+        </BaseCard>
       </div>
     </div>
   </AnalyticsLayout>
