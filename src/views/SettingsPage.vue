@@ -41,7 +41,7 @@ const flagsError = ref('')
 const nonBadgeStatuses = new Set(['info'])
 
 const groupedFlags = computed(() => {
-  const order = ['environment', 'credentials', 'sto', 'queue', 'broadcasts', 'webhooks', 'ai']
+  const order = ['environment', 'credentials', 'sto', 'queue', 'broadcasts', 'webhooks', 'compliance', 'ai']
   const buckets: Record<string, FeatureFlag[]> = {}
   for (const f of featureFlags.value) {
     ;(buckets[f.category] ||= []).push(f)
@@ -62,6 +62,7 @@ function categoryLabel(c: string): string {
     queue: 'Queue',
     broadcasts: 'Broadcasts',
     webhooks: 'Webhooks',
+    compliance: 'Compliance',
     ai: 'AI',
   }
   return map[c] || c.charAt(0).toUpperCase() + c.slice(1)
