@@ -73,7 +73,7 @@ const error = ref('')
 const loading = ref(false)
 const nextVariantId = ref(0)
 
-const channels = ['email', 'sms', 'whatsapp', 'push']
+const channels = ['email', 'sms', 'whatsapp', 'push', 'inbox']
 // Keep this list in lockstep with internal/condition/condition.go's
 // Registry. A stale option here would render in the dropdown but fail at
 // runtime with "unknown condition: X".
