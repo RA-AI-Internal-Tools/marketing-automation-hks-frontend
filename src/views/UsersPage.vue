@@ -1,17 +1,57 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { fetchUsers, createUser, updateUser, deleteUser } from '@/api/users'
 import type { User, UserRequest } from '@/api/types'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import DataTable, { type Column } from '@/components/DataTable.vue'
 import {
   PlusIcon,
   PencilSquareIcon,
   TrashIcon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline'
+
+// Users list is small; client-side sort is fine. No dedicated sort
+// API param exists so we sort the already-loaded array.
+const sortKey = ref<string | null>(null)
+const sortDir = ref<'asc' | 'desc' | null>(null)
+const selectedUsers = ref<(string | number)[]>([])
+
+const columns: Column[] = [
+  { key: 'id', label: 'ID', width: '60px' },
+  { key: 'email', label: 'Email', sortable: true },
+  { key: 'name', label: 'Name', sortable: true },
+  { key: 'role', label: 'Role' },
+  { key: 'is_active', label: 'Status' },
+  { key: 'last_login_at', label: 'Last Login', sortable: true },
+  { key: 'actions', label: 'Actions', align: 'right' },
+]
+
+const sortedUsers = computed(() => {
+  if (!sortKey.value || !sortDir.value) return users.value
+  const k = sortKey.value as keyof User
+  const dir = sortDir.value === 'asc' ? 1 : -1
+  return [...users.value].sort((a, b) => {
+    const av = a[k] ?? ''
+    const bv = b[k] ?? ''
+    if (av < bv) return -1 * dir
+    if (av > bv) return 1 * dir
+    return 0
+  })
+})
+
+async function handleBulkDelete() {
+  if (!selectedUsers.value.length) return
+  if (!confirm(`Delete ${selectedUsers.value.length} user(s)? This cannot be undone.`)) return
+  for (const id of selectedUsers.value) {
+    try { await deleteUser(id as number) } catch { /* collected on next load */ }
+  }
+  selectedUsers.value = []
+  await load()
+}
 
 const auth = useAuthStore()
 
@@ -146,52 +186,44 @@ onMounted(load)
       {{ loadError }}
     </div>
 
-    <!-- Loading -->
-    <div v-if="loading" class="text-center py-12 text-[var(--color-text-tertiary)]">Loading users...</div>
-
-    <!-- Users table -->
-    <div v-else class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden">
-      <table class="min-w-full divide-y divide-[var(--color-border)]">
-        <thead class="bg-[var(--color-bg-page)]">
-          <tr>
-            <th class="px-6 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Name</th>
-            <th class="px-6 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Email</th>
-            <th class="px-6 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Role</th>
-            <th class="px-6 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Status</th>
-            <th class="px-6 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Last Login</th>
-            <th class="px-6 py-3 text-right text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-[var(--color-border-muted)]">
-          <tr v-for="user in users" :key="user.id" class="hover:bg-[var(--color-bg-hover)] transition-colors">
-            <td class="px-6 py-4">
-              <div class="font-medium text-[var(--color-text-primary)]">{{ user.name }}</div>
-            </td>
-            <td class="px-6 py-4 text-sm text-[var(--color-text-secondary)]">{{ user.email }}</td>
-            <td class="px-6 py-4">
-              <StatusBadge :status="user.role" />
-            </td>
-            <td class="px-6 py-4">
-              <StatusBadge :status="user.is_active ? 'active' : 'inactive'" />
-            </td>
-            <td class="px-6 py-4 text-sm text-[var(--color-text-tertiary)]">{{ formatDate(user.last_login_at) }}</td>
-            <td class="px-6 py-4 text-right">
-              <div v-if="auth.isAdmin" class="flex items-center justify-end gap-2">
-                <button @click="openEdit(user)" class="btn-icon" :aria-label="`Edit user ${user.email}`" title="Edit">
-                  <PencilSquareIcon class="h-4 w-4" />
-                </button>
-                <button @click="confirmDelete = user" class="btn-icon" :aria-label="`Delete user ${user.email}`" title="Delete">
-                  <TrashIcon class="h-4 w-4" />
-                </button>
-              </div>
-            </td>
-          </tr>
-          <tr v-if="users.length === 0">
-            <td colspan="6" class="px-6 py-12 text-center text-[var(--color-text-tertiary)]">No users found</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <DataTable
+      :columns="columns"
+      :rows="sortedUsers"
+      row-key="id"
+      :loading="loading"
+      empty-title="No users found"
+      sortable
+      :selectable="auth.isAdmin"
+      v-model:sort-key="sortKey"
+      v-model:sort-dir="sortDir"
+      v-model:selected="selectedUsers"
+      @row-click="(u) => auth.isAdmin && openEdit(u)"
+    >
+      <template #bulk-actions="{ selected }" v-if="auth.isAdmin">
+        <button class="btn btn-ghost btn-sm" @click="handleBulkDelete">
+          <TrashIcon class="h-4 w-4" /> Delete {{ selected.length }} user{{ selected.length === 1 ? '' : 's' }}
+        </button>
+      </template>
+      <template #cell-is_active="{ row }">
+        <StatusBadge :status="row.is_active ? 'active' : 'inactive'" />
+      </template>
+      <template #cell-role="{ row }">
+        <StatusBadge :status="row.role" />
+      </template>
+      <template #cell-last_login_at="{ row }">
+        <span class="text-sm text-[var(--color-text-tertiary)]">{{ formatDate(row.last_login_at) }}</span>
+      </template>
+      <template #cell-actions="{ row }">
+        <div v-if="auth.isAdmin" class="flex items-center justify-end gap-2" @click.stop>
+          <button @click="openEdit(row)" class="btn-icon" :aria-label="`Edit user ${row.email}`" title="Edit">
+            <PencilSquareIcon class="h-4 w-4" />
+          </button>
+          <button @click="confirmDelete = row" class="btn-icon" :aria-label="`Delete user ${row.email}`" title="Delete">
+            <TrashIcon class="h-4 w-4" />
+          </button>
+        </div>
+      </template>
+    </DataTable>
 
     <!-- Create/Edit Modal -->
     <Teleport to="body">

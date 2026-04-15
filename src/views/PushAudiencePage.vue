@@ -5,19 +5,34 @@ import type { PushAudienceEntry, PushSendResponse } from '@/api/types'
 import { useAuthStore } from '@/stores/auth'
 import { useEnvironmentStore } from '@/stores/environment'
 import { useToast } from '@/composables/useToast'
+import { usePreferencesStore } from '@/stores/preferences'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import DataTable, { type Column } from '@/components/DataTable.vue'
 
 const auth = useAuthStore()
 const env = useEnvironmentStore()
 const { showToast } = useToast()
+const prefs = usePreferencesStore()
 
 // --- Audience table state ---
 const rows = ref<PushAudienceEntry[]>([])
 const total = ref(0)
 const page = ref(1)
-const perPage = 25
+const pageSize = ref(prefs.pageSize || 25)
+
+const sortKey = ref<string | null>('last_seen_at')
+const sortDir = ref<'asc' | 'desc' | null>('desc')
+
+const columns: Column[] = [
+  { key: 'client_id', label: 'Client ID' },
+  { key: 'device_count', label: 'Devices', width: '90px' },
+  { key: 'device_category', label: 'Device' },
+  { key: 'locale', label: 'Locale', width: '90px' },
+  { key: 'last_seen_at', label: 'Last Seen', sortable: true, width: '160px' },
+  { key: 'is_active', label: 'Status', width: '110px' },
+]
 const loading = ref(true)
 const error = ref('')
 // Monotonic sequence to drop stale load() responses (env flips, rapid
@@ -29,27 +44,10 @@ const searchInput = ref('')
 const filterPlatform = ref('')
 const filterActive = ref('')
 
-// Selection
-const selected = ref<Set<number>>(new Set())
-const allVisibleSelected = computed(() =>
-  rows.value.length > 0 && rows.value.every(r => selected.value.has(r.client_id))
-)
-
-function toggleSelectAll() {
-  if (allVisibleSelected.value) {
-    for (const r of rows.value) selected.value.delete(r.client_id)
-  } else {
-    for (const r of rows.value) selected.value.add(r.client_id)
-  }
-}
-
-function toggleRow(clientId: number) {
-  if (selected.value.has(clientId)) {
-    selected.value.delete(clientId)
-  } else {
-    selected.value.add(clientId)
-  }
-}
+// Selection — held as array for DataTable v-model compatibility. Other
+// call sites that need set-semantics derive a Set via `selectedSet`.
+const selectedList = ref<(string | number)[]>([])
+const selected = computed(() => new Set(selectedList.value.map(Number)))
 
 // --- Compose state ---
 const pushTitle = ref('')
@@ -74,11 +72,15 @@ async function load() {
   loading.value = true
   error.value = ''
   try {
-    const params: Record<string, any> = { limit: perPage, offset: (page.value - 1) * perPage }
+    const params: Record<string, any> = { limit: pageSize.value, offset: (page.value - 1) * pageSize.value }
     if (searchInput.value.trim()) params.search = searchInput.value.trim()
     if (filterPlatform.value) params.platform = filterPlatform.value
     if (filterActive.value) params.active = filterActive.value
     params.environment = env.mode
+    if (sortKey.value && sortDir.value) {
+      params.sort = sortKey.value
+      params.order = sortDir.value
+    }
     const res = await fetchPushAudience(params)
     if (mySeq !== loadSeq.value) return
     rows.value = res.data || []
@@ -92,8 +94,8 @@ async function load() {
 }
 
 function clearSelectionOnScopeChange() {
-  if (selected.value.size > 0) {
-    selected.value = new Set()
+  if (selectedList.value.length > 0) {
+    selectedList.value = []
     showToast('Selection cleared (filter changed)', 'info')
   }
 }
@@ -113,21 +115,7 @@ function clearFilters() {
   load()
 }
 
-function prevPage() {
-  if (page.value > 1 && !loading.value) {
-    clearSelectionOnScopeChange()
-    page.value--
-    load()
-  }
-}
-
-function nextPage() {
-  if (page.value * perPage < total.value && !loading.value) {
-    clearSelectionOnScopeChange()
-    page.value++
-    load()
-  }
-}
+watch([sortKey, sortDir, page, pageSize], () => load())
 
 // --- Send ---
 function requestSend() {
@@ -142,7 +130,7 @@ async function confirmAndSend() {
   sending.value = true
   try {
     const req = {
-      client_ids: Array.from(selected.value),
+      client_ids: Array.from(selected.value) as number[],
       title: pushTitle.value.trim(),
       body: pushBody.value.trim(),
       link: pushLink.value.trim() || undefined,
@@ -232,79 +220,57 @@ onMounted(load)
       </div>
     </div>
 
-    <!-- Loading / Error -->
-    <div v-if="loading" class="text-center py-12 text-[var(--color-text-muted)]">Loading push audience...</div>
-    <div v-else-if="error" class="bg-[var(--color-error-bg)] border border-[var(--color-error-border)] text-[var(--color-error-text)] px-4 py-3 rounded-lg text-sm">{{ error }}</div>
-
-    <!-- Table -->
-    <div v-else class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead class="bg-[var(--color-bg-page)]">
-            <tr class="text-left text-[var(--color-text-tertiary)] text-xs uppercase tracking-wide">
-              <th class="px-4 py-3 w-10">
-                <input type="checkbox" :checked="allVisibleSelected" @change="toggleSelectAll"
-                  class="rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]" />
-              </th>
-              <th class="px-4 py-3">Client ID</th>
-              <th class="px-4 py-3">Devices</th>
-              <th class="px-4 py-3">Device</th>
-              <th class="px-4 py-3">Locale</th>
-              <th class="px-4 py-3">Last Seen</th>
-              <th class="px-4 py-3">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in rows" :key="row.client_id"
-              class="border-t border-[var(--color-border-muted)] hover:bg-[var(--color-bg-hover)] transition-colors cursor-pointer"
-              @click="toggleRow(row.client_id)">
-              <td class="px-4 py-3" @click.stop>
-                <input type="checkbox" :checked="selected.has(row.client_id)" @change="toggleRow(row.client_id)"
-                  class="rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]" />
-              </td>
-              <td class="px-4 py-3 font-mono text-[var(--color-text-primary)] font-medium">{{ row.client_id }}</td>
-              <td class="px-4 py-3 text-[var(--color-text-secondary)]">{{ row.device_count }}</td>
-              <td class="px-4 py-3">
-                <!-- Prefer device_categories (mobile/tablet/desktop); fall
-                     back to legacy platforms (ios/android/web) for older rows
-                     pre-migration. Raw platforms stay visible via title. -->
-                <span
-                  v-for="d in ((row.device_categories && row.device_categories.length) ? row.device_categories : row.platforms)"
-                  :key="d"
-                  :title="(row.platforms || []).join(', ')"
-                  class="inline-block mr-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] capitalize">
-                  {{ d }}
-                </span>
-              </td>
-              <td class="px-4 py-3 text-xs text-[var(--color-text-tertiary)]">
-                {{ (row.locales && row.locales[0]) || '—' }}
-              </td>
-              <td class="px-4 py-3 text-[var(--color-text-tertiary)] text-xs whitespace-nowrap">{{ formatDate(row.last_seen_at) }}</td>
-              <td class="px-4 py-3">
-                <StatusBadge :status="row.is_active ? 'active' : 'inactive'" />
-              </td>
-            </tr>
-            <tr v-if="rows.length === 0">
-              <td colspan="7" class="px-4 py-8 text-center text-[var(--color-text-muted)]">No push registrations found</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Pagination -->
-      <div class="flex items-center justify-between px-4 py-3 border-t border-[var(--color-border)] bg-[var(--color-bg-page)]">
-        <span class="text-xs text-[var(--color-text-tertiary)]">{{ total }} total client{{ total === 1 ? '' : 's' }}</span>
-        <div class="flex gap-2">
-          <button @click="prevPage" :disabled="page <= 1" class="btn btn-ghost btn-sm">
-            Previous
-          </button>
-          <span class="px-3 py-1 text-xs text-[var(--color-text-secondary)]">Page {{ page }}</span>
-          <button @click="nextPage" :disabled="page * perPage >= total" class="btn btn-ghost btn-sm">
-            Next
-          </button>
-        </div>
-      </div>
-    </div>
+    <DataTable
+      :columns="columns"
+      :rows="rows"
+      row-key="client_id"
+      :loading="loading"
+      :error="error"
+      :total="total"
+      empty-title="No push registrations found"
+      sortable
+      selectable
+      paginated
+      v-model:sort-key="sortKey"
+      v-model:sort-dir="sortDir"
+      v-model:selected="selectedList"
+      v-model:page="page"
+      v-model:page-size="pageSize"
+      @retry="load"
+    >
+      <template #bulk-actions="{ selected: sel }">
+        <button
+          v-if="auth.canWrite"
+          class="btn btn-primary btn-sm"
+          :disabled="!canSend"
+          @click="requestSend"
+        >
+          Send to {{ sel.length }} client{{ sel.length === 1 ? '' : 's' }}
+        </button>
+      </template>
+      <template #cell-client_id="{ row }">
+        <span class="font-mono text-[var(--color-text-primary)] font-medium">{{ row.client_id }}</span>
+      </template>
+      <template #cell-device_category="{ row }">
+        <span
+          v-for="d in ((row.device_categories && row.device_categories.length) ? row.device_categories : row.platforms)"
+          :key="d"
+          :title="(row.platforms || []).join(', ')"
+          class="inline-block mr-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] capitalize"
+        >
+          {{ d }}
+        </span>
+      </template>
+      <template #cell-locale="{ row }">
+        <span class="text-xs text-[var(--color-text-tertiary)]">{{ (row.locales && row.locales[0]) || '—' }}</span>
+      </template>
+      <template #cell-last_seen_at="{ row }">
+        <span class="text-xs text-[var(--color-text-tertiary)] whitespace-nowrap">{{ formatDate(row.last_seen_at) }}</span>
+      </template>
+      <template #cell-is_active="{ row }">
+        <StatusBadge :status="row.is_active ? 'active' : 'inactive'" />
+      </template>
+    </DataTable>
 
     <!-- Compose & Send Panel -->
     <div v-if="auth.canWrite" class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6 space-y-4">

@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import DataTable, { type Column } from '@/components/DataTable.vue'
 import { fetchConsents, optOut, optIn } from '@/api/dashboard'
 import { getChannelVocabulary } from '@/api/channels'
 import { useAuthStore } from '@/stores/auth'
@@ -14,6 +15,33 @@ const clientId = ref('')
 const consents = ref<ClientConsent[]>([])
 const loading = ref(false)
 const error = ref('')
+
+// Client-side sort on the loaded page (consents for one client are
+// always small — no dedicated server-side sort field needed).
+const sortKey = ref<string | null>(null)
+const sortDir = ref<'asc' | 'desc' | null>(null)
+
+const columns: Column[] = [
+  { key: 'client_id', label: 'Client', sortable: true },
+  { key: 'channel', label: 'Channel' },
+  { key: 'purpose', label: 'Purpose' },
+  { key: 'opted_in', label: 'Status' },
+  { key: 'updated_at', label: 'Updated', sortable: true },
+  { key: 'action', label: 'Action', align: 'right' },
+]
+
+const sortedConsents = computed(() => {
+  if (!sortKey.value || !sortDir.value) return consents.value
+  const k = sortKey.value as keyof ClientConsent
+  const dir = sortDir.value === 'asc' ? 1 : -1
+  return [...consents.value].sort((a: any, b: any) => {
+    const av = a[k] ?? ''
+    const bv = b[k] ?? ''
+    if (av < bv) return -1 * dir
+    if (av > bv) return 1 * dir
+    return 0
+  })
+})
 
 async function lookupConsents() {
   const id = parseInt(clientId.value)
@@ -124,54 +152,50 @@ function createOptOut(channel: string) {
     <!-- Results -->
     <div v-if="loading" class="text-center py-12 text-[var(--color-text-muted)]">Loading...</div>
 
-    <div v-else-if="consents.length > 0 || clientId" class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden">
-      <div class="px-6 py-4 border-b border-[var(--color-border)]">
+    <div v-if="consents.length > 0 || clientId" class="space-y-4">
+      <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden px-6 py-4">
         <h2 class="text-lg font-semibold tracking-tight text-[var(--color-text-primary)]">Consents for Client #{{ clientId }}</h2>
       </div>
-      <table class="min-w-full divide-y divide-[var(--color-border)]">
-        <thead class="bg-[var(--color-bg-page)]">
-          <tr>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Channel</th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Purpose</th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Status</th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Updated</th>
-            <th class="px-4 py-3 text-right text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Action</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-[var(--color-border-muted)]">
-          <tr v-for="c in consents" :key="c.id" class="hover:bg-[var(--color-bg-hover)] transition-colors">
-            <td class="px-4 py-3 text-sm font-medium text-[var(--color-text-primary)] uppercase">{{ c.channel }}</td>
-            <td class="px-4 py-3 text-sm text-[var(--color-text-tertiary)]">
-              {{ purposeLabel(c.purpose, c.channel) }}
-            </td>
-            <td class="px-4 py-3">
-              <StatusBadge :status="c.opted_in ? 'active' : 'inactive'" />
-              <span class="ml-2 text-sm text-[var(--color-text-tertiary)]">{{ c.opted_in ? 'Opted In' : 'Opted Out' }}</span>
-            </td>
-            <td class="px-4 py-3 text-sm text-[var(--color-text-tertiary)]">{{ new Date(c.updated_at).toLocaleString() }}</td>
-            <td class="px-4 py-3 text-right">
-              <button
-                v-if="auth.canWrite"
-                @click="toggleConsent(c)"
-                :class="c.opted_in ? 'text-[var(--color-error-text)] hover:text-[var(--color-error-text)]' : 'text-[var(--color-success-text)] hover:text-[var(--color-success-text)]'"
-                class="text-sm font-medium"
-              >
-                {{ c.opted_in ? 'Opt Out' : 'Opt In' }}
-              </button>
-            </td>
-          </tr>
-          <tr v-if="consents.length === 0">
-            <td colspan="5" class="px-4 py-6 text-center text-[var(--color-text-muted)]">
-              No explicit consents found (all channels are implicitly opted-in)
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <DataTable
+        :columns="columns"
+        :rows="sortedConsents"
+        row-key="id"
+        :loading="loading"
+        empty-title="No explicit consents found"
+        empty-description="(all channels are implicitly opted-in)"
+        sortable
+        v-model:sort-key="sortKey"
+        v-model:sort-dir="sortDir"
+      >
+        <template #cell-channel="{ row }">
+          <span class="text-sm font-medium text-[var(--color-text-primary)] uppercase">{{ row.channel }}</span>
+        </template>
+        <template #cell-purpose="{ row }">
+          <span class="text-sm text-[var(--color-text-tertiary)]">{{ purposeLabel(row.purpose, row.channel) }}</span>
+        </template>
+        <template #cell-opted_in="{ row }">
+          <StatusBadge :status="row.opted_in ? 'active' : 'inactive'" />
+          <span class="ml-2 text-sm text-[var(--color-text-tertiary)]">{{ row.opted_in ? 'Opted In' : 'Opted Out' }}</span>
+        </template>
+        <template #cell-updated_at="{ row }">
+          <span class="text-sm text-[var(--color-text-tertiary)]">{{ new Date(row.updated_at).toLocaleString() }}</span>
+        </template>
+        <template #cell-action="{ row }">
+          <button
+            v-if="auth.canWrite"
+            @click="toggleConsent(row)"
+            :class="row.opted_in ? 'text-[var(--color-error-text)] hover:text-[var(--color-error-text)]' : 'text-[var(--color-success-text)] hover:text-[var(--color-success-text)]'"
+            class="text-sm font-medium"
+          >
+            {{ row.opted_in ? 'Opt Out' : 'Opt In' }}
+          </button>
+        </template>
+      </DataTable>
 
       <!-- Quick opt-out for channels not yet in the table -->
-      <div v-if="consents.length < allChannels.length" class="px-6 py-4 border-t border-[var(--color-border)] bg-[var(--color-bg-page)]">
+      <div v-if="consents.length < allChannels.length" class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] p-4">
         <p class="text-xs text-[var(--color-text-tertiary)] mb-2">Quick opt-out (implicit opt-in channels):</p>
-        <div v-if="auth.canWrite" class="flex gap-2">
+        <div v-if="auth.canWrite" class="flex gap-2 flex-wrap">
           <button
             v-for="ch in allChannels.filter(c => !consents.find(x => x.channel === c))"
             :key="ch"

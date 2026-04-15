@@ -1,17 +1,31 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { fetchAuditLogs } from '@/api/dashboard'
 import type { AuditLog } from '@/api/types'
 import { ShieldCheckIcon } from '@heroicons/vue/24/outline'
-import SkeletonTable from '@/components/SkeletonTable.vue'
-import ErrorState from '@/components/ErrorState.vue'
+import DataTable, { type Column } from '@/components/DataTable.vue'
+import { usePreferencesStore } from '@/stores/preferences'
 
+const prefs = usePreferencesStore()
 const logs = ref<AuditLog[]>([])
 const total = ref(0)
 const page = ref(1)
-const perPage = 50
+const pageSize = ref(prefs.pageSize || 50)
 const loading = ref(true)
 const error = ref('')
+
+const sortKey = ref<string | null>('created_at')
+const sortDir = ref<'asc' | 'desc' | null>('desc')
+
+const columns: Column[] = [
+  { key: 'created_at', label: 'Time', sortable: true, width: '160px' },
+  { key: 'user_email', label: 'User', sortable: true },
+  { key: 'action', label: 'Action' },
+  { key: 'resource', label: 'Resource' },
+  { key: 'resource_id', label: 'ID' },
+  { key: 'detail', label: 'Details' },
+  { key: 'ip_address', label: 'IP' },
+]
 
 // Filters
 const filterAction = ref('')
@@ -38,10 +52,14 @@ async function load() {
   loading.value = true
   error.value = ''
   try {
-    const params: Record<string, any> = { limit: perPage, offset: (page.value - 1) * perPage }
+    const params: Record<string, any> = { limit: pageSize.value, offset: (page.value - 1) * pageSize.value }
     if (filterAction.value) params.action = filterAction.value
     if (filterDateFrom.value) params.since = new Date(filterDateFrom.value).toISOString()
     if (filterDateTo.value) params.until = new Date(filterDateTo.value + 'T23:59:59').toISOString()
+    if (sortKey.value && sortDir.value) {
+      params.sort = sortKey.value
+      params.order = sortDir.value
+    }
     const res = await fetchAuditLogs(params)
     logs.value = res.data
     total.value = res.total
@@ -65,18 +83,12 @@ function clearFilters() {
   load()
 }
 
-function prevPage() {
-  if (page.value > 1 && !loading.value) { page.value--; load() }
-}
-
-function nextPage() {
-  if (page.value * perPage < total.value && !loading.value) { page.value++; load() }
-}
-
 function formatDetail(detail?: Record<string, any>): string {
   if (!detail) return '-'
   return Object.entries(detail).map(([k, v]) => `${k}: ${v}`).join(', ')
 }
+
+watch([sortKey, sortDir, page, pageSize], () => load())
 
 onMounted(load)
 </script>
@@ -121,59 +133,41 @@ onMounted(load)
       </button>
     </div>
 
-    <SkeletonTable v-if="loading" :rows="8" :columns="5" />
-
-    <ErrorState v-else-if="error" :message="error" :retryable="true" @retry="load" />
-
-    <div v-else class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden">
-      <table class="w-full text-sm">
-        <thead class="bg-[var(--color-bg-page)]">
-          <tr class="text-left text-[var(--color-text-tertiary)] text-xs uppercase tracking-wide">
-            <th class="px-4 py-3">Time</th>
-            <th class="px-4 py-3">User</th>
-            <th class="px-4 py-3">Action</th>
-            <th class="px-4 py-3">Resource</th>
-            <th class="px-4 py-3">ID</th>
-            <th class="px-4 py-3">Details</th>
-            <th class="px-4 py-3">IP</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="log in logs" :key="log.id" class="border-t border-[var(--color-border-muted)] hover:bg-[var(--color-bg-hover)] transition-colors">
-            <td class="px-4 py-3 text-[var(--color-text-tertiary)] text-xs whitespace-nowrap">
-              {{ new Date(log.created_at).toLocaleString() }}
-            </td>
-            <td class="px-4 py-3 text-[var(--color-text-secondary)]">{{ log.user_email }}</td>
-            <td class="px-4 py-3">
-              <span class="px-2 py-0.5 rounded-full text-xs font-medium" :class="actionColors[log.action] || 'bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)]'">
-                {{ log.action }}
-              </span>
-            </td>
-            <td class="px-4 py-3 text-[var(--color-text-secondary)] font-medium">{{ log.resource }}</td>
-            <td class="px-4 py-3 text-[var(--color-text-tertiary)] font-mono text-xs">{{ log.resource_id ?? '-' }}</td>
-            <td class="px-4 py-3 text-[var(--color-text-tertiary)] text-xs max-w-xs truncate">{{ formatDetail(log.detail) }}</td>
-            <td class="px-4 py-3 text-[var(--color-text-muted)] font-mono text-xs">{{ log.ip_address || '-' }}</td>
-          </tr>
-          <tr v-if="logs.length === 0">
-            <td colspan="7" class="px-4 py-8 text-center text-[var(--color-text-muted)]">No audit logs found</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="flex items-center justify-between px-4 py-3 border-t border-[var(--color-border)] bg-[var(--color-bg-page)]">
-        <span class="text-xs text-[var(--color-text-tertiary)]">{{ total }} total entries</span>
-        <div class="flex gap-2">
-          <button @click="prevPage" :disabled="page <= 1"
-                  class="px-3 py-1 text-xs rounded border border-[var(--color-border)] bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-page)] disabled:opacity-50">
-            Previous
-          </button>
-          <span class="px-3 py-1 text-xs text-[var(--color-text-secondary)]">Page {{ page }}</span>
-          <button @click="nextPage" :disabled="page * perPage >= total"
-                  class="px-3 py-1 text-xs rounded border border-[var(--color-border)] bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-page)] disabled:opacity-50">
-            Next
-          </button>
-        </div>
-      </div>
-    </div>
+    <DataTable
+      :columns="columns"
+      :rows="logs"
+      row-key="id"
+      :loading="loading"
+      :error="error"
+      :total="total"
+      empty-title="No audit logs found"
+      sortable
+      paginated
+      v-model:sort-key="sortKey"
+      v-model:sort-dir="sortDir"
+      v-model:page="page"
+      v-model:page-size="pageSize"
+      @retry="load"
+    >
+      <template #cell-created_at="{ row }">
+        <span class="text-xs text-[var(--color-text-tertiary)] whitespace-nowrap">
+          {{ new Date(row.created_at).toLocaleString() }}
+        </span>
+      </template>
+      <template #cell-action="{ row }">
+        <span class="px-2 py-0.5 rounded-full text-xs font-medium" :class="actionColors[row.action] || 'bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)]'">
+          {{ row.action }}
+        </span>
+      </template>
+      <template #cell-resource_id="{ row }">
+        <span class="font-mono text-xs text-[var(--color-text-tertiary)]">{{ row.resource_id ?? '-' }}</span>
+      </template>
+      <template #cell-detail="{ row }">
+        <span class="text-xs text-[var(--color-text-tertiary)] inline-block max-w-xs truncate align-bottom">{{ formatDetail(row.detail) }}</span>
+      </template>
+      <template #cell-ip_address="{ row }">
+        <span class="font-mono text-xs text-[var(--color-text-muted)]">{{ row.ip_address || '-' }}</span>
+      </template>
+    </DataTable>
   </div>
 </template>

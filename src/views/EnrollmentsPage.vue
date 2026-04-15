@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
+import DataTable, { type Column } from '@/components/DataTable.vue'
+import { usePreferencesStore } from '@/stores/preferences'
 import { fetchEnrollments, exportEnrollments } from '@/api/dashboard'
 import { getEnrollmentStatusVocabulary, DEFAULT_ENROLLMENT_STATUSES } from '@/api/enrollments'
 import { useAuthStore } from '@/stores/auth'
@@ -10,14 +12,36 @@ import type { CampaignEnrollment } from '@/api/types'
 
 const auth = useAuthStore()
 const { showToast } = useToast()
+const prefs = usePreferencesStore()
 const exporting = ref(false)
 
 const enrollments = ref<CampaignEnrollment[]>([])
 const total = ref(0)
 const loading = ref(true)
 const error = ref('')
-const page = ref(0)
-const limit = 25
+const page = ref(1)
+const pageSize = ref(prefs.pageSize || 25)
+
+const sortKey = ref<string | null>('enrolled_at')
+const sortDir = ref<'asc' | 'desc' | null>('desc')
+
+const columns: Column[] = [
+  { key: 'id', label: 'ID', width: '80px' },
+  { key: 'campaign_slug', label: 'Campaign', sortable: true },
+  { key: 'client_id', label: 'Client' },
+  { key: 'current_step', label: 'Step', width: '60px' },
+  { key: 'status', label: 'Status' },
+  { key: 'next_step_at', label: 'Next Step At' },
+  { key: 'enrolled_at', label: 'Enrolled', sortable: true },
+]
+
+// Surface enrollments with a pre-derived campaign_slug so the column
+// can read it straight from the row key (the API shape nests it under
+// definition.slug, which DataTable's default cell can't reach).
+const displayRows = computed(() => enrollments.value.map(e => ({
+  ...e,
+  campaign_slug: e.definition?.slug ?? e.campaign_definition_id,
+})))
 
 const filterStatus = ref('')
 const filterCampaign = ref('')
@@ -32,10 +56,14 @@ async function load() {
   loading.value = true
   error.value = ''
   try {
-    const params: Record<string, any> = { limit, offset: page.value * limit }
+    const params: Record<string, any> = { limit: pageSize.value, offset: (page.value - 1) * pageSize.value }
     if (filterStatus.value) params.status = filterStatus.value
     if (filterCampaign.value) params.campaign = filterCampaign.value
     if (filterClient.value) params.client_id = filterClient.value
+    if (sortKey.value && sortDir.value) {
+      params.sort = sortKey.value
+      params.order = sortDir.value
+    }
 
     const result = await fetchEnrollments(params)
     enrollments.value = result.data || []
@@ -59,10 +87,11 @@ let debounceTimer: ReturnType<typeof setTimeout> | null = null
 watch([filterStatus, filterCampaign, filterClient], () => {
   if (debounceTimer) clearTimeout(debounceTimer)
   debounceTimer = setTimeout(() => {
-    page.value = 0
+    page.value = 1
     load()
   }, 300)
 })
+watch([sortKey, sortDir, page, pageSize], () => load())
 
 // Prevent a pending debounced fetch from firing after the component is
 // torn down (it would touch `page` / `load` on a disposed instance).
@@ -126,69 +155,34 @@ function formatDate(d?: string): string {
       />
     </div>
 
-    <!-- Error -->
-    <div v-if="error" class="mb-4 bg-[var(--color-error-bg)] border border-[var(--color-error-border)] text-[var(--color-error-text)] px-4 py-3 rounded-lg text-sm">{{ error }}</div>
-
-    <!-- Table -->
-    <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-[var(--color-border)]">
-          <thead class="bg-[var(--color-bg-page)]">
-            <tr>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">ID</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Campaign</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Client</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Step</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Status</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Next Step At</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Enrolled</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-[var(--color-border-muted)]">
-            <tr v-if="loading">
-              <td colspan="7" class="px-4 py-8 text-center text-[var(--color-text-muted)]">Loading...</td>
-            </tr>
-            <tr v-else-if="enrollments.length === 0">
-              <td colspan="7" class="px-4 py-8 text-center text-[var(--color-text-muted)]">
-                No enrollments found. Enrollments are created when a tracked event (e.g.
-                <code class="text-xs bg-[var(--color-bg-subtle)] px-1 rounded">client-registered</code>,
-                <code class="text-xs bg-[var(--color-bg-subtle)] px-1 rounded">checkout-started</code>)
-                matches an active campaign trigger.
-              </td>
-            </tr>
-            <tr v-for="e in enrollments" :key="e.id" class="hover:bg-[var(--color-bg-hover)] transition-colors">
-              <td class="px-4 py-3 text-sm text-[var(--color-text-tertiary)]">#{{ e.id }}</td>
-              <td class="px-4 py-3 text-sm font-medium text-[var(--color-text-primary)]">{{ e.definition?.slug ?? e.campaign_definition_id }}</td>
-              <td class="px-4 py-3 text-sm text-[var(--color-text-secondary)]">{{ e.client_id }}</td>
-              <td class="px-4 py-3 text-sm text-[var(--color-text-secondary)]">{{ e.current_step }}</td>
-              <td class="px-4 py-3"><StatusBadge :status="e.status" /></td>
-              <td class="px-4 py-3 text-sm text-[var(--color-text-tertiary)]">{{ formatDate(e.next_step_at) }}</td>
-              <td class="px-4 py-3 text-sm text-[var(--color-text-tertiary)]">{{ formatDate(e.enrolled_at) }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Pagination -->
-      <div class="px-4 py-3 border-t border-[var(--color-border)] flex items-center justify-between text-sm text-[var(--color-text-tertiary)]">
-        <span>{{ total }} total</span>
-        <div class="flex gap-2">
-          <button
-            :disabled="page === 0"
-            @click="page--; load()"
-            class="px-3 py-1 rounded border border-[var(--color-border)] disabled:opacity-50 hover:bg-[var(--color-bg-hover)] transition-colors"
-          >
-            Prev
-          </button>
-          <button
-            :disabled="(page + 1) * limit >= total"
-            @click="page++; load()"
-            class="px-3 py-1 rounded border border-[var(--color-border)] disabled:opacity-50 hover:bg-[var(--color-bg-hover)] transition-colors"
-          >
-            Next
-          </button>
-        </div>
-      </div>
-    </div>
+    <DataTable
+      :columns="columns"
+      :rows="displayRows"
+      row-key="id"
+      :loading="loading"
+      :error="error"
+      :total="total"
+      empty-title="No enrollments found"
+      empty-description="Enrollments are created when a tracked event (e.g. client-registered, checkout-started) matches an active campaign trigger."
+      sortable
+      paginated
+      v-model:sort-key="sortKey"
+      v-model:sort-dir="sortDir"
+      v-model:page="page"
+      v-model:page-size="pageSize"
+      @retry="load"
+    >
+      <template #cell-id="{ row }">#{{ row.id }}</template>
+      <template #cell-campaign_slug="{ row }">
+        <span class="font-medium text-[var(--color-text-primary)]">{{ row.campaign_slug }}</span>
+      </template>
+      <template #cell-status="{ row }"><StatusBadge :status="row.status" /></template>
+      <template #cell-next_step_at="{ row }">
+        <span class="text-sm text-[var(--color-text-tertiary)]">{{ formatDate(row.next_step_at) }}</span>
+      </template>
+      <template #cell-enrolled_at="{ row }">
+        <span class="text-sm text-[var(--color-text-tertiary)]">{{ formatDate(row.enrolled_at) }}</span>
+      </template>
+    </DataTable>
   </div>
 </template>

@@ -1,22 +1,42 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
+import ChannelChip from '@/components/ChannelChip.vue'
+import DataTable, { type Column } from '@/components/DataTable.vue'
 import { fetchLogs, exportLogs } from '@/api/dashboard'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
+import { usePreferencesStore } from '@/stores/preferences'
 import type { CampaignLog } from '@/api/types'
 
 const auth = useAuthStore()
 const { showToast } = useToast()
+const prefs = usePreferencesStore()
 const exporting = ref(false)
 
 const logs = ref<CampaignLog[]>([])
 const total = ref(0)
 const loading = ref(true)
 const error = ref('')
-const page = ref(0)
-const limit = 50
+// DataTable uses 1-based pages; translate on the API boundary below.
+const page = ref(1)
+const pageSize = ref(prefs.pageSize || 50)
+
+// Server-side sort. `created_at` desc is the default for logs.
+const sortKey = ref<string | null>('created_at')
+const sortDir = ref<'asc' | 'desc' | null>('desc')
+
+const columns: Column[] = [
+  { key: 'created_at', label: 'Time', sortable: true, width: '160px' },
+  { key: 'campaign_slug', label: 'Campaign' },
+  { key: 'client_id', label: 'Client' },
+  { key: 'step_index', label: 'Step', width: '60px' },
+  { key: 'channel', label: 'Channel', width: '120px' },
+  { key: 'provider', label: 'Provider' },
+  { key: 'status', label: 'Status' },
+  { key: 'error_message', label: 'Error' },
+]
 
 const filterCampaign = ref('')
 const filterStatus = ref('')
@@ -26,10 +46,19 @@ async function load() {
   loading.value = true
   error.value = ''
   try {
-    const params: Record<string, any> = { limit, offset: page.value * limit }
+    const params: Record<string, any> = {
+      limit: pageSize.value,
+      offset: (page.value - 1) * pageSize.value,
+    }
     if (filterCampaign.value) params.campaign = filterCampaign.value
     if (filterStatus.value) params.status = filterStatus.value
     if (filterChannel.value) params.channel = filterChannel.value
+    // NOTE: backend accepts sort/order; unknown keys are ignored so this
+    // degrades gracefully for endpoints that don't yet sort.
+    if (sortKey.value && sortDir.value) {
+      params.sort = sortKey.value
+      params.order = sortDir.value
+    }
 
     const result = await fetchLogs(params)
     logs.value = result.data || []
@@ -47,10 +76,11 @@ let debounceTimer: ReturnType<typeof setTimeout> | null = null
 watch([filterCampaign, filterStatus, filterChannel], () => {
   if (debounceTimer) clearTimeout(debounceTimer)
   debounceTimer = setTimeout(() => {
-    page.value = 0
+    page.value = 1
     load()
   }, 300)
 })
+watch([sortKey, sortDir, page, pageSize], () => load())
 
 // Clear any pending debounced fetch so it can't fire after unmount.
 onUnmounted(() => {
@@ -125,56 +155,39 @@ function formatDate(d?: string): string {
       </select>
     </div>
 
-    <!-- Error -->
-    <div v-if="error" class="mb-4 bg-[var(--color-error-bg)] border border-[var(--color-error-border)] text-[var(--color-error-text)] px-4 py-3 rounded-lg text-sm">{{ error }}</div>
-
-    <!-- Table -->
-    <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-[var(--color-border)]">
-          <thead class="bg-[var(--color-bg-page)]">
-            <tr>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Time</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Campaign</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Client</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Step</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Channel</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Provider</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Status</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--color-text-tertiary)] uppercase">Error</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-[var(--color-border-muted)]">
-            <tr v-if="loading">
-              <td colspan="8" class="px-4 py-8 text-center text-[var(--color-text-muted)]">Loading...</td>
-            </tr>
-            <tr v-else-if="logs.length === 0">
-              <td colspan="8" class="px-4 py-8 text-center text-[var(--color-text-muted)]">No logs found</td>
-            </tr>
-            <tr v-for="log in logs" :key="log.id" class="hover:bg-[var(--color-bg-hover)] transition-colors">
-              <td class="px-4 py-3 text-xs text-[var(--color-text-tertiary)]">{{ formatDate(log.created_at) }}</td>
-              <td class="px-4 py-3 text-sm font-medium text-[var(--color-text-primary)]">{{ log.campaign_slug }}</td>
-              <td class="px-4 py-3 text-sm text-[var(--color-text-secondary)]">{{ log.client_id }}</td>
-              <td class="px-4 py-3 text-sm text-[var(--color-text-secondary)]">{{ log.step_index }}</td>
-              <td class="px-4 py-3 text-sm text-[var(--color-text-secondary)]">{{ log.channel }}</td>
-              <td class="px-4 py-3 text-sm text-[var(--color-text-tertiary)]">{{ log.provider }}</td>
-              <td class="px-4 py-3"><StatusBadge :status="log.status" /></td>
-              <td class="px-4 py-3 text-xs text-[var(--color-error-text)] max-w-[200px] truncate" :title="log.error_message">
-                {{ log.error_message || '—' }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Pagination -->
-      <div class="px-4 py-3 border-t border-[var(--color-border)] flex items-center justify-between text-sm text-[var(--color-text-tertiary)]">
-        <span>{{ total }} total</span>
-        <div class="flex gap-2">
-          <button :disabled="page === 0" @click="page--; load()" class="px-3 py-1 rounded border border-[var(--color-border)] disabled:opacity-50 hover:bg-[var(--color-bg-hover)] transition-colors">Prev</button>
-          <button :disabled="(page + 1) * limit >= total" @click="page++; load()" class="px-3 py-1 rounded border border-[var(--color-border)] disabled:opacity-50 hover:bg-[var(--color-bg-hover)] transition-colors">Next</button>
-        </div>
-      </div>
-    </div>
+    <DataTable
+      :columns="columns"
+      :rows="logs"
+      row-key="id"
+      :loading="loading"
+      :error="error"
+      :total="total"
+      empty-title="No logs found"
+      sortable
+      paginated
+      v-model:sort-key="sortKey"
+      v-model:sort-dir="sortDir"
+      v-model:page="page"
+      v-model:page-size="pageSize"
+      @retry="load"
+    >
+      <template #cell-created_at="{ row }">
+        <span class="text-xs text-[var(--color-text-tertiary)]">{{ formatDate(row.created_at) }}</span>
+      </template>
+      <template #cell-campaign_slug="{ row }">
+        <span class="font-medium text-[var(--color-text-primary)]">{{ row.campaign_slug }}</span>
+      </template>
+      <template #cell-channel="{ row }">
+        <ChannelChip :channel="row.channel" />
+      </template>
+      <template #cell-status="{ row }">
+        <StatusBadge :status="row.status" />
+      </template>
+      <template #cell-error_message="{ row }">
+        <span class="text-xs text-[var(--color-error-text)] inline-block max-w-[200px] truncate align-bottom" :title="row.error_message">
+          {{ row.error_message || '—' }}
+        </span>
+      </template>
+    </DataTable>
   </div>
 </template>
