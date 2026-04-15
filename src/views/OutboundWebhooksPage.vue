@@ -208,19 +208,19 @@ function formatDate(s?: string | null): string {
     <div v-if="stats" class="grid grid-cols-2 gap-3 sm:grid-cols-5">
       <div class="rounded-lg border border-neutral-200 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-900">
         <div class="text-[11px] font-medium uppercase tracking-wide text-neutral-500">Delivered · 24h</div>
-        <div class="mt-1 text-2xl font-semibold tabular-nums text-emerald-700 dark:text-emerald-400">{{ stats.delivered.toLocaleString() }}</div>
+        <div class="mt-1 text-2xl font-semibold tabular-nums text-[var(--color-success-text)] dark:text-emerald-400">{{ stats.delivered.toLocaleString() }}</div>
       </div>
       <div class="rounded-lg border border-neutral-200 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-900">
         <div class="text-[11px] font-medium uppercase tracking-wide text-neutral-500">Failed · 24h</div>
-        <div class="mt-1 text-2xl font-semibold tabular-nums" :class="stats.failed > 0 ? 'text-rose-700 dark:text-rose-400' : 'text-neutral-400'">{{ stats.failed.toLocaleString() }}</div>
+        <div class="mt-1 text-2xl font-semibold tabular-nums" :class="stats.failed > 0 ? 'text-[var(--color-error-text)] dark:text-rose-400' : 'text-neutral-400'">{{ stats.failed.toLocaleString() }}</div>
       </div>
       <div class="rounded-lg border border-neutral-200 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-900">
         <div class="text-[11px] font-medium uppercase tracking-wide text-neutral-500">Retrying now</div>
-        <div class="mt-1 text-2xl font-semibold tabular-nums" :class="stats.retrying > 0 ? 'text-amber-700 dark:text-amber-400' : 'text-neutral-400'">{{ stats.retrying.toLocaleString() }}</div>
+        <div class="mt-1 text-2xl font-semibold tabular-nums" :class="stats.retrying > 0 ? 'text-[var(--color-warning-text)] dark:text-amber-400' : 'text-neutral-400'">{{ stats.retrying.toLocaleString() }}</div>
       </div>
       <div class="rounded-lg border border-neutral-200 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-900">
         <div class="text-[11px] font-medium uppercase tracking-wide text-neutral-500">Pending</div>
-        <div class="mt-1 text-2xl font-semibold tabular-nums" :class="stats.pending > 10 ? 'text-amber-700 dark:text-amber-400' : 'text-neutral-400'">{{ stats.pending.toLocaleString() }}</div>
+        <div class="mt-1 text-2xl font-semibold tabular-nums" :class="stats.pending > 10 ? 'text-[var(--color-warning-text)] dark:text-amber-400' : 'text-neutral-400'">{{ stats.pending.toLocaleString() }}</div>
       </div>
       <div class="rounded-lg border border-neutral-200 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-900">
         <div class="text-[11px] font-medium uppercase tracking-wide text-neutral-500">Success rate</div>
@@ -271,8 +271,8 @@ function formatDate(s?: string | null): string {
             </td>
             <td class="px-4 py-3 text-xs">
               <div v-if="w.last_delivery_at" class="flex items-center gap-1">
-                <CheckCircleIcon v-if="w.last_delivery_success" class="h-3.5 w-3.5 text-emerald-600" />
-                <ExclamationTriangleIcon v-else class="h-3.5 w-3.5 text-rose-600" />
+                <CheckCircleIcon v-if="w.last_delivery_success" class="h-3.5 w-3.5 text-[var(--color-success-text)]" />
+                <ExclamationTriangleIcon v-else class="h-3.5 w-3.5 text-[var(--color-error-text)]" />
                 <span>{{ formatDate(w.last_delivery_at) }}</span>
               </div>
               <span v-else class="text-neutral-400">never</span>
@@ -288,7 +288,7 @@ function formatDate(s?: string | null): string {
                 <button @click="openEdit(w)" class="rounded p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-white" :aria-label="`Edit webhook ${w.name}`" title="Edit">
                   <PencilSquareIcon class="h-4 w-4" />
                 </button>
-                <button @click="deleteTarget = w" class="rounded p-1.5 text-neutral-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/30" :aria-label="`Delete webhook ${w.name}`" title="Delete">
+                <button @click="deleteTarget = w" class="rounded p-1.5 text-neutral-500 hover:bg-[var(--color-error-soft)] hover:text-[var(--color-error-text)] dark:hover:bg-rose-900/30" :aria-label="`Delete webhook ${w.name}`" title="Delete">
                   <TrashIcon class="h-4 w-4" />
                 </button>
               </div>
@@ -309,9 +309,9 @@ function formatDate(s?: string | null): string {
         </div>
 
         <div class="space-y-4 p-4">
-          <div v-if="revealedSecret" class="rounded-md border border-amber-300 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950/40">
-            <p class="text-sm font-medium text-amber-900 dark:text-amber-200">Signing secret (shown once)</p>
-            <p class="mt-1 text-xs text-amber-800 dark:text-amber-300">Save this now — it will never be shown again.</p>
+          <div v-if="revealedSecret" class="rounded-md border border-amber-300 bg-[var(--color-warning-soft)] p-3 dark:border-amber-900 dark:bg-amber-950/40">
+            <p class="text-sm font-medium text-[var(--color-warning-text)] dark:text-amber-200">Signing secret (shown once)</p>
+            <p class="mt-1 text-xs text-[var(--color-warning-text)] dark:text-amber-300">Save this now — it will never be shown again.</p>
             <div class="mt-2 flex items-center gap-2">
               <code class="flex-1 break-all rounded bg-white px-2 py-1 font-mono text-xs dark:bg-neutral-900">{{ revealedSecret }}</code>
               <button @click="copyToClipboard(revealedSecret!, 'Secret copied')" class="rounded bg-amber-600 px-2 py-1 text-xs font-medium text-white hover:bg-amber-700">
@@ -482,7 +482,7 @@ func verify(rawBody []byte, h http.Header, secret string) bool {
               <span v-if="d.delivered_at">delivered {{ formatDate(d.delivered_at) }}</span>
               <span v-else-if="d.next_attempt_at">next attempt {{ formatDate(d.next_attempt_at) }}</span>
             </div>
-            <p v-if="d.error_message" class="mt-1 font-mono text-xs text-rose-600 dark:text-rose-400">{{ d.error_message }}</p>
+            <p v-if="d.error_message" class="mt-1 font-mono text-xs text-[var(--color-error-text)] dark:text-rose-400">{{ d.error_message }}</p>
             <details v-if="d.response_body" class="mt-1">
               <summary class="cursor-pointer text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white">Response body</summary>
               <pre class="mt-1 max-h-48 overflow-auto rounded bg-neutral-50 p-2 text-[11px] dark:bg-neutral-800">{{ d.response_body }}</pre>

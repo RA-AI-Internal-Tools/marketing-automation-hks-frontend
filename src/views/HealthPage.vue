@@ -114,7 +114,7 @@ const serviceGroups = computed(() => [
             <div
               :class="[
                 'h-12 w-12 rounded-full flex items-center justify-center text-lg font-bold',
-                health?.status === 'ok' ? 'bg-green-100 text-green-700' : error ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700',
+                health?.status === 'ok' ? 'bg-[var(--color-success-soft)] text-[var(--color-success-text)]' : error ? 'bg-[var(--color-error-soft)] text-[var(--color-error-text)]' : 'bg-[var(--color-warning-soft)] text-[var(--color-warning-text)]',
               ]"
             >
               {{ health?.status === 'ok' ? '\u2713' : error ? '\u2715' : '!' }}
@@ -162,7 +162,7 @@ const serviceGroups = computed(() => [
         </section>
       </div>
 
-      <p v-if="error" class="mt-6 text-center text-red-600">{{ error }}</p>
+      <p v-if="error" class="mt-6 text-center text-[var(--color-error-text)]">{{ error }}</p>
     </template>
   </div>
 </template>

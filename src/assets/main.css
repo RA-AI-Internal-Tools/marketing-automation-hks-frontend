@@ -2,6 +2,15 @@
 @import "./design-system.css";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
+/* Tailwind v4 theme extension — expose design-system brand/accent tokens as
+ * Tailwind color utilities (e.g. `bg-ma-accent`, `text-ma-accent`,
+ * `ring-ma-accent`, `border-ma-accent`, `focus:border-ma-accent`). Values
+ * reference CSS variables so dark mode + theme swaps propagate automatically. */
+@theme {
+  --color-ma-accent: var(--hks-cyan);
+  --color-ma-accent-hover: var(--color-accent-hover);
+}
+
 /* Global font & smoothing */
 body {
   font-family: var(--font-sans);

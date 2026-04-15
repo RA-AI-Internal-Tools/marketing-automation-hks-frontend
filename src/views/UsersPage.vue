@@ -180,7 +180,7 @@ onMounted(load)
                 <button @click="openEdit(user)" class="text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors" :aria-label="`Edit user ${user.email}`" title="Edit">
                   <PencilSquareIcon class="h-4 w-4" />
                 </button>
-                <button @click="confirmDelete = user" class="text-[var(--color-text-muted)] hover:text-red-600 transition-colors" :aria-label="`Delete user ${user.email}`" title="Delete">
+                <button @click="confirmDelete = user" class="text-[var(--color-text-muted)] hover:text-[var(--color-error-text)] transition-colors" :aria-label="`Delete user ${user.email}`" title="Delete">
                   <TrashIcon class="h-4 w-4" />
                 </button>
               </div>
@@ -245,7 +245,7 @@ onMounted(load)
               <label for="is_active" class="text-sm text-[var(--color-text-secondary)]">Active</label>
             </div>
 
-            <div v-if="formError" class="text-sm text-red-600">{{ formError }}</div>
+            <div v-if="formError" class="text-sm text-[var(--color-error-text)]">{{ formError }}</div>
 
             <div class="flex justify-end gap-3 pt-2">
               <button type="button" @click="showModal = false"

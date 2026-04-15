@@ -60,7 +60,7 @@ watch(() => analytics.queryParams, load)
             <tbody>
               <tr v-for="r in data.failure_reasons" :key="r.reason" class="border-t border-[var(--color-border-muted)]">
                 <td class="py-2 text-[var(--color-text-primary)]">{{ r.reason }}</td>
-                <td class="py-2 text-right text-red-600">{{ r.count.toLocaleString() }}</td>
+                <td class="py-2 text-right text-[var(--color-error-text)]">{{ r.count.toLocaleString() }}</td>
               </tr>
             </tbody>
           </table>

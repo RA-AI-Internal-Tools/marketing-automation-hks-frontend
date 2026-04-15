@@ -118,7 +118,7 @@ function createOptOut(channel: string) {
           Lookup
         </button>
       </div>
-      <p v-if="error" class="mt-2 text-sm text-red-600">{{ error }}</p>
+      <p v-if="error" class="mt-2 text-sm text-[var(--color-error-text)]">{{ error }}</p>
     </div>
 
     <!-- Results -->
@@ -153,7 +153,7 @@ function createOptOut(channel: string) {
               <button
                 v-if="auth.canWrite"
                 @click="toggleConsent(c)"
-                :class="c.opted_in ? 'text-red-600 hover:text-red-800' : 'text-green-600 hover:text-green-800'"
+                :class="c.opted_in ? 'text-[var(--color-error-text)] hover:text-[var(--color-error-text)]' : 'text-[var(--color-success-text)] hover:text-[var(--color-success-text)]'"
                 class="text-sm font-medium"
               >
                 {{ c.opted_in ? 'Opt Out' : 'Opt In' }}

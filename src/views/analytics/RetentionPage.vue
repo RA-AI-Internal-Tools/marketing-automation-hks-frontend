@@ -51,7 +51,7 @@ watch(() => analytics.queryParams, load)
                 <td class="py-2 text-[var(--color-text-primary)] font-mono text-xs">{{ c.campaign_slug }}</td>
                 <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ c.enrollments.toLocaleString() }}</td>
                 <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ c.conversions.toLocaleString() }}</td>
-                <td class="py-2 text-right text-green-600">{{ c.conversion_rate.toFixed(1) }}%</td>
+                <td class="py-2 text-right text-[var(--color-success-text)]">{{ c.conversion_rate.toFixed(1) }}%</td>
               </tr>
             </tbody>
           </table>
@@ -68,8 +68,8 @@ watch(() => analytics.queryParams, load)
               <tr v-for="s in data.consent_stats" :key="`${s.purpose}-${s.channel}`" class="border-t border-[var(--color-border-muted)]">
                 <td class="py-2 text-[var(--color-text-secondary)] capitalize">{{ s.purpose || 'unspecified' }}</td>
                 <td class="py-2 text-[var(--color-text-primary)] capitalize">{{ s.channel }}</td>
-                <td class="py-2 text-right text-green-600">{{ s.opted_in.toLocaleString() }}</td>
-                <td class="py-2 text-right text-red-500">{{ s.opted_out.toLocaleString() }}</td>
+                <td class="py-2 text-right text-[var(--color-success-text)]">{{ s.opted_in.toLocaleString() }}</td>
+                <td class="py-2 text-right text-[var(--color-error-text)]">{{ s.opted_out.toLocaleString() }}</td>
                 <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ s.rate.toFixed(1) }}%</td>
               </tr>
             </tbody>

@@ -9,22 +9,22 @@ const loading = ref(false)
 const error = ref('')
 
 const typeBadge: Record<string, string> = {
-  campaign: 'bg-blue-50 text-blue-700',
+  campaign: 'bg-[var(--color-info-soft)] text-[var(--color-info-text)]',
   event: 'bg-purple-50 text-purple-700',
-  email: 'bg-emerald-50 text-emerald-700',
-  sms: 'bg-orange-50 text-orange-700',
+  email: 'bg-[var(--color-success-soft)] text-[var(--color-success-text)]',
+  sms: 'bg-orange-50 text-[var(--color-warning-text)]',
   push: 'bg-pink-50 text-pink-700',
 }
 
 const statusBadge: Record<string, string> = {
-  sent: 'bg-green-50 text-green-700',
-  delivered: 'bg-green-100 text-green-800',
-  opened: 'bg-blue-50 text-blue-700',
-  clicked: 'bg-blue-100 text-blue-800',
-  failed: 'bg-red-50 text-red-700',
-  pending: 'bg-yellow-50 text-yellow-700',
-  completed: 'bg-green-50 text-green-700',
-  cancelled: 'bg-gray-100 text-gray-700',
+  sent: 'bg-[var(--color-success-soft)] text-[var(--color-success-text)]',
+  delivered: 'bg-[var(--color-success-soft)] text-[var(--color-success-text)]',
+  opened: 'bg-[var(--color-info-soft)] text-[var(--color-info-text)]',
+  clicked: 'bg-[var(--color-info-soft)] text-[var(--color-info-text)]',
+  failed: 'bg-[var(--color-error-soft)] text-[var(--color-error-text)]',
+  pending: 'bg-[var(--color-warning-soft)] text-[var(--color-warning-text)]',
+  completed: 'bg-[var(--color-success-soft)] text-[var(--color-success-text)]',
+  cancelled: 'bg-[var(--color-bg-page)] text-[var(--color-text-secondary)]',
 }
 
 async function load() {

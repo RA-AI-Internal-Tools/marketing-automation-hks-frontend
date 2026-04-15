@@ -214,7 +214,7 @@ watch(() => props.open, async (v) => {
 /* Reusable danger button — extends design-system .btn token. */
 :global(.btn-danger) {
   background: var(--color-error);
-  color: #fff;
+  color: var(--color-on-brand);
   border: 1px solid var(--color-error);
 }
 :global(.btn-danger:hover) {

@@ -14,7 +14,7 @@ const error = ref('')
 function retentionColor(pct: number): string {
   if (pct >= 80) return 'bg-green-600 text-white'
   if (pct >= 60) return 'bg-green-400 text-white'
-  if (pct >= 40) return 'bg-yellow-400 text-gray-900'
+  if (pct >= 40) return 'bg-yellow-400 text-[var(--color-text-primary)]'
   if (pct >= 20) return 'bg-orange-400 text-white'
   if (pct > 0) return 'bg-red-400 text-white'
   return 'bg-[var(--color-bg-subtle)] text-[var(--color-text-muted)]'

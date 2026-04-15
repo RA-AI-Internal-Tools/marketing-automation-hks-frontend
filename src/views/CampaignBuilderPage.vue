@@ -38,6 +38,7 @@ import '@vue-flow/controls/dist/style.css'
 import '@vue-flow/minimap/dist/style.css'
 
 import PageHeader from '@/components/PageHeader.vue'
+import { getDesignColor } from '@/utils/chartColors'
 import SendNode from '@/components/campaign-builder/SendNode.vue'
 import WaitNode from '@/components/campaign-builder/WaitNode.vue'
 import WebhookNode from '@/components/campaign-builder/WebhookNode.vue'
@@ -190,11 +191,19 @@ function mapType(n: CampaignGraphNode): 'send' | 'wait' | 'webhook' | 'condition
   return 'send'
 }
 
+// Canvas grid-dot colour: pulled from the design-system so dark mode
+// swaps the pattern contrast without re-rendering logic.
+const canvasPatternColor = computed(() =>
+  getDesignColor('--color-canvas-pattern', '#cbd5e1'),
+)
+
 function edgeStyle(label: string) {
+  // Edge colour keys off the design-system semantic tokens so dark mode
+  // flips automatically. `stroke` as a CSS property supports var().
   switch (label) {
-    case 'true':  return { stroke: '#059669', strokeWidth: 2 }
-    case 'false': return { stroke: '#dc2626', strokeWidth: 2 }
-    default:      return { stroke: '#64748b', strokeWidth: 2 }
+    case 'true':  return { stroke: 'var(--color-success)', strokeWidth: 2 }
+    case 'false': return { stroke: 'var(--color-error)', strokeWidth: 2 }
+    default:      return { stroke: 'var(--color-text-muted)', strokeWidth: 2 }
   }
 }
 
@@ -463,7 +472,7 @@ onMounted(async () => {
   <div class="flex h-screen flex-col bg-neutral-50 dark:bg-neutral-950">
     <PageHeader :title="campaignName || 'Campaign builder'" :description="slug ? `#${slug}` : ''">
       <template #actions>
-        <span v-if="dirty" class="text-xs text-amber-700 dark:text-amber-400">● unsaved</span>
+        <span v-if="dirty" class="text-xs text-[var(--color-warning-text)] dark:text-amber-400">● unsaved</span>
         <button @click="router.push(`/campaigns/${route.params.id}/edit`)"
                 class="inline-flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800">
           <ArrowLeftIcon class="h-4 w-4" /> List editor
@@ -482,11 +491,11 @@ onMounted(async () => {
         <h3 class="mb-3 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Add step</h3>
         <div class="space-y-2">
           <button @click="addNode('send')"
-                  class="flex w-full items-center gap-2 rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-900 hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">
+                  class="flex w-full items-center gap-2 rounded-md border border-emerald-300 bg-[var(--color-success-soft)] px-3 py-2 text-xs font-medium text-[var(--color-success-text)] hover:bg-[var(--color-success-soft)] dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">
             <PaperAirplaneIcon class="h-4 w-4" /> Send
           </button>
           <button @click="addNode('wait')"
-                  class="flex w-full items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900 hover:bg-amber-100 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                  class="flex w-full items-center gap-2 rounded-md border border-amber-300 bg-[var(--color-warning-soft)] px-3 py-2 text-xs font-medium text-[var(--color-warning-text)] hover:bg-[var(--color-warning-soft)] dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
             <PauseIcon class="h-4 w-4" /> Wait
           </button>
           <button @click="addNode('condition')"
@@ -500,8 +509,8 @@ onMounted(async () => {
         </div>
 
         <h3 class="mb-2 mt-6 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Issues</h3>
-        <div v-if="lintIssues.length === 0" class="text-[11px] text-emerald-700 dark:text-emerald-400">✓ looks good</div>
-        <ul v-else class="space-y-1 text-[11px] text-rose-700 dark:text-rose-400">
+        <div v-if="lintIssues.length === 0" class="text-[11px] text-[var(--color-success-text)] dark:text-emerald-400">✓ looks good</div>
+        <ul v-else class="space-y-1 text-[11px] text-[var(--color-error-text)] dark:text-rose-400">
           <li v-for="(i, idx) in lintIssues" :key="idx"
               class="cursor-pointer hover:underline"
               @click="i.nodeId && (selectedNodeId = i.nodeId)">
@@ -511,7 +520,7 @@ onMounted(async () => {
       </aside>
 
       <!-- Canvas -->
-      <div class="relative flex-1 min-w-0" style="background: var(--color-bg-page, #fafafa)">
+      <div class="relative flex-1 min-w-0" style="background: var(--color-canvas-bg)">
         <VueFlow
           :nodes="nodes"
           :edges="edges"
@@ -521,7 +530,7 @@ onMounted(async () => {
           :min-zoom="0.25"
           :max-zoom="2"
         >
-          <Background pattern-color="#cbd5e1" :gap="20" />
+          <Background :pattern-color="canvasPatternColor" :gap="20" />
           <Controls />
           <MiniMap pannable zoomable />
         </VueFlow>
@@ -536,7 +545,7 @@ onMounted(async () => {
         <div class="mb-3 flex items-center justify-between">
           <h3 class="text-sm font-semibold">Properties</h3>
           <div class="flex gap-1">
-            <button @click="deleteSelected" class="rounded p-1 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40" aria-label="Delete selected node" title="Delete node">
+            <button @click="deleteSelected" class="rounded p-1 text-[var(--color-error-text)] hover:bg-[var(--color-error-soft)] dark:hover:bg-rose-950/40" aria-label="Delete selected node" title="Delete node">
               <TrashIcon class="h-4 w-4" />
             </button>
             <button @click="selectedNodeId = null" class="rounded p-1 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800" aria-label="Deselect node">

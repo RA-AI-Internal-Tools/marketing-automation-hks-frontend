@@ -46,13 +46,13 @@ const tabs = [
       <span class="hidden sm:inline">{{ tab.label }}</span>
       <span
         v-if="tab.key === 'settings' && (errorCount || 0) > 0"
-        class="ml-0.5 inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full"
+        class="ml-0.5 inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 text-[10px] font-bold text-white bg-[var(--color-error-soft)]0 rounded-full"
       >
         {{ errorCount }}
       </span>
       <span
         v-else-if="tab.key === 'settings' && (warningCount || 0) > 0"
-        class="ml-0.5 inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 text-[10px] font-bold text-amber-700 bg-amber-100 rounded-full"
+        class="ml-0.5 inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 text-[10px] font-bold text-[var(--color-warning-text)] bg-[var(--color-warning-soft)] rounded-full"
       >
         {{ warningCount }}
       </span>

@@ -370,9 +370,9 @@ onMounted(load)
           <!-- Summary -->
           <div class="px-6 py-3 flex gap-4 border-b border-[var(--color-border)] bg-[var(--color-bg-page)]">
             <span class="text-sm"><strong>Total:</strong> {{ sendResult.summary.total }}</span>
-            <span class="text-sm text-green-600"><strong>Sent:</strong> {{ sendResult.summary.sent }}</span>
-            <span class="text-sm text-red-600"><strong>Failed:</strong> {{ sendResult.summary.failed }}</span>
-            <span class="text-sm text-amber-600"><strong>No Consent:</strong> {{ sendResult.summary.no_consent }}</span>
+            <span class="text-sm text-[var(--color-success-text)]"><strong>Sent:</strong> {{ sendResult.summary.sent }}</span>
+            <span class="text-sm text-[var(--color-error-text)]"><strong>Failed:</strong> {{ sendResult.summary.failed }}</span>
+            <span class="text-sm text-[var(--color-warning-text)]"><strong>No Consent:</strong> {{ sendResult.summary.no_consent }}</span>
           </div>
 
           <!-- Results table -->

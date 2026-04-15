@@ -104,10 +104,10 @@ function colorFor(t: JourneyTouchpoint): string {
     switch (status) {
       case 'delivered':
       case 'opened':
-      case 'clicked':    return 'bg-emerald-500 border-emerald-600'
+      case 'clicked':    return 'bg-[var(--color-success-soft)]0 border-emerald-600'
       case 'bounced':
       case 'failed':
-      case 'complaint':  return 'bg-rose-500 border-rose-600'
+      case 'complaint':  return 'bg-[var(--color-error-soft)]0 border-rose-600'
       case 'skipped':    return 'bg-neutral-400 border-neutral-500'
       default:           return 'bg-sky-500 border-sky-600'
     }

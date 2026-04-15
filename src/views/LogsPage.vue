@@ -159,7 +159,7 @@ function formatDate(d?: string): string {
               <td class="px-4 py-3 text-sm text-[var(--color-text-secondary)]">{{ log.channel }}</td>
               <td class="px-4 py-3 text-sm text-[var(--color-text-tertiary)]">{{ log.provider }}</td>
               <td class="px-4 py-3"><StatusBadge :status="log.status" /></td>
-              <td class="px-4 py-3 text-xs text-red-500 max-w-[200px] truncate" :title="log.error_message">
+              <td class="px-4 py-3 text-xs text-[var(--color-error-text)] max-w-[200px] truncate" :title="log.error_message">
                 {{ log.error_message || '—' }}
               </td>
             </tr>

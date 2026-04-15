@@ -433,7 +433,7 @@ function formatTime(iso: string) {
 }
 .bc-act:hover { color: var(--color-text-primary); background: var(--color-bg-subtle); border-color: var(--color-border); }
 .bc-act-primary { color: var(--hks-deep-blue); background: var(--color-primary-soft); border-color: var(--color-primary-border); }
-.bc-act-primary:hover { color: #fff; background: var(--hks-deep-blue); border-color: var(--hks-deep-blue); }
+.bc-act-primary:hover { color: var(--color-on-brand); background: var(--hks-deep-blue); border-color: var(--hks-deep-blue); }
 .bc-act-warn:hover { color: var(--color-warning); border-color: var(--color-warning-border); background: var(--color-warning-bg); }
 .bc-act-danger:hover { color: var(--color-error); border-color: var(--color-error-border); background: var(--color-error-bg); }
 

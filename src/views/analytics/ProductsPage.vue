@@ -55,9 +55,9 @@ watch(() => analytics.queryParams, load)
               <td class="py-2 text-[var(--color-text-primary)] font-medium">{{ p.name }}</td>
               <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ safeNumber(p.views).toLocaleString() }}</td>
               <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ safeNumber(p.add_to_cart).toLocaleString() }}</td>
-              <td class="py-2 text-right text-blue-600">{{ safeNumber(p.cart_rate).toFixed(1) }}%</td>
+              <td class="py-2 text-right text-[var(--color-info-text)]">{{ safeNumber(p.cart_rate).toFixed(1) }}%</td>
               <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ safeNumber(p.purchases).toLocaleString() }}</td>
-              <td class="py-2 text-right text-green-600">{{ safeNumber(p.conversion_rate).toFixed(1) }}%</td>
+              <td class="py-2 text-right text-[var(--color-success-text)]">{{ safeNumber(p.conversion_rate).toFixed(1) }}%</td>
               <td class="py-2 text-right text-[var(--color-text-primary)] font-medium">${{ safeNumber(p.revenue).toLocaleString() }}</td>
             </tr>
           </tbody>

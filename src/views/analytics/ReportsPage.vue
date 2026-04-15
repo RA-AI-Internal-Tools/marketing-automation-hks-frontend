@@ -163,14 +163,14 @@ async function confirmDelete() {
           <div>
             <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Name</label>
             <input v-model="form.name" type="text" placeholder="e.g. Weekly Campaign Summary"
-              class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40" />
+              class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-[var(--color-focus-ring)]/40" />
           </div>
 
           <!-- Schedule -->
           <div>
             <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Schedule</label>
             <select v-model="form.schedule"
-              class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40">
+              class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-[var(--color-focus-ring)]/40">
               <option v-for="opt in scheduleOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
             </select>
           </div>
@@ -179,7 +179,7 @@ async function confirmDelete() {
           <div>
             <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Format</label>
             <select v-model="form.format"
-              class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40">
+              class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-[var(--color-focus-ring)]/40">
               <option v-for="opt in formatOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
             </select>
           </div>
@@ -207,12 +207,12 @@ async function confirmDelete() {
           <div>
             <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Recipients (comma-separated emails)</label>
             <input v-model="form.recipients" type="text" placeholder="alice@example.com, bob@example.com"
-              class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-[#0099db]/40" />
+              class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-[var(--color-focus-ring)]/40" />
           </div>
 
           <!-- Active -->
           <label class="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
-            <input v-model="form.is_active" type="checkbox" class="rounded border-[var(--color-text-muted)] text-[var(--color-primary)] focus:ring-[#0099db]/40" />
+            <input v-model="form.is_active" type="checkbox" class="rounded border-[var(--color-text-muted)] text-[var(--color-primary)] focus:ring-[var(--color-focus-ring)]/40" />
             Active
           </label>
 
@@ -249,7 +249,7 @@ async function confirmDelete() {
               <span
                 v-for="m in report.modules"
                 :key="m"
-                class="px-2 py-0.5 bg-blue-50 text-[#020288] text-xs rounded-full"
+                class="px-2 py-0.5 bg-[var(--color-info-soft)] text-[var(--hks-deep-blue)] text-xs rounded-full"
               >
                 {{ m }}
               </span>
@@ -267,14 +267,14 @@ async function confirmDelete() {
             <button
               v-if="auth.canWrite"
               @click="handleRunNow(report.id)"
-              class="px-3 py-1.5 text-xs font-medium text-[#020288] border border-[#020288]/30 rounded-lg hover:bg-blue-50"
+              class="px-3 py-1.5 text-xs font-medium text-[var(--hks-deep-blue)] border border-[var(--hks-deep-blue)]/30 rounded-lg hover:bg-[var(--color-info-soft)]"
             >
               Run Now
             </button>
             <button
               v-if="auth.canWrite"
               @click="handleDelete(report.id)"
-              class="px-3 py-1.5 text-xs font-medium text-red-600 border border-red-300 rounded-lg hover:bg-red-50"
+              class="px-3 py-1.5 text-xs font-medium text-[var(--color-error-text)] border border-red-300 rounded-lg hover:bg-[var(--color-error-soft)]"
             >
               Delete
             </button>

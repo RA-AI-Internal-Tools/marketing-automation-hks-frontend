@@ -7,6 +7,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js'
+import { chartColors } from '@/utils/chartColors'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
@@ -16,17 +17,16 @@ const props = defineProps<{
   colors?: string[]
 }>()
 
-const defaultColors = [
-  '#020288', '#0d35d7', '#0099db', '#50C8ED', '#10b981',
-  '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#f97316',
-]
+// Pull --chart-1..--chart-10 from the design-system at render time so
+// dark mode + theme swaps flow through without hard-coded hex drift.
+const defaultColors = computed(() => chartColors())
 
 const chartData = computed(() => ({
   labels: props.labels,
   datasets: [
     {
       data: props.values,
-      backgroundColor: props.colors || defaultColors.slice(0, props.values.length),
+      backgroundColor: props.colors || defaultColors.value.slice(0, props.values.length),
       borderWidth: 2,
       borderColor: 'var(--color-bg-card)',
     },

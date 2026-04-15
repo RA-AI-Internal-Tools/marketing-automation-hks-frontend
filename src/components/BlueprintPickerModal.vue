@@ -80,9 +80,9 @@ function iconFor(cat: string) {
 }
 function accentFor(cat: string): string {
   switch (cat) {
-    case 'onboarding': return 'text-indigo-700'
-    case 'recovery':   return 'text-amber-700'
-    case 'engagement': return 'text-rose-700'
+    case 'onboarding': return 'text-[var(--color-info-text)]'
+    case 'recovery':   return 'text-[var(--color-warning-text)]'
+    case 'engagement': return 'text-[var(--color-error-text)]'
     default:           return 'text-neutral-700'
   }
 }

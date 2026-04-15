@@ -191,7 +191,7 @@ function formatHours(min: number): string {
           </div>
 
           <!-- Caveats -->
-          <ul v-if="result.notes?.length" class="space-y-1 rounded bg-amber-50 p-3 text-xs text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+          <ul v-if="result.notes?.length" class="space-y-1 rounded bg-[var(--color-warning-soft)] p-3 text-xs text-[var(--color-warning-text)] dark:bg-amber-950/40 dark:text-amber-200">
             <li v-for="(n, i) in result.notes" :key="i">• {{ n }}</li>
           </ul>
         </div>

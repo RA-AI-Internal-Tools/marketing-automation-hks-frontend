@@ -84,7 +84,7 @@ onMounted(load)
 <template>
   <div class="page-enter space-y-6">
     <div class="flex items-center gap-3">
-      <ShieldCheckIcon class="w-7 h-7 text-[#0099db]" />
+      <ShieldCheckIcon class="w-7 h-7 text-[var(--hks-cyan)]" />
       <div>
         <h1 class="text-2xl font-bold text-[var(--color-text-primary)]">Audit Logs</h1>
         <p class="text-sm text-[var(--color-text-tertiary)]">Track all administrative actions across the platform</p>

@@ -8,10 +8,10 @@ const loading = ref(true)
 const error = ref('')
 
 const riskColors: Record<string, string> = {
-  low: 'bg-green-100 text-green-800',
-  medium: 'bg-yellow-100 text-yellow-800',
+  low: 'bg-[var(--color-success-soft)] text-[var(--color-success-text)]',
+  medium: 'bg-[var(--color-warning-soft)] text-[var(--color-warning-text)]',
   high: 'bg-orange-100 text-orange-800',
-  critical: 'bg-red-100 text-red-800',
+  critical: 'bg-[var(--color-error-soft)] text-[var(--color-error-text)]',
 }
 
 async function load() {

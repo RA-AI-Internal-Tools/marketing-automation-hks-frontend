@@ -16,7 +16,7 @@ const themeLabel: Record<string, string> = {
 
 <template>
   <button
-    class="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]"
+    class="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-white/[0.04]"
     :class="{ 'justify-center': collapsed }"
     @click="toggleTheme"
     :title="collapsed ? `Theme: ${themeLabel[theme]}` : undefined"

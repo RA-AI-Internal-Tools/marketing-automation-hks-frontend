@@ -24,6 +24,16 @@ import { Doughnut } from 'vue-chartjs'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
 import { fetchRFMSegmentCounts, type RFMSegment } from '@/api/rfm'
 import { useToast } from '@/composables/useToast'
+import { getDesignColor } from '@/utils/chartColors'
+
+// Resolve a CSS `var(--x)` reference to its computed colour string.
+// Chart.js paints the literal string it receives and won't evaluate
+// `var(...)` expressions, so inline styles can take the token directly
+// but canvas backgrounds must be resolved first.
+function resolveVar(v: string): string {
+  const m = /^var\((--[a-z0-9-]+)\)$/i.exec(v.trim())
+  return m && m[1] ? getDesignColor(m[1], v) : v
+}
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
@@ -40,18 +50,20 @@ interface SegmentMeta { key: RFMSegment; label: string; description: string; col
 // Kumar-Reinartz matrix, highest-value first. Colours are a deliberate
 // gradient from emerald (champions) → rose (lost) so the donut reads
 // as a health arc.
+// Colours resolve from the design-system --rfm-* tokens via CSS custom
+// properties, so the donut + chips stay in sync with theme changes.
 const SEGMENT_META: SegmentMeta[] = [
-  { key: 'champions',       label: 'Champions',         description: 'Bought recently + often + big-ticket. Reward + upsell.',       color: '#059669' },
-  { key: 'loyal',           label: 'Loyal',             description: 'Consistent buyers. Make them feel seen.',                       color: '#10b981' },
-  { key: 'potential_loyal', label: 'Potential loyal',   description: 'Recent + engaged. Nudge toward the second + third purchase.',    color: '#34d399' },
-  { key: 'recent',          label: 'Recent',            description: 'First-time buyers inside the last ~30 days. Classic welcome.',  color: '#6ee7b7' },
-  { key: 'promising',       label: 'Promising',         description: 'Recent but low spend. Incentive-test campaigns.',                color: '#a7f3d0' },
-  { key: 'need_attention',  label: 'Need attention',    description: 'Mid-recency, mid-frequency. Personalise or lose them.',          color: '#fbbf24' },
-  { key: 'about_to_sleep',  label: 'About to sleep',    description: 'Dropping off engagement. Re-engage with soft touches.',          color: '#f59e0b' },
-  { key: 'at_risk',         label: 'At risk',           description: 'Older, high value. Retention priority.',                         color: '#f97316' },
-  { key: 'cant_lose',       label: "Can't lose",        description: 'Past VIPs slipping away. Direct outreach warranted.',            color: '#dc2626' },
-  { key: 'hibernating',     label: 'Hibernating',       description: 'Low recency + low frequency. Winback series material.',          color: '#9ca3af' },
-  { key: 'lost',            label: 'Lost',              description: 'Deep inactive. Low-cost reactivation only.',                     color: '#6b7280' },
+  { key: 'champions',       label: 'Champions',         description: 'Bought recently + often + big-ticket. Reward + upsell.',       color: 'var(--rfm-champions)' },
+  { key: 'loyal',           label: 'Loyal',             description: 'Consistent buyers. Make them feel seen.',                       color: 'var(--rfm-loyal)' },
+  { key: 'potential_loyal', label: 'Potential loyal',   description: 'Recent + engaged. Nudge toward the second + third purchase.',    color: 'var(--rfm-potential-loyal)' },
+  { key: 'recent',          label: 'Recent',            description: 'First-time buyers inside the last ~30 days. Classic welcome.',  color: 'var(--rfm-recent)' },
+  { key: 'promising',       label: 'Promising',         description: 'Recent but low spend. Incentive-test campaigns.',                color: 'var(--rfm-promising)' },
+  { key: 'need_attention',  label: 'Need attention',    description: 'Mid-recency, mid-frequency. Personalise or lose them.',          color: 'var(--rfm-need-attention)' },
+  { key: 'about_to_sleep',  label: 'About to sleep',    description: 'Dropping off engagement. Re-engage with soft touches.',          color: 'var(--rfm-about-to-sleep)' },
+  { key: 'at_risk',         label: 'At risk',           description: 'Older, high value. Retention priority.',                         color: 'var(--rfm-at-risk)' },
+  { key: 'cant_lose',       label: "Can't lose",        description: 'Past VIPs slipping away. Direct outreach warranted.',            color: 'var(--rfm-cant-lose)' },
+  { key: 'hibernating',     label: 'Hibernating',       description: 'Low recency + low frequency. Winback series material.',          color: 'var(--rfm-hibernating)' },
+  { key: 'lost',            label: 'Lost',              description: 'Deep inactive. Low-cost reactivation only.',                     color: 'var(--rfm-lost)' },
 ]
 
 async function load() {
@@ -88,7 +100,7 @@ const donutData = computed(() => {
     labels: visible.map(m => m.label),
     datasets: [{
       data: visible.map(m => counts.value[m.key] || 0),
-      backgroundColor: visible.map(m => m.color),
+      backgroundColor: visible.map(m => resolveVar(m.color)),
       borderWidth: 0,
     }],
   }
@@ -129,11 +141,11 @@ function createCampaignForSegment(seg: RFMSegment) {
         </div>
         <div class="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3">
           <div class="text-[11px] font-medium uppercase tracking-wide text-[var(--color-text-muted)]">Win-worthy (champions + loyal + potential)</div>
-          <div class="mt-1 text-2xl font-semibold tabular-nums text-emerald-600">{{ winWorthy.toLocaleString() }}</div>
+          <div class="mt-1 text-2xl font-semibold tabular-nums text-[var(--color-success-text)]">{{ winWorthy.toLocaleString() }}</div>
         </div>
         <div class="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-3">
           <div class="text-[11px] font-medium uppercase tracking-wide text-[var(--color-text-muted)]">At risk (at_risk + cant_lose + about_to_sleep)</div>
-          <div class="mt-1 text-2xl font-semibold tabular-nums text-rose-600">{{ atRisk.toLocaleString() }}</div>
+          <div class="mt-1 text-2xl font-semibold tabular-nums text-[var(--color-error-text)]">{{ atRisk.toLocaleString() }}</div>
         </div>
       </div>
 

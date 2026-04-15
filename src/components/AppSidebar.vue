@@ -202,7 +202,7 @@ const roleInitial = computed(() => (auth.name || auth.email || '?').charAt(0).to
       <button
         v-if="mobileOpen"
         @click="emit('close-mobile')"
-        class="lg:hidden ml-auto text-slate-400 hover:text-white transition-colors"
+        class="lg:hidden ml-auto text-[var(--color-text-muted)] hover:text-white transition-colors"
         aria-label="Close menu"
       >
         <XMarkIcon class="h-5 w-5" />
@@ -321,12 +321,12 @@ const roleInitial = computed(() => (auth.name || auth.email || '?').charAt(0).to
   font-variation-settings: 'opsz' 72, 'SOFT' 30;
   font-size: 22px;
   letter-spacing: -0.01em;
-  color: #fff;
+  color: var(--color-on-brand);
   display: inline-flex;
   align-items: baseline;
   gap: 0;
 }
-.brand-word-ar { color: #fff; }
+.brand-word-ar { color: var(--color-on-brand); }
 .brand-word-sep {
   color: var(--hks-cyan);
   margin: 0 3px;
@@ -346,7 +346,7 @@ const roleInitial = computed(() => (auth.name || auth.email || '?').charAt(0).to
   font-family: var(--font-display);
   font-weight: 500;
   font-size: 18px;
-  color: #fff;
+  color: var(--color-on-brand);
 }
 
 .brand-meta {
@@ -471,7 +471,7 @@ const roleInitial = computed(() => (auth.name || auth.email || '?').charAt(0).to
   height: 28px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--hks-cyan), var(--hks-royal-blue));
-  color: #fff;
+  color: var(--color-on-brand);
   font-family: var(--font-display);
   font-weight: 500;
   font-size: 13px;

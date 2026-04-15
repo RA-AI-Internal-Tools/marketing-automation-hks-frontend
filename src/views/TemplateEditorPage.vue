@@ -110,7 +110,7 @@ async function handleSubmit() {
   }
 }
 
-const inputClass = 'w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[#0099db] transition-shadow'
+const inputClass = 'w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-focus-ring)] transition-shadow'
 </script>
 
 <template>
@@ -172,11 +172,11 @@ const inputClass = 'w-full px-3 py-2 border border-[var(--color-border)] rounded
       <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6 space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Name <span class="text-red-500">*</span></label>
+            <label class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Name <span class="text-[var(--color-error-text)]">*</span></label>
             <input v-model="name" required :class="inputClass" placeholder="Template name" />
           </div>
           <div>
-            <label class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Template Key <span class="text-red-500">*</span></label>
+            <label class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Template Key <span class="text-[var(--color-error-text)]">*</span></label>
             <input v-model="templateKey" required :class="inputClass" placeholder="e.g. welcome_sms" />
           </div>
         </div>
@@ -186,7 +186,7 @@ const inputClass = 'w-full px-3 py-2 border border-[var(--color-border)] rounded
           <span class="px-2.5 py-0.5 text-xs font-medium rounded-full capitalize"
             :class="{
               'bg-purple-100 text-purple-800': channel === 'sms',
-              'bg-green-100 text-green-800': channel === 'whatsapp',
+              'bg-[var(--color-success-soft)] text-[var(--color-success-text)]': channel === 'whatsapp',
               'bg-orange-100 text-orange-800': channel === 'push',
             }"
           >
@@ -226,7 +226,7 @@ const inputClass = 'w-full px-3 py-2 border border-[var(--color-border)] rounded
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Body <span class="text-red-500">*</span></label>
+          <label class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Body <span class="text-[var(--color-error-text)]">*</span></label>
           <textarea
             v-model="body"
             required

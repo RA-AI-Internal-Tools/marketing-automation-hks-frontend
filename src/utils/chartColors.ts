@@ -29,9 +29,24 @@ export function chartPalette() {
     error: getDesignColor('--color-error', '#b4281e'),
     warning: getDesignColor('--color-warning', '#a36a04'),
     info: getDesignColor('--color-info', '#1d4ed8'),
+    text: getDesignColor('--color-text-primary', '#1a1a15'),
+    textInverse: getDesignColor('--color-text-inverse', '#ffffff'),
     textTertiary: getDesignColor('--color-text-tertiary', '#6b6a5c'),
     border: getDesignColor('--color-border', '#e6ddc8'),
   }
+}
+
+/**
+ * Extended 10-slot chart palette for donut / stacked bar charts. Reads
+ * --chart-1..--chart-10 at runtime so dark mode + theme swaps apply without
+ * chart re-construction.
+ */
+export function chartColors(): string[] {
+  const fallbacks = [
+    '#020288', '#0d35d7', '#0099db', '#50C8ED', '#10b981',
+    '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#f97316',
+  ]
+  return fallbacks.map((fb, i) => getDesignColor(`--chart-${i + 1}`, fb))
 }
 
 /**

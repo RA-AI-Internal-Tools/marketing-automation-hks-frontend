@@ -102,7 +102,7 @@ const labelClass = 'block text-xs font-medium text-[var(--color-text-secondary)]
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div>
         <label :class="labelClass">
-          Name <span class="text-red-500">*</span>
+          Name <span class="text-[var(--color-error-text)]">*</span>
         </label>
         <input
           :value="name"
@@ -114,7 +114,7 @@ const labelClass = 'block text-xs font-medium text-[var(--color-text-secondary)]
       </div>
       <div>
         <label :class="labelClass">
-          Template Key <span class="text-red-500">*</span>
+          Template Key <span class="text-[var(--color-error-text)]">*</span>
         </label>
         <input
           :value="templateKey"
@@ -130,7 +130,7 @@ const labelClass = 'block text-xs font-medium text-[var(--color-text-secondary)]
     <div>
       <div class="flex items-center justify-between">
         <label :class="labelClass">
-          Subject Line <span class="text-red-500">*</span>
+          Subject Line <span class="text-[var(--color-error-text)]">*</span>
         </label>
         <button v-if="aiEnabled" type="button"
                 @click="aiSubjectOpen = true"
@@ -145,7 +145,7 @@ const labelClass = 'block text-xs font-medium text-[var(--color-text-secondary)]
         :class="inputClass"
         placeholder="Email subject line — use {{first_name}} for personalization"
       />
-      <p class="text-[11px] mt-1" :class="subject.length > 78 ? 'text-amber-500' : 'text-[var(--color-text-muted)]'">
+      <p class="text-[11px] mt-1" :class="subject.length > 78 ? 'text-[var(--color-warning-text)]' : 'text-[var(--color-text-muted)]'">
         {{ subject.length }} / 78 characters recommended
       </p>
       <AISubjectLineModal
@@ -164,7 +164,7 @@ const labelClass = 'block text-xs font-medium text-[var(--color-text-secondary)]
         :class="inputClass"
         placeholder="Preview text shown after subject in inbox"
       />
-      <p class="text-[11px] mt-1" :class="preheader.length > 0 && (preheader.length < 40 || preheader.length > 130) ? 'text-amber-500' : 'text-[var(--color-text-muted)]'">
+      <p class="text-[11px] mt-1" :class="preheader.length > 0 && (preheader.length < 40 || preheader.length > 130) ? 'text-[var(--color-warning-text)]' : 'text-[var(--color-text-muted)]'">
         {{ preheader.length > 0 ? `${preheader.length} / 40–130 characters recommended` : 'Recommended: 40–130 characters' }}
       </p>
     </div>
@@ -257,7 +257,7 @@ const labelClass = 'block text-xs font-medium text-[var(--color-text-secondary)]
           class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-[var(--color-info-bg)] text-[var(--color-primary)] rounded-md"
         >
           {{ tag }}
-          <button @click="removeTag(tag)" class="text-[var(--color-primary-border)] hover:text-red-500 ml-0.5">&times;</button>
+          <button @click="removeTag(tag)" class="text-[var(--color-primary-border)] hover:text-[var(--color-error-text)] ml-0.5">&times;</button>
         </span>
         <input
           v-model="tagInput"

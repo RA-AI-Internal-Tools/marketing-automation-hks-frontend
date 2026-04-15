@@ -33,7 +33,7 @@ onMounted(async () => {
             <span
               :class="[
                 'h-3 w-3 rounded-full',
-                s.status === 'up' ? 'bg-green-500' : 'bg-red-500',
+                s.status === 'up' ? 'bg-[var(--color-success-soft)]0' : 'bg-[var(--color-error-soft)]0',
               ]"
             />
             <span class="text-sm text-[var(--color-text-secondary)] capitalize">{{ s.name }}</span>
@@ -51,7 +51,7 @@ onMounted(async () => {
           <tbody>
             <tr v-for="e in data.event_freshness" :key="e.event_type" class="border-t border-[var(--color-border-muted)]">
               <td class="py-2 text-[var(--color-text-primary)] font-mono text-xs">{{ e.event_type }}</td>
-              <td class="py-2 text-right text-xs" :class="e.last_seen && e.last_seen !== 'never' ? 'text-green-600' : 'text-[var(--color-text-muted)]'">{{ e.last_seen || 'never' }}</td>
+              <td class="py-2 text-right text-xs" :class="e.last_seen && e.last_seen !== 'never' ? 'text-[var(--color-success-text)]' : 'text-[var(--color-text-muted)]'">{{ e.last_seen || 'never' }}</td>
               <td class="py-2 text-right" :class="e.count_24h > 0 ? 'text-[var(--color-text-secondary)]' : 'text-[var(--color-text-muted)]'">{{ e.count_24h.toLocaleString() }}</td>
               <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ Math.round((e.avg_7d ?? 0) * 7).toLocaleString() }}</td>
             </tr>
@@ -60,7 +60,7 @@ onMounted(async () => {
       </div>
 
       <div v-if="data.volume_anomalies.length" class="bg-[var(--color-bg-card)] rounded-xl border border-yellow-200 p-6">
-        <h3 class="text-sm font-semibold text-yellow-800 mb-4">Volume Anomalies</h3>
+        <h3 class="text-sm font-semibold text-[var(--color-warning-text)] mb-4">Volume Anomalies</h3>
         <table class="w-full text-sm">
           <thead><tr class="text-left text-[var(--color-text-tertiary)] text-xs uppercase">
             <th class="pb-2">Event</th><th class="pb-2 text-right">Current</th>
@@ -71,7 +71,7 @@ onMounted(async () => {
               <td class="py-2 text-[var(--color-text-primary)] font-mono text-xs">{{ a.event_type }}</td>
               <td class="py-2 text-right">{{ a.current.toLocaleString() }}</td>
               <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ a.average.toFixed(0) }}</td>
-              <td class="py-2 text-right" :class="a.deviation > 0 ? 'text-green-600' : 'text-red-600'">
+              <td class="py-2 text-right" :class="a.deviation > 0 ? 'text-[var(--color-success-text)]' : 'text-[var(--color-error-text)]'">
                 {{ a.deviation > 0 ? '+' : '' }}{{ a.deviation.toFixed(1) }}%
               </td>
             </tr>

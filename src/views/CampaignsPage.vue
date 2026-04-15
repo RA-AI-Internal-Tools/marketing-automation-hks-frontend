@@ -372,7 +372,7 @@ const totalActive = computed(() => store.campaigns.filter(c => c.is_active).leng
   position: absolute;
   top: 1px; left: 1px;
   width: 14px; height: 14px;
-  background: #fff;
+  background: var(--color-bg-card);
   border-radius: 50%;
   box-shadow: 0 1px 2px rgba(0,0,0,0.2);
   transition: transform var(--transition-fast);

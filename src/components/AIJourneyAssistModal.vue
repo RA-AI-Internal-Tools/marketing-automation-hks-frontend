@@ -102,7 +102,7 @@ function close() { emit('update:open', false) }
               <div class="flex items-center gap-2">
                 <span class="font-mono text-xs opacity-60">#{{ i }}</span>
                 <span class="rounded bg-white px-1.5 py-0.5 text-[10px] font-mono uppercase shadow-sm dark:bg-neutral-900">{{ s.channel }}</span>
-                <span v-if="s.delay_minutes" class="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-mono dark:bg-amber-900/40 dark:text-amber-200">+{{ s.delay_minutes }}m</span>
+                <span v-if="s.delay_minutes" class="rounded bg-[var(--color-warning-soft)] px-1.5 py-0.5 text-[10px] font-mono dark:bg-amber-900/40 dark:text-amber-200">+{{ s.delay_minutes }}m</span>
                 <span class="font-mono text-xs text-neutral-600 dark:text-neutral-300">{{ s.template_key }}</span>
               </div>
               <div class="mt-1 text-xs text-neutral-500">{{ s.rationale }}</div>
@@ -111,7 +111,7 @@ function close() { emit('update:open', false) }
               </div>
             </li>
           </ol>
-          <p v-if="suggestion.notes?.length" class="rounded bg-amber-50 p-2 text-xs text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+          <p v-if="suggestion.notes?.length" class="rounded bg-[var(--color-warning-soft)] p-2 text-xs text-[var(--color-warning-text)] dark:bg-amber-950/40 dark:text-amber-200">
             {{ suggestion.notes.join(' · ') }}
           </p>
           <div class="flex justify-end pt-1">

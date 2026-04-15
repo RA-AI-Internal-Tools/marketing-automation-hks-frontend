@@ -396,23 +396,23 @@ async function handleSubmit() {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Name</label>
-            <input v-model="name" required class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[#0099db]" />
+            <input v-model="name" required class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-focus-ring)]" />
           </div>
           <div>
             <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Slug (auto-generated if empty)</label>
-            <input v-model="slug" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[#0099db]" placeholder="auto-generated" />
+            <input v-model="slug" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-focus-ring)]" placeholder="auto-generated" />
           </div>
           <div>
             <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Trigger Event</label>
-            <input v-model="triggerEvent" required class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[#0099db]" placeholder="e.g. order_completed" />
+            <input v-model="triggerEvent" required class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-focus-ring)]" placeholder="e.g. order_completed" />
           </div>
           <div>
             <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Cancellation Event</label>
-            <input v-model="cancellationEvent" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[#0099db]" placeholder="Optional" />
+            <input v-model="cancellationEvent" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-focus-ring)]" placeholder="Optional" />
           </div>
           <div>
             <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Segment Filter</label>
-            <select v-model="segmentFilter" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[#0099db]">
+            <select v-model="segmentFilter" class="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-focus-ring)]">
               <option v-for="seg in segments" :key="seg" :value="seg">{{ seg }}</option>
             </select>
           </div>
@@ -479,7 +479,7 @@ async function handleSubmit() {
       <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6 space-y-4">
         <div class="flex items-center justify-between">
           <h3 class="text-sm font-semibold text-[var(--color-text-primary)]">Workflow Steps</h3>
-          <button type="button" @click="addStep" class="flex items-center gap-1 text-sm text-[#020288] hover:text-[#0d35d7]">
+          <button type="button" @click="addStep" class="flex items-center gap-1 text-sm text-[var(--hks-deep-blue)] hover:text-[var(--hks-royal-blue)]">
             <PlusIcon class="h-4 w-4" /> Add Step
           </button>
         </div>
@@ -501,7 +501,7 @@ async function handleSubmit() {
               <button type="button" @click="moveStep(i, 1)" :disabled="i === steps.length - 1" class="p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] disabled:opacity-30">
                 <ArrowDownIcon class="h-4 w-4" />
               </button>
-              <button type="button" @click="removeStep(i)" :disabled="steps.length <= 1" class="p-1 text-[var(--color-text-muted)] hover:text-red-600 disabled:opacity-30">
+              <button type="button" @click="removeStep(i)" :disabled="steps.length <= 1" class="p-1 text-[var(--color-text-muted)] hover:text-[var(--color-error-text)] disabled:opacity-30">
                 <TrashIcon class="h-4 w-4" />
               </button>
             </div>
@@ -557,7 +557,7 @@ async function handleSubmit() {
                   Σ {{ variantWeightSum(step) }}
                 </span>
               </span>
-              <button type="button" @click="addVariant(i)" class="text-xs text-[#020288] hover:text-[#0d35d7]">
+              <button type="button" @click="addVariant(i)" class="text-xs text-[var(--hks-deep-blue)] hover:text-[var(--hks-royal-blue)]">
                 + Add Variant
               </button>
             </div>
@@ -566,7 +566,7 @@ async function handleSubmit() {
             </div>
             <div v-else class="space-y-2">
               <div v-for="(variant, vi) in step.variants" :key="vi" class="flex items-center gap-2 bg-[var(--color-bg-page)] rounded-lg px-3 py-2">
-                <span class="text-xs font-bold text-[#020288] w-6">{{ variant.id }}</span>
+                <span class="text-xs font-bold text-[var(--hks-deep-blue)] w-6">{{ variant.id }}</span>
                 <div class="flex-1">
                   <select
                     v-if="templatesForChannel(step.channel).length > 0"
@@ -584,7 +584,7 @@ async function handleSubmit() {
                   <input v-model.number="variant.weight" type="number" min="1" max="100" class="w-full px-2 py-1 border border-[var(--color-border)] rounded text-xs text-center" />
                 </div>
                 <span class="text-[10px] text-[var(--color-text-muted)] w-4">%</span>
-                <button type="button" @click="removeVariant(i, vi)" class="text-[var(--color-text-muted)] hover:text-red-500">
+                <button type="button" @click="removeVariant(i, vi)" class="text-[var(--color-text-muted)] hover:text-[var(--color-error-text)]">
                   <TrashIcon class="h-3.5 w-3.5" />
                 </button>
               </div>

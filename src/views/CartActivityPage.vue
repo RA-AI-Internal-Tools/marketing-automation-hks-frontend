@@ -137,7 +137,7 @@ const currentLabel = computed(() =>
     <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
       <div class="rounded-lg border border-neutral-200 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-900">
         <div class="text-[11px] font-medium uppercase tracking-wide text-neutral-500">Abandoned · last {{ currentLabel }}</div>
-        <div class="mt-1 text-2xl font-semibold tabular-nums text-rose-700 dark:text-rose-400">{{ aggregate.total_count.toLocaleString() }}</div>
+        <div class="mt-1 text-2xl font-semibold tabular-nums text-[var(--color-error-text)] dark:text-rose-400">{{ aggregate.total_count.toLocaleString() }}</div>
       </div>
       <div class="rounded-lg border border-neutral-200 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-900">
         <div class="text-[11px] font-medium uppercase tracking-wide text-neutral-500">Total abandoned value</div>
@@ -201,7 +201,7 @@ const currentLabel = computed(() =>
               <div class="truncate font-medium">{{ p.name }}</div>
               <div class="font-mono text-[11px] text-neutral-500">{{ money(p.price) }}</div>
             </div>
-            <span class="rounded bg-rose-100 px-2 py-0.5 text-xs font-medium tabular-nums text-rose-800 dark:bg-rose-900/40 dark:text-rose-200">{{ p.abandon_count }}</span>
+            <span class="rounded bg-[var(--color-error-soft)] px-2 py-0.5 text-xs font-medium tabular-nums text-[var(--color-error-text)] dark:bg-rose-900/40 dark:text-rose-200">{{ p.abandon_count }}</span>
           </li>
         </ul>
         <div v-else class="rounded-lg border border-dashed border-neutral-300 p-6 text-center text-xs text-neutral-500 dark:border-neutral-700">

@@ -120,7 +120,7 @@ function onCampaignChange() {
       <select
         v-model="selectedSlug"
         @change="onCampaignChange"
-        class="rounded-lg border-[var(--color-border)] text-sm focus:ring-[var(--color-accent)]/40 focus:border-[#0099db]"
+        class="rounded-lg border-[var(--color-border)] text-sm focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-focus-ring)]"
       >
         <option v-for="c in campaigns" :key="c.slug" :value="c.slug">
           {{ c.name }} ({{ c.slug }})
@@ -135,7 +135,7 @@ function onCampaignChange() {
       <!-- Funnel Visualization -->
       <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
         <h2 class="text-sm font-semibold text-[var(--color-text-primary)] mb-6 flex items-center gap-2">
-          <ChartBarIcon class="w-5 h-5 text-[#0099db]" />
+          <ChartBarIcon class="w-5 h-5 text-[var(--hks-cyan)]" />
           Conversion Funnel
         </h2>
         <div class="space-y-3">
@@ -193,7 +193,7 @@ function onCampaignChange() {
             <select
               v-model.number="selectedStep"
               @change="loadVariants"
-              class="rounded-lg border-[var(--color-border)] text-xs focus:ring-[var(--color-accent)]/40 focus:border-[#0099db]"
+              class="rounded-lg border-[var(--color-border)] text-xs focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-focus-ring)]"
             >
               <option :value="0">All Steps</option>
               <option v-for="i in (campaigns.find(c => c.slug === selectedSlug)?.steps.length || 3)" :key="i" :value="i">

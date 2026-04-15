@@ -53,8 +53,8 @@ watch(() => analytics.queryParams, load)
             <tr v-for="s in data.stages" :key="s.name" class="border-t border-[var(--color-border-muted)]">
               <td class="py-2 text-[var(--color-text-primary)] font-medium">{{ s.name }}</td>
               <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ s.count.toLocaleString() }}</td>
-              <td class="py-2 text-right text-green-600">{{ s.conversion_rate.toFixed(1) }}%</td>
-              <td class="py-2 text-right text-red-500">{{ s.drop_off_rate.toFixed(1) }}%</td>
+              <td class="py-2 text-right text-[var(--color-success-text)]">{{ s.conversion_rate.toFixed(1) }}%</td>
+              <td class="py-2 text-right text-[var(--color-error-text)]">{{ s.drop_off_rate.toFixed(1) }}%</td>
             </tr>
           </tbody>
         </table>

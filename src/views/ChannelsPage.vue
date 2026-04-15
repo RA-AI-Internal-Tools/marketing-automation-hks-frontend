@@ -13,7 +13,7 @@ import {
 import PageHeader from '@/components/PageHeader.vue'
 import StatCard from '@/components/StatCard.vue'
 import { fetchChannelStats } from '@/api/dashboard'
-import { chartPalette } from '@/utils/chartColors'
+import { chartPalette, getDesignColor } from '@/utils/chartColors'
 import type { ChannelStats } from '@/api/types'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
@@ -48,9 +48,9 @@ const chartData = computed(() => {
       { label: 'Failed',      data: channels.value.map((c) => c.failed),            backgroundColor: p.error },
       { label: 'Freq Capped', data: channels.value.map((c) => c.frequency_capped),  backgroundColor: p.warning },
       // No-consent uses a distinct orange-ish tint that isn't in the
-      // 9-colour palette; keep it hex-literal so the semantic stays
-      // unambiguous (warning-adjacent but not the same bucket).
-      { label: 'No Consent',  data: channels.value.map((c) => c.no_consent),        backgroundColor: '#f97316' },
+      // 9-colour palette; pulled from --chart-10 so dark-mode keeps the
+      // warning-adjacent-but-different semantic.
+      { label: 'No Consent',  data: channels.value.map((c) => c.no_consent),        backgroundColor: getDesignColor('--chart-10', '#f97316') },
     ],
   }
 })
@@ -90,11 +90,11 @@ const chartOptions = {
         <div v-for="ch in channels" :key="ch.channel" class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-5">
           <h3 class="text-sm font-semibold text-[var(--color-text-primary)] uppercase mb-3">{{ ch.channel }}</h3>
           <div class="space-y-2 text-sm">
-            <div class="flex justify-between"><span class="text-[var(--color-text-tertiary)]">Sent</span><span class="font-medium text-green-700">{{ ch.sent }}</span></div>
-            <div class="flex justify-between"><span class="text-[var(--color-text-tertiary)]">Failed</span><span class="font-medium text-red-600">{{ ch.failed }}</span></div>
+            <div class="flex justify-between"><span class="text-[var(--color-text-tertiary)]">Sent</span><span class="font-medium text-[var(--color-success-text)]">{{ ch.sent }}</span></div>
+            <div class="flex justify-between"><span class="text-[var(--color-text-tertiary)]">Failed</span><span class="font-medium text-[var(--color-error-text)]">{{ ch.failed }}</span></div>
             <div class="flex justify-between"><span class="text-[var(--color-text-tertiary)]">Skipped</span><span class="font-medium text-[var(--color-text-secondary)]">{{ ch.skipped }}</span></div>
-            <div class="flex justify-between"><span class="text-[var(--color-text-tertiary)]">Freq Capped</span><span class="font-medium text-yellow-700">{{ ch.frequency_capped }}</span></div>
-            <div class="flex justify-between"><span class="text-[var(--color-text-tertiary)]">No Consent</span><span class="font-medium text-orange-700">{{ ch.no_consent }}</span></div>
+            <div class="flex justify-between"><span class="text-[var(--color-text-tertiary)]">Freq Capped</span><span class="font-medium text-[var(--color-warning-text)]">{{ ch.frequency_capped }}</span></div>
+            <div class="flex justify-between"><span class="text-[var(--color-text-tertiary)]">No Consent</span><span class="font-medium text-[var(--color-warning-text)]">{{ ch.no_consent }}</span></div>
           </div>
         </div>
       </div>

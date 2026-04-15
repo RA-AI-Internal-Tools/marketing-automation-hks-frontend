@@ -81,16 +81,16 @@ async function copyToken(token: string) {
     </div>
 
     <!-- Unknown variables warning -->
-    <div v-if="unknownVariables.length > 0" class="px-3 py-2 bg-amber-50 border-b border-amber-100">
+    <div v-if="unknownVariables.length > 0" class="px-3 py-2 bg-[var(--color-warning-soft)] border-b border-amber-100">
       <div class="flex items-start gap-1.5">
-        <ExclamationTriangleIcon class="h-3.5 w-3.5 text-amber-500 mt-0.5 shrink-0" />
+        <ExclamationTriangleIcon class="h-3.5 w-3.5 text-[var(--color-warning-text)] mt-0.5 shrink-0" />
         <div>
-          <p class="text-[11px] font-medium text-amber-700">Unknown variables</p>
+          <p class="text-[11px] font-medium text-[var(--color-warning-text)]">Unknown variables</p>
           <div class="flex flex-wrap gap-1 mt-1">
             <span
               v-for="v in unknownVariables"
               :key="v"
-              class="inline-flex px-1.5 py-0.5 text-[10px] font-mono bg-amber-100 text-amber-800 rounded"
+              class="inline-flex px-1.5 py-0.5 text-[10px] font-mono bg-[var(--color-warning-soft)] text-[var(--color-warning-text)] rounded"
             >
               <span v-text="wrapToken(v)"></span>
             </span>
@@ -125,11 +125,11 @@ async function copyToken(token: string) {
                 <span
                   :class="[
                     'h-1.5 w-1.5 rounded-full shrink-0',
-                    props.usedVariables.has(v.name) ? 'bg-emerald-500' : 'bg-[var(--color-text-muted)]',
+                    props.usedVariables.has(v.name) ? 'bg-[var(--color-success-soft)]0' : 'bg-[var(--color-text-muted)]',
                   ]"
                 ></span>
                 <span class="text-xs font-medium text-[var(--color-text-primary)] truncate">{{ v.label }}</span>
-                <span v-if="v.required" class="text-[9px] font-bold text-red-500 uppercase">req</span>
+                <span v-if="v.required" class="text-[9px] font-bold text-[var(--color-error-text)] uppercase">req</span>
               </div>
               <div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button

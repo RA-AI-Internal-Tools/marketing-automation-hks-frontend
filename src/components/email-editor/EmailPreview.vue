@@ -111,7 +111,7 @@ function handleIframeLoad(e: Event) {
         </button>
       </div>
       <div class="flex items-center gap-2 text-xs text-[var(--color-text-muted)]" role="status" aria-live="polite">
-        <span v-if="previewStale" class="text-amber-600 dark:text-amber-400">updating…</span>
+        <span v-if="previewStale" class="text-[var(--color-warning-text)] dark:text-amber-400">updating…</span>
         <span>{{ viewMode === 'mobile' ? '375px' : 'Full width' }}</span>
       </div>
     </div>

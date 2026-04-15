@@ -77,7 +77,7 @@ const buildId = 'MA · build ' + (new Date().getFullYear())
           <circle cx="300" cy="300" r="220" />
           <circle cx="300" cy="300" r="290" />
         </g>
-        <circle cx="300" cy="300" r="4" fill="#50C8ED" />
+        <circle cx="300" cy="300" r="4" :style="{ fill: 'var(--hks-cyan-light)' }" />
       </svg>
     </aside>
 
@@ -169,8 +169,8 @@ const buildId = 'MA · build ' + (new Date().getFullYear())
   background:
     radial-gradient(ellipse at 10% 0%, rgba(13, 53, 215, 0.35), transparent 55%),
     radial-gradient(ellipse at 95% 100%, rgba(0, 153, 219, 0.25), transparent 55%),
-    linear-gradient(180deg, #020288 0%, #05073f 60%, #0a0d18 100%);
-  color: #fff;
+    linear-gradient(180deg, var(--hks-deep-blue) 0%, var(--hks-navy) 60%, var(--color-bg-dark) 100%);
+  color: var(--color-on-brand);
   overflow: hidden;
 }
 @media (max-width: 959px) { .login-brand { padding: 40px 28px; } }
@@ -185,7 +185,7 @@ const buildId = 'MA · build ' + (new Date().getFullYear())
   font-size: clamp(48px, 6.8vw, 92px);
   line-height: 0.95;
   letter-spacing: -0.035em;
-  color: #fff;
+  color: var(--color-on-brand);
   font-feature-settings: 'ss01' 1, 'ss02' 1;
 }
 .brand-title-italic {
@@ -221,7 +221,7 @@ const buildId = 'MA · build ' + (new Date().getFullYear())
   font-size: 44px;
   line-height: 1;
   letter-spacing: -0.02em;
-  color: #fff;
+  color: var(--color-on-brand);
   font-variant-numeric: tabular-nums lining-nums;
 }
 .brand-grid-lbl {
@@ -317,7 +317,7 @@ const buildId = 'MA · build ' + (new Date().getFullYear())
 .field-input:focus {
   outline: none;
   border-color: var(--hks-deep-blue);
-  background: #fff;
+  background: var(--color-bg-card);
   box-shadow: 0 0 0 3px rgba(2, 2, 136, 0.08);
 }
 
@@ -350,7 +350,7 @@ const buildId = 'MA · build ' + (new Date().getFullYear())
   font-size: 14px;
   font-weight: 500;
   letter-spacing: 0.01em;
-  color: #fff;
+  color: var(--color-on-brand);
   background: var(--hks-deep-blue);
   border: 1px solid var(--hks-deep-blue);
   border-radius: var(--radius-md);
@@ -365,7 +365,7 @@ const buildId = 'MA · build ' + (new Date().getFullYear())
 .spinner {
   width: 14px; height: 14px;
   border: 1.5px solid rgba(255, 255, 255, 0.4);
-  border-top-color: #fff;
+  border-top-color: var(--color-on-brand);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -389,7 +389,7 @@ const buildId = 'MA · build ' + (new Date().getFullYear())
 [data-theme="dark"] .login-submit {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  color: #0a0d18;
+  color: var(--color-bg-dark);
 }
 [data-theme="dark"] .login-submit:hover:not(:disabled) {
   background: var(--color-primary-hover);

@@ -36,13 +36,13 @@ defineProps<{
           {{ data.condition || 'always_true' }}
         </div>
         <div class="mt-1 flex items-center justify-between text-[10px] font-medium">
-          <span class="text-emerald-700 dark:text-emerald-400">true ↓</span>
-          <span class="text-rose-700 dark:text-rose-400">↓ false</span>
+          <span class="text-[var(--color-success-text)] dark:text-emerald-400">true ↓</span>
+          <span class="text-[var(--color-error-text)] dark:text-rose-400">↓ false</span>
         </div>
       </div>
     </div>
 
-    <Handle id="true"  type="source" :position="Position.Bottom" style="left: 30%;" class="!bg-emerald-500 !h-3 !w-3" />
-    <Handle id="false" type="source" :position="Position.Bottom" style="left: 70%;" class="!bg-rose-500 !h-3 !w-3" />
+    <Handle id="true"  type="source" :position="Position.Bottom" style="left: 30%;" class="!bg-[var(--color-success-soft)]0 !h-3 !w-3" />
+    <Handle id="false" type="source" :position="Position.Bottom" style="left: 70%;" class="!bg-[var(--color-error-soft)]0 !h-3 !w-3" />
   </div>
 </template>

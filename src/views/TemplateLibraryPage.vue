@@ -285,10 +285,10 @@ function iconFor(cat: string) {
   background: var(--color-text-muted);
   border-radius: 1px;
 }
-.lib-card[data-category="transactional"] .lib-card-accent { background: #1e3a8a; }
+.lib-card[data-category="transactional"] .lib-card-accent { background: var(--category-transactional); }
 .lib-card[data-category="marketing"]     .lib-card-accent { background: var(--hks-royal-blue); }
-.lib-card[data-category="recovery"]      .lib-card-accent { background: #7a3e00; }
-.lib-card[data-category="engagement"]    .lib-card-accent { background: #c11a51; }
+.lib-card[data-category="recovery"]      .lib-card-accent { background: var(--category-recovery); }
+.lib-card[data-category="engagement"]    .lib-card-accent { background: var(--category-engagement); }
 
 .lib-card-head {
   display: flex;
@@ -309,10 +309,10 @@ function iconFor(cat: string) {
   border-radius: var(--radius-md);
   color: var(--color-text-secondary);
 }
-.lib-card[data-category="transactional"] .lib-card-icon { color: #1e3a8a; }
+.lib-card[data-category="transactional"] .lib-card-icon { color: var(--category-transactional); }
 .lib-card[data-category="marketing"]     .lib-card-icon { color: var(--hks-royal-blue); }
-.lib-card[data-category="recovery"]      .lib-card-icon { color: #7a3e00; }
-.lib-card[data-category="engagement"]    .lib-card-icon { color: #c11a51; }
+.lib-card[data-category="recovery"]      .lib-card-icon { color: var(--category-recovery); }
+.lib-card[data-category="engagement"]    .lib-card-icon { color: var(--category-engagement); }
 
 .lib-card-head-body { min-width: 0; flex: 1; }
 .lib-card-title {
@@ -380,7 +380,7 @@ function iconFor(cat: string) {
   width: 12px;
   height: 12px;
   border: 1.5px solid rgba(255, 255, 255, 0.4);
-  border-top-color: #fff;
+  border-top-color: var(--color-text-inverse);
   border-radius: 50%;
   animation: libspin 0.7s linear infinite;
 }

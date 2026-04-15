@@ -66,8 +66,8 @@ function handleFileChange(e: Event) {
       </button>
 
       <!-- Dirty indicator -->
-      <span v-if="isDirty" class="text-xs text-amber-500 font-medium flex items-center gap-1">
-        <span class="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+      <span v-if="isDirty" class="text-xs text-[var(--color-warning-text)] font-medium flex items-center gap-1">
+        <span class="h-1.5 w-1.5 rounded-full bg-[var(--color-warning)] animate-pulse"></span>
         <span class="hidden sm:inline">Unsaved changes</span>
       </span>
     </div>

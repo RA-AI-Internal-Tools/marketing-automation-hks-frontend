@@ -339,14 +339,14 @@ async function handleChangePassword() {
                     <div class="font-mono text-xs text-[var(--color-text-primary)]">{{ flag.key }}</div>
                     <span
                       v-if="flag.source === 'override'"
-                      class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                      class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[var(--color-info-soft)] text-[var(--color-info-text)] dark:bg-blue-900/30 dark:text-blue-300"
                       title="Value is overridden in the database"
                     >
                       Source: override
                     </span>
                     <span
                       v-if="flag.scope === 'boot'"
-                      class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+                      class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[var(--color-warning-soft)] text-[var(--color-warning-text)] dark:bg-amber-900/30 dark:text-amber-300"
                       title="Requires a server restart to take effect"
                     >
                       Requires restart

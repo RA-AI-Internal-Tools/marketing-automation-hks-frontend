@@ -79,7 +79,7 @@ function resetToDefaults() {
         :class="parseError ? 'border-red-300' : 'border-[var(--color-border)]'"
         placeholder='{"first_name": "John", ...}'
       ></textarea>
-      <p v-if="parseError" class="text-[11px] text-red-500 mt-1">{{ parseError }}</p>
+      <p v-if="parseError" class="text-[11px] text-[var(--color-error-text)] mt-1">{{ parseError }}</p>
       <p v-else class="text-[11px] text-[var(--color-text-muted)] mt-1">
         Variables in preview will be replaced with these values
       </p>

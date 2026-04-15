@@ -310,7 +310,7 @@ function handleKeydown(e: KeyboardEvent) {
 
 <template>
   <div
-    class="flex flex-col h-[calc(100vh-80px)] bg-gray-50 rounded-xl overflow-hidden border border-gray-200/80 shadow-sm"
+    class="flex flex-col h-[calc(100vh-80px)] bg-[var(--color-bg-subtle)] rounded-xl overflow-hidden border border-[var(--color-border)]/80 shadow-sm"
     @keydown="handleKeydown"
   >
     <!-- Loading state -->
@@ -323,7 +323,7 @@ function handleKeydown(e: KeyboardEvent) {
 
     <template v-else>
       <!-- Top bar: tabs + channel indicator + sidebar toggle -->
-      <div class="flex items-center justify-between px-4 py-2.5 bg-white border-b border-gray-200">
+      <div class="flex items-center justify-between px-4 py-2.5 bg-white border-b border-[var(--color-border)]">
         <div class="flex items-center gap-3">
           <EditorTabs
             :active-tab="activeTab"
@@ -331,13 +331,13 @@ function handleKeydown(e: KeyboardEvent) {
             :error-count="errorCount"
             :warning-count="warningCount"
           />
-          <span class="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold bg-blue-100 text-blue-700 rounded-full uppercase tracking-wide">
+          <span class="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold bg-[var(--color-info-soft)] text-[var(--color-info-text)] rounded-full uppercase tracking-wide">
             Email
           </span>
         </div>
         <button
           @click="sidebarOpen = !sidebarOpen"
-          class="lg:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+          class="lg:hidden p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-page)] transition-colors"
           title="Toggle sidebar"
         >
           <XMarkIcon v-if="sidebarOpen" class="h-5 w-5" />
@@ -346,9 +346,9 @@ function handleKeydown(e: KeyboardEvent) {
       </div>
 
       <!-- Error banner (dismissible) -->
-      <div v-if="error" class="flex items-center justify-between px-4 py-2 bg-red-50 border-b border-red-100">
-        <span class="text-sm text-red-600">{{ error }}</span>
-        <button @click="dismissError" class="text-red-400 hover:text-red-600 p-1 rounded transition-colors">
+      <div v-if="error" class="flex items-center justify-between px-4 py-2 bg-[var(--color-error-soft)] border-b border-red-100">
+        <span class="text-sm text-[var(--color-error-text)]">{{ error }}</span>
+        <button @click="dismissError" class="text-[var(--color-error-text)] hover:text-[var(--color-error-text)] p-1 rounded transition-colors">
           <XMarkIcon class="h-4 w-4" />
         </button>
       </div>
@@ -359,7 +359,7 @@ function handleKeydown(e: KeyboardEvent) {
         <div class="flex-1 flex flex-col min-w-0">
           <!-- One-shot notice after Code→Visual wrap. Fades after 8s. -->
           <div v-if="codeToVisualNotice && activeTab === 'visual'"
-               class="mx-3 mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
+               class="mx-3 mt-3 rounded-md border border-amber-200 bg-[var(--color-warning-soft)] px-3 py-2 text-xs text-[var(--color-warning-text)] dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
                role="status" aria-live="polite">
             Your hand-written HTML is wrapped in a raw block — it still renders, but drag-edit is limited. For full Visual editing, replace it with MJML components from the palette.
           </div>
@@ -425,7 +425,7 @@ function handleKeydown(e: KeyboardEvent) {
         <!-- Right Sidebar (Desktop: always visible; Mobile: overlay) -->
         <div
           :class="[
-            'border-l border-gray-200 bg-white flex flex-col w-[320px] shrink-0 transition-transform duration-200',
+            'border-l border-[var(--color-border)] bg-white flex flex-col w-[320px] shrink-0 transition-transform duration-200',
             'max-lg:fixed max-lg:right-0 max-lg:top-0 max-lg:bottom-0 max-lg:z-40 max-lg:shadow-xl',
             sidebarOpen ? 'max-lg:translate-x-0' : 'max-lg:translate-x-full',
           ]"
@@ -440,12 +440,12 @@ function handleKeydown(e: KeyboardEvent) {
           </div>
 
           <!-- Sample data -->
-          <div class="border-t border-gray-200">
+          <div class="border-t border-[var(--color-border)]">
             <SampleDataEditor v-model="sampleData" />
           </div>
 
           <!-- Validation -->
-          <div class="border-t border-gray-200">
+          <div class="border-t border-[var(--color-border)]">
             <ValidationPanel
               :errors="errors"
               :warnings="warnings"

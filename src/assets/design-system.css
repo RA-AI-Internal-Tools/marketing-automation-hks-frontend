@@ -21,9 +21,12 @@
   --hks-deep-blue: #020288;
   --hks-royal-blue: #0d35d7;
   --hks-cyan: #0099db;
+  --hks-cyan-rgb: 0 153 219;
   --hks-cyan-light: #50C8ED;
+  --hks-navy: #05073f;
   --hks-dark: #0a0d18;
   --hks-dark-surface: #12162a;
+  --color-bg-dark: #0a0d18;
 
   /* ---- Primary ---- */
   --color-primary: #020288;
@@ -66,30 +69,73 @@
   --color-success: #0b7a4b;
   --color-success-bg: #e8f5ee;
   --color-success-border: #b6dac5;
-  --color-success-text: #0b5334;
 
   --color-error: #b4281e;
   --color-error-bg: #fbeceb;
   --color-error-border: #efc5c1;
-  --color-error-text: #7a1c16;
 
   --color-warning: #a36a04;
   --color-warning-bg: #faf1dc;
   --color-warning-border: #ecd39a;
-  --color-warning-text: #6e4602;
 
   --color-info: #1d4ed8;
   --color-info-bg: #eaf0fa;
   --color-info-border: #c0cfee;
-  --color-info-text: #142e81;
 
-  /* ---- Semantic soft/strong pairs — for pill chips (e.g. delta % on MetricCard) ---- */
-  --color-success-soft: #e8f5ee;
-  --color-success-strong: #0b5334;
-  --color-error-soft: #fbeceb;
-  --color-error-strong: #7a1c16;
-  --color-warning-soft: #faf1dc;
-  --color-warning-strong: #6e4602;
+  /* ---- Semantic soft/text pairs — for pill chips + status backgrounds ---- */
+  --color-success-soft: #ecfdf5;
+  --color-success-text: #065f46;
+  --color-success-strong: #065f46;
+  --color-warning-soft: #fffbeb;
+  --color-warning-text: #92400e;
+  --color-warning-strong: #92400e;
+  --color-error-soft: #fef2f2;
+  --color-error-text: #991b1b;
+  --color-error-strong: #991b1b;
+  --color-info-soft: #eff6ff;
+  --color-info-text: #1e40af;
+
+  /* ---- RFM 11-segment palette ---- */
+  --rfm-champions: #059669;
+  --rfm-loyal: #10b981;
+  --rfm-potential-loyal: #34d399;
+  --rfm-recent: #6ee7b7;
+  --rfm-promising: #a7f3d0;
+  --rfm-need-attention: #fbbf24;
+  --rfm-about-to-sleep: #f59e0b;
+  --rfm-at-risk: #f97316;
+  --rfm-cant-lose: #dc2626;
+  --rfm-hibernating: #9ca3af;
+  --rfm-lost: #6b7280;
+
+  /* ---- Template categories ---- */
+  --category-transactional: #1e3a8a;
+  --category-recovery: #7a3e00;
+  --category-engagement: #c11a51;
+
+  /* ---- Focus ring (single source of truth) ---- */
+  --color-focus-ring: var(--hks-cyan);
+  --color-focus-ring-rgb: 0, 153, 219;
+
+  /* ---- Campaign builder canvas ---- */
+  --color-canvas-bg: var(--color-bg-page);
+  --color-canvas-pattern: #cbd5e1;
+
+  /* ---- Always-dark brand surfaces (login hero, sidebar, brand-colour
+         buttons) that shouldn't flip on theme change ---- */
+  --color-on-brand: #ffffff;
+
+  /* ---- Extended chart palette (for DonutChart and similar) ---- */
+  --chart-1: var(--hks-deep-blue);
+  --chart-2: var(--hks-royal-blue);
+  --chart-3: var(--hks-cyan);
+  --chart-4: #50C8ED;
+  --chart-5: var(--color-success);
+  --chart-6: var(--color-warning);
+  --chart-7: var(--color-error);
+  --chart-8: #8b5cf6;
+  --chart-9: #ec4899;
+  --chart-10: #f97316;
 
   /* ---- Channel palette — single source for ChannelChip / broadcast chips ---- */
   --channel-email: #1e3a8a;
@@ -252,30 +298,34 @@
   --color-success: #4ade80;
   --color-success-bg: rgba(74, 222, 128, 0.08);
   --color-success-border: rgba(74, 222, 128, 0.22);
-  --color-success-text: #86efac;
 
   --color-error: #f87171;
   --color-error-bg: rgba(248, 113, 113, 0.08);
   --color-error-border: rgba(248, 113, 113, 0.22);
-  --color-error-text: #fca5a5;
 
   --color-warning: #fbbf24;
   --color-warning-bg: rgba(251, 191, 36, 0.08);
   --color-warning-border: rgba(251, 191, 36, 0.22);
-  --color-warning-text: #fde68a;
 
   --color-info: #60a5fa;
   --color-info-bg: rgba(96, 165, 250, 0.08);
   --color-info-border: rgba(96, 165, 250, 0.22);
-  --color-info-text: #93c5fd;
 
-  /* Semantic soft/strong for dark mode */
-  --color-success-soft: rgba(74, 222, 128, 0.10);
-  --color-success-strong: #86efac;
-  --color-error-soft: rgba(248, 113, 113, 0.10);
-  --color-error-strong: #fca5a5;
-  --color-warning-soft: rgba(251, 191, 36, 0.10);
+  /* Semantic soft/text pairs for dark mode (darker-soft / lighter-text) */
+  --color-success-soft: #064e3b;
+  --color-success-text: #d1fae5;
+  --color-success-strong: #d1fae5;
+  --color-warning-soft: #451a03;
+  --color-warning-text: #fde68a;
   --color-warning-strong: #fde68a;
+  --color-error-soft: #450a0a;
+  --color-error-text: #fecaca;
+  --color-error-strong: #fecaca;
+  --color-info-soft: #1e3a8a;
+  --color-info-text: #dbeafe;
+
+  /* Canvas pattern — higher contrast against dark bg */
+  --color-canvas-pattern: #334155;
 
   /* Channel palette — dark */
   --channel-email: #93b4ff;
