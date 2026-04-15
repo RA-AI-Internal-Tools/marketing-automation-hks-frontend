@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
+import ModalWrapper from '@/components/ModalWrapper.vue'
 import { useToast } from '@/composables/useToast'
 import { useAction } from '@/composables/useAction'
 import {
@@ -299,16 +300,14 @@ function formatDate(s?: string | null): string {
     </div>
 
     <!-- Editor modal -->
-    <div v-if="editorOpen" class="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 overflow-y-auto" @click.self="editorOpen = false">
-      <div class="mt-12 w-full max-w-2xl rounded-lg bg-white shadow-xl dark:bg-neutral-900">
-        <div class="flex items-center justify-between border-b border-neutral-200 p-4 dark:border-neutral-800">
-          <h2 class="text-lg font-semibold">{{ editing ? 'Edit webhook' : 'New webhook' }}</h2>
-          <button @click="editorOpen = false" class="btn-icon" aria-label="Close">
-            <XMarkIcon class="h-5 w-5" />
-          </button>
-        </div>
-
-        <div class="space-y-4 p-4">
+    <ModalWrapper
+      :model-value="editorOpen"
+      :title="editing ? 'Edit webhook' : 'New webhook'"
+      size="lg"
+      @update:model-value="(v) => { if (!v) editorOpen = false }"
+    >
+      <template #body>
+        <div class="space-y-4">
           <div v-if="revealedSecret" class="rounded-md border border-amber-300 bg-[var(--color-warning-soft)] p-3 dark:border-amber-900 dark:bg-amber-950/40">
             <p class="text-sm font-medium text-[var(--color-warning-text)] dark:text-amber-200">Signing secret (shown once)</p>
             <p class="mt-1 text-xs text-[var(--color-warning-text)] dark:text-amber-300">Save this now — it will never be shown again.</p>
@@ -425,32 +424,31 @@ func verify(rawBody []byte, h http.Header, secret string) bool {
             </div>
           </div>
         </div>
-
-        <div class="flex items-center justify-end gap-2 border-t border-neutral-200 p-4 dark:border-neutral-800">
-          <button @click="editorOpen = false" class="btn btn-ghost">Close</button>
-          <!-- Once the secret is revealed, Create has already succeeded;
-               the only remaining action is "Done" which dismisses the
-               modal. Leaving the Create button active re-posts the same
-               form and spawns a duplicate webhook. -->
-          <button
-            v-if="revealedSecret"
-            @click="editorOpen = false"
-            class="btn btn-primary"
-          >
-            Done
-          </button>
-          <button
-            v-else
-            @click="save"
-            :disabled="saving"
-            class="btn btn-primary"
-          >
-            <ArrowPathIcon v-if="saving" class="h-4 w-4 animate-spin" />
-            {{ editing ? 'Save' : 'Create' }}
-          </button>
-        </div>
-      </div>
-    </div>
+      </template>
+      <template #footer>
+        <button @click="editorOpen = false" class="btn btn-ghost">Close</button>
+        <!-- Once the secret is revealed, Create has already succeeded;
+             the only remaining action is "Done" which dismisses the
+             modal. Leaving the Create button active re-posts the same
+             form and spawns a duplicate webhook. -->
+        <button
+          v-if="revealedSecret"
+          @click="editorOpen = false"
+          class="btn btn-primary"
+        >
+          Done
+        </button>
+        <button
+          v-else
+          @click="save"
+          :disabled="saving"
+          class="btn btn-primary"
+        >
+          <ArrowPathIcon v-if="saving" class="h-4 w-4 animate-spin" />
+          {{ editing ? 'Save' : 'Create' }}
+        </button>
+      </template>
+    </ModalWrapper>
 
     <!-- Deliveries drawer -->
     <div v-if="deliveriesOpen" class="fixed inset-0 z-40 flex justify-end bg-black/50" @click.self="deliveriesOpen = false">

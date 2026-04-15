@@ -11,7 +11,8 @@ import { ref } from 'vue'
 import { useAction } from '@/composables/useAction'
 import { useToast } from '@/composables/useToast'
 import { generateSubjectLines, type SubjectLineResponse } from '@/api/ai'
-import { XMarkIcon, SparklesIcon, CheckIcon } from '@heroicons/vue/24/outline'
+import { SparklesIcon, CheckIcon } from '@heroicons/vue/24/outline'
+import ModalWrapper from './ModalWrapper.vue'
 
 const props = defineProps<{
   open: boolean
@@ -62,19 +63,18 @@ function close() { emit('update:open', false) }
 </script>
 
 <template>
-  <div v-if="open" class="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 overflow-y-auto" @click.self="close">
-    <div class="mt-12 w-full max-w-2xl rounded-lg bg-white shadow-xl dark:bg-neutral-900">
-      <div class="flex items-center justify-between border-b border-neutral-200 p-4 dark:border-neutral-800">
-        <h2 class="flex items-center gap-2 text-lg font-semibold">
-          <SparklesIcon class="h-5 w-5 text-ma-accent" aria-hidden="true" />
-          Generate subject lines
-        </h2>
-        <button @click="close" aria-label="Close" class="btn-icon">
-          <XMarkIcon class="h-5 w-5" />
-        </button>
-      </div>
-
-      <div class="space-y-3 p-4">
+  <ModalWrapper
+    :model-value="open"
+    title="Generate subject lines"
+    size="md"
+    @update:model-value="(v) => { if (!v) close() }"
+    @close="close"
+  >
+    <template #header-extra>
+      <SparklesIcon class="h-5 w-5 text-ma-accent" aria-hidden="true" />
+    </template>
+    <template #body>
+      <div class="space-y-3">
         <div>
           <label class="block text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Campaign name</label>
           <input v-model="form.campaign_name" class="form-input mt-1" placeholder="e.g. Spring sale 2026" />
@@ -124,10 +124,9 @@ function close() { emit('update:open', false) }
           </ul>
         </div>
       </div>
-
-      <div class="flex items-center justify-end border-t border-neutral-200 p-4 dark:border-neutral-800">
-        <button @click="close" class="rounded-md px-3 py-2 text-sm text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800">Close</button>
-      </div>
-    </div>
-  </div>
+    </template>
+    <template #footer>
+      <button @click="close" class="btn btn-ghost">Close</button>
+    </template>
+  </ModalWrapper>
 </template>

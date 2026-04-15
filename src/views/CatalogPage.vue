@@ -13,6 +13,7 @@ import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import SkeletonTable from '@/components/SkeletonTable.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
+import ModalWrapper from '@/components/ModalWrapper.vue'
 import { useToast } from '@/composables/useToast'
 import { useAction } from '@/composables/useAction'
 import {
@@ -20,7 +21,7 @@ import {
   type Product, type ProductUpsertRequest,
 } from '@/api/catalog'
 import {
-  MagnifyingGlassIcon, TrashIcon, PencilSquareIcon, PlusIcon, XMarkIcon,
+  MagnifyingGlassIcon, TrashIcon, PencilSquareIcon, PlusIcon,
   PhotoIcon,
 } from '@heroicons/vue/24/outline'
 
@@ -272,23 +273,14 @@ function priceDisplay(p: Product): string {
     </div>
 
     <!-- Editor modal -->
-    <Teleport to="body">
-      <div v-if="editorOpen" class="cat-modal-root">
-        <div class="cat-modal-scrim" @click="editorOpen = false" />
-        <div class="cat-modal" role="dialog" aria-modal="true" aria-labelledby="cat-modal-title">
-          <header class="cat-modal-head">
-            <div>
-              <div class="rule-dot">{{ editing ? 'Edit' : 'New' }}</div>
-              <h2 id="cat-modal-title" class="cat-modal-title">
-                {{ editing ? 'Edit product' : 'New product' }}
-              </h2>
-            </div>
-            <button @click="editorOpen = false" class="cat-modal-close" aria-label="Close">
-              <XMarkIcon class="h-5 w-5" />
-            </button>
-          </header>
-
-          <form @submit.prevent="saveAction.execute()" class="cat-form">
+    <ModalWrapper
+      :model-value="editorOpen"
+      :title="editing ? 'Edit product' : 'New product'"
+      size="md"
+      @update:model-value="(v) => { if (!v) editorOpen = false }"
+    >
+      <template #body>
+        <form id="cat-product-form" @submit.prevent="saveAction.execute()" class="cat-form">
             <div class="cat-field">
               <label>External ID</label>
               <input
@@ -330,20 +322,20 @@ function priceDisplay(p: Product): string {
               <textarea v-model="form.description" rows="2" placeholder="Optional customer-facing description…" />
             </div>
 
-            <div class="cat-modal-foot">
-              <button type="button" @click="editorOpen = false" class="btn btn-ghost">Cancel</button>
-              <button
-                type="submit"
-                :disabled="saveAction.pending.value"
-                class="btn btn-primary"
-              >
-                {{ saveAction.pending.value ? 'Saving…' : (editing ? 'Save' : 'Create') }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </Teleport>
+        </form>
+      </template>
+      <template #footer>
+        <button type="button" @click="editorOpen = false" class="btn btn-ghost">Cancel</button>
+        <button
+          type="submit"
+          form="cat-product-form"
+          :disabled="saveAction.pending.value"
+          class="btn btn-primary"
+        >
+          {{ saveAction.pending.value ? 'Saving…' : (editing ? 'Save' : 'Create') }}
+        </button>
+      </template>
+    </ModalWrapper>
 
     <ConfirmDialog
       :open="deleteOpen"

@@ -12,7 +12,8 @@ import { ref } from 'vue'
 import { useAction } from '@/composables/useAction'
 import { useToast } from '@/composables/useToast'
 import { suggestJourney, type SuggestedStep } from '@/api/ai'
-import { XMarkIcon, SparklesIcon, ArrowDownIcon } from '@heroicons/vue/24/outline'
+import { SparklesIcon, ArrowDownIcon } from '@heroicons/vue/24/outline'
+import ModalWrapper from './ModalWrapper.vue'
 
 defineProps<{ open: boolean }>()
 const emit = defineEmits<{
@@ -55,19 +56,18 @@ function close() { emit('update:open', false) }
 </script>
 
 <template>
-  <div v-if="open" class="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 overflow-y-auto" @click.self="close">
-    <div class="mt-12 w-full max-w-2xl rounded-lg bg-white shadow-xl dark:bg-neutral-900">
-      <div class="flex items-center justify-between border-b border-neutral-200 p-4 dark:border-neutral-800">
-        <h2 class="flex items-center gap-2 text-lg font-semibold">
-          <SparklesIcon class="h-5 w-5 text-ma-accent" aria-hidden="true" />
-          AI journey assist
-        </h2>
-        <button @click="close" aria-label="Close" class="btn-icon">
-          <XMarkIcon class="h-5 w-5" />
-        </button>
-      </div>
-
-      <div class="space-y-3 p-4">
+  <ModalWrapper
+    :model-value="open"
+    title="AI journey assist"
+    size="lg"
+    @update:model-value="(v) => { if (!v) close() }"
+    @close="close"
+  >
+    <template #header-extra>
+      <SparklesIcon class="h-5 w-5 text-ma-accent" aria-hidden="true" />
+    </template>
+    <template #body>
+      <div class="space-y-3">
         <div>
           <label class="block text-[10px] font-semibold uppercase tracking-wide text-neutral-500">What's your goal?</label>
           <input v-model="goal" class="form-input mt-1" placeholder="Reduce cart abandonment" />
@@ -121,10 +121,9 @@ function close() { emit('update:open', false) }
           </div>
         </div>
       </div>
-
-      <div class="flex items-center justify-end border-t border-neutral-200 p-4 dark:border-neutral-800">
-        <button @click="close" class="rounded-md px-3 py-2 text-sm text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800">Close</button>
-      </div>
-    </div>
-  </div>
+    </template>
+    <template #footer>
+      <button @click="close" class="btn btn-ghost">Close</button>
+    </template>
+  </ModalWrapper>
 </template>

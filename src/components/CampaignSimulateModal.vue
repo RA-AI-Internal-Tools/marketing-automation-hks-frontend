@@ -18,7 +18,8 @@ import { ref, computed } from 'vue'
 import api from '@/api/client'
 import { useAction } from '@/composables/useAction'
 import { useToast } from '@/composables/useToast'
-import { XMarkIcon, ClockIcon, BoltIcon, BeakerIcon } from '@heroicons/vue/24/outline'
+import { ClockIcon, BoltIcon, BeakerIcon } from '@heroicons/vue/24/outline'
+import ModalWrapper from './ModalWrapper.vue'
 
 interface SimulationStep {
   index: number
@@ -94,18 +95,18 @@ function formatHours(min: number): string {
 </script>
 
 <template>
-  <div v-if="open" class="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 overflow-y-auto" @click.self="close">
-    <div class="mt-12 w-full max-w-3xl rounded-lg bg-white shadow-xl dark:bg-neutral-900">
-      <div class="flex items-center justify-between border-b border-neutral-200 p-4 dark:border-neutral-800">
-        <h2 class="flex items-center gap-2 text-lg font-semibold">
-          <BeakerIcon class="h-5 w-5 text-ma-accent" aria-hidden="true" /> Simulate campaign
-        </h2>
-        <button @click="close" aria-label="Close" class="btn-icon">
-          <XMarkIcon class="h-5 w-5" />
-        </button>
-      </div>
-
-      <div class="space-y-4 p-4">
+  <ModalWrapper
+    :model-value="open"
+    title="Simulate campaign"
+    size="md"
+    @update:model-value="(v) => { if (!v) close() }"
+    @close="close"
+  >
+    <template #header-extra>
+      <BeakerIcon class="h-5 w-5 text-ma-accent" aria-hidden="true" />
+    </template>
+    <template #body>
+      <div class="space-y-4">
         <div class="flex items-end gap-3">
           <label class="flex-1">
             <span class="block text-xs font-medium uppercase tracking-wide text-neutral-500">Audience size</span>
@@ -194,10 +195,9 @@ function formatHours(min: number): string {
           </ul>
         </div>
       </div>
-
-      <div class="flex items-center justify-end border-t border-neutral-200 p-4 dark:border-neutral-800">
-        <button @click="close" class="btn btn-ghost">Close</button>
-      </div>
-    </div>
-  </div>
+    </template>
+    <template #footer>
+      <button @click="close" class="btn btn-ghost">Close</button>
+    </template>
+  </ModalWrapper>
 </template>

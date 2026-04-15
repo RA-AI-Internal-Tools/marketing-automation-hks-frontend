@@ -13,9 +13,10 @@ import api from '@/api/client'
 import { useAction } from '@/composables/useAction'
 import { useToast } from '@/composables/useToast'
 import {
-  XMarkIcon, ArrowRightIcon, SparklesIcon,
+  ArrowRightIcon, SparklesIcon,
   PaperAirplaneIcon, ShoppingCartIcon, HeartIcon, RocketLaunchIcon,
 } from '@heroicons/vue/24/outline'
+import ModalWrapper from './ModalWrapper.vue'
 
 interface BlueprintStep {
   delay_minutes: number
@@ -103,21 +104,18 @@ const cloneAction = useAction(async (bp: Blueprint) => {
 </script>
 
 <template>
-  <div v-if="open" class="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 overflow-y-auto"
-       @click.self="emit('update:open', false)">
-    <div class="mt-12 w-full max-w-5xl rounded-lg bg-white shadow-xl dark:bg-neutral-900">
-      <div class="flex items-center justify-between border-b border-neutral-200 p-4 dark:border-neutral-800">
-        <h2 class="flex items-center gap-2 text-lg font-semibold">
-          <SparklesIcon class="h-5 w-5 text-ma-accent" aria-hidden="true" />
-          Start from a blueprint
-        </h2>
-        <button @click="emit('update:open', false)" aria-label="Close"
-                class="rounded p-1 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800">
-          <XMarkIcon class="h-5 w-5" />
-        </button>
-      </div>
-
-      <div class="p-4">
+  <ModalWrapper
+    :model-value="open"
+    title="Start from a blueprint"
+    size="xl"
+    @update:model-value="(v) => { if (!v) emit('update:open', false) }"
+    @close="emit('update:open', false)"
+  >
+    <template #header-extra>
+      <SparklesIcon class="h-5 w-5 text-ma-accent" aria-hidden="true" />
+    </template>
+    <template #body>
+      <div>
         <div class="mb-3 flex flex-wrap gap-2" role="tablist" aria-label="Blueprint category">
           <button
             v-for="c in categories"
@@ -170,6 +168,6 @@ const cloneAction = useAction(async (bp: Blueprint) => {
           </article>
         </div>
       </div>
-    </div>
-  </div>
+    </template>
+  </ModalWrapper>
 </template>

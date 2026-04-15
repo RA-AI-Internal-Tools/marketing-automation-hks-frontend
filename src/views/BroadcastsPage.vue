@@ -7,6 +7,7 @@ import SkeletonTable from '@/components/SkeletonTable.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import ChannelChip from '@/components/ChannelChip.vue'
 import BaseCard from '@/components/BaseCard.vue'
+import ModalWrapper from '@/components/ModalWrapper.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useTemplatesStore } from '@/stores/templates'
 import { useToast } from '@/composables/useToast'
@@ -16,7 +17,7 @@ import {
   type Broadcast, type BroadcastRequest,
 } from '@/api/broadcasts'
 import { getChannelVocabulary } from '@/api/channels'
-import { PlusIcon, PlayIcon, StopIcon, TrashIcon, PencilSquareIcon, XMarkIcon, MegaphoneIcon } from '@heroicons/vue/24/outline'
+import { PlusIcon, PlayIcon, StopIcon, TrashIcon, PencilSquareIcon, MegaphoneIcon } from '@heroicons/vue/24/outline'
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 
 const auth = useAuthStore()
@@ -270,15 +271,14 @@ function formatTime(iso: string) {
     </div>
 
     <!-- Editor modal -->
-    <Teleport to="body">
-      <Transition name="fade">
-        <div v-if="editorOpen" class="bc-modal-backdrop" @click.self="editorOpen = false" role="dialog" aria-modal="true">
-          <div class="bc-modal">
-            <div class="bc-modal-head">
-              <h3>{{ editing ? 'Edit broadcast' : 'New broadcast' }}</h3>
-              <button @click="editorOpen = false" class="btn-icon" aria-label="Close"><XMarkIcon class="h-5 w-5" /></button>
-            </div>
-            <div class="bc-modal-body">
+    <ModalWrapper
+      :model-value="editorOpen"
+      :title="editing ? 'Edit broadcast' : 'New broadcast'"
+      size="lg"
+      @update:model-value="(v) => { if (!v) editorOpen = false }"
+    >
+      <template #body>
+        <div class="bc-modal-body">
               <label class="bc-field">
                 <span class="bc-field-lbl">Name</span>
                 <input v-model="form.name" type="text" placeholder="April newsletter" class="form-input" />
@@ -312,21 +312,19 @@ function formatTime(iso: string) {
                   <span class="bc-field-hint">Local time — the server will convert to UTC.</span>
                 </label>
               </div>
-            </div>
-            <div class="bc-modal-foot">
-              <button @click="editorOpen = false" class="btn btn-ghost">Cancel</button>
-              <button
-                @click="save"
-                :disabled="saving || !form.name || !form.template_key || !form.scheduled_at"
-                class="btn btn-primary"
-              >
-                {{ saving ? 'Saving…' : (editing ? 'Save changes' : 'Create draft') }}
-              </button>
-            </div>
-          </div>
         </div>
-      </Transition>
-    </Teleport>
+      </template>
+      <template #footer>
+        <button @click="editorOpen = false" class="btn btn-ghost">Cancel</button>
+        <button
+          @click="save"
+          :disabled="saving || !form.name || !form.template_key || !form.scheduled_at"
+          class="btn btn-primary"
+        >
+          {{ saving ? 'Saving…' : (editing ? 'Save changes' : 'Create draft') }}
+        </button>
+      </template>
+    </ModalWrapper>
 
     <ConfirmDialog
       :open="deleteOpen"

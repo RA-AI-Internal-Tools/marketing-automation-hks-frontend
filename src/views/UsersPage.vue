@@ -7,11 +7,11 @@ import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import DataTable, { type Column } from '@/components/DataTable.vue'
+import ModalWrapper from '@/components/ModalWrapper.vue'
 import {
   PlusIcon,
   PencilSquareIcon,
   TrashIcon,
-  XMarkIcon,
 } from '@heroicons/vue/24/outline'
 
 // Users list is small; client-side sort is fine. No dedicated sort
@@ -226,67 +226,57 @@ onMounted(load)
     </DataTable>
 
     <!-- Create/Edit Modal -->
-    <Teleport to="body">
-      <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="fixed inset-0 bg-black/50" @click="showModal = false" />
-        <div class="relative bg-[var(--color-bg-card)] rounded-xl shadow-xl w-full max-w-md p-6">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-lg font-semibold tracking-tight text-[var(--color-text-primary)]">
-              {{ editingUser ? 'Edit User' : 'Create User' }}
-            </h2>
-            <button @click="showModal = false" class="btn-icon" aria-label="Close">
-              <XMarkIcon class="h-5 w-5" />
-            </button>
+    <ModalWrapper
+      :model-value="showModal"
+      :title="editingUser ? 'Edit User' : 'Create User'"
+      size="md"
+      @update:model-value="(v) => { if (!v) showModal = false }"
+    >
+      <template #body>
+        <form id="users-edit-form" @submit.prevent="handleSave" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Name</label>
+            <input v-model="form.name" type="text" required class="form-input" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Email</label>
+            <input v-model="form.email" type="email" required class="form-input" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+              Password {{ editingUser ? '(leave blank to keep current)' : '' }}
+            </label>
+            <input v-model="form.password" type="password" :required="!editingUser" class="form-input" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Role</label>
+            <select v-model="form.role" class="form-select">
+              <option value="admin">Admin</option>
+              <option value="editor">Editor</option>
+              <option value="viewer">Viewer</option>
+            </select>
+            <p class="mt-1 text-xs text-[var(--color-text-tertiary)]">
+              <strong>Admin:</strong> Full access including user management.
+              <strong>Editor:</strong> Create/edit campaigns and templates.
+              <strong>Viewer:</strong> Read-only access.
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <input v-model="form.is_active" type="checkbox" id="is_active"
+              class="h-4 w-4 text-[var(--color-primary)] border-[var(--color-border)] rounded" />
+            <label for="is_active" class="text-sm text-[var(--color-text-secondary)]">Active</label>
           </div>
 
-          <form @submit.prevent="handleSave" class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Name</label>
-              <input v-model="form.name" type="text" required class="form-input" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Email</label>
-              <input v-model="form.email" type="email" required class="form-input" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
-                Password {{ editingUser ? '(leave blank to keep current)' : '' }}
-              </label>
-              <input v-model="form.password" type="password" :required="!editingUser" class="form-input" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Role</label>
-              <select v-model="form.role" class="form-select">
-                <option value="admin">Admin</option>
-                <option value="editor">Editor</option>
-                <option value="viewer">Viewer</option>
-              </select>
-              <p class="mt-1 text-xs text-[var(--color-text-tertiary)]">
-                <strong>Admin:</strong> Full access including user management.
-                <strong>Editor:</strong> Create/edit campaigns and templates.
-                <strong>Viewer:</strong> Read-only access.
-              </p>
-            </div>
-            <div class="flex items-center gap-2">
-              <input v-model="form.is_active" type="checkbox" id="is_active"
-                class="h-4 w-4 text-[var(--color-primary)] border-[var(--color-border)] rounded" />
-              <label for="is_active" class="text-sm text-[var(--color-text-secondary)]">Active</label>
-            </div>
-
-            <div v-if="formError" class="text-sm text-[var(--color-error-text)]">{{ formError }}</div>
-
-            <div class="flex justify-end gap-3 pt-2">
-              <button type="button" @click="showModal = false" class="btn btn-ghost">
-                Cancel
-              </button>
-              <button type="submit" :disabled="saving" class="btn btn-primary">
-                {{ saving ? 'Saving...' : (editingUser ? 'Update' : 'Create') }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </Teleport>
+          <div v-if="formError" class="text-sm text-[var(--color-error-text)]">{{ formError }}</div>
+        </form>
+      </template>
+      <template #footer>
+        <button type="button" @click="showModal = false" class="btn btn-ghost">Cancel</button>
+        <button type="submit" form="users-edit-form" :disabled="saving" class="btn btn-primary">
+          {{ saving ? 'Saving...' : (editingUser ? 'Update' : 'Create') }}
+        </button>
+      </template>
+    </ModalWrapper>
 
     <!-- Delete confirmation -->
     <ConfirmDialog

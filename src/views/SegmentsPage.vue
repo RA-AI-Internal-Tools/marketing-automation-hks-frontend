@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import ModalWrapper from '@/components/ModalWrapper.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import {
@@ -393,23 +394,14 @@ const totalMembers = computed(() =>
     </div>
 
     <!-- Create / Edit Modal -->
-    <Teleport to="body">
-      <div v-if="showModal" class="seg-modal-root">
-        <div class="seg-modal-scrim" @click="showModal = false" />
-        <div class="seg-modal" role="dialog" aria-modal="true">
-          <header class="seg-modal-head">
-            <div>
-              <div class="rule-dot">{{ editingSlug ? 'Edit' : 'New' }}</div>
-              <h2 class="seg-modal-title">
-                {{ editingSlug ? 'Edit segment' : 'New segment' }}
-              </h2>
-            </div>
-            <button @click="showModal = false" class="seg-modal-close" aria-label="Close">
-              <XMarkIcon class="h-5 w-5" />
-            </button>
-          </header>
-
-          <form @submit.prevent="handleSave" class="seg-form">
+    <ModalWrapper
+      :model-value="showModal"
+      :title="editingSlug ? 'Edit segment' : 'New segment'"
+      size="lg"
+      @update:model-value="(v) => { if (!v) showModal = false }"
+    >
+      <template #body>
+        <form id="seg-edit-form" @submit.prevent="handleSave" class="seg-form">
             <div class="seg-field">
               <label>Name</label>
               <input v-model="form.name" type="text" required placeholder="e.g. High spenders" />
@@ -485,16 +477,15 @@ const totalMembers = computed(() =>
               <input v-model="form.tracardi_event_type" type="text" class="mono" placeholder="e.g. segment-entry" />
             </div>
 
-            <div class="seg-modal-foot">
-              <button type="button" @click="showModal = false" class="btn btn-ghost">Cancel</button>
-              <button type="submit" :disabled="saving" class="btn btn-primary">
-                {{ saving ? 'Saving…' : (editingSlug ? 'Update' : 'Create') }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </Teleport>
+        </form>
+      </template>
+      <template #footer>
+        <button type="button" @click="showModal = false" class="btn btn-ghost">Cancel</button>
+        <button type="submit" form="seg-edit-form" :disabled="saving" class="btn btn-primary">
+          {{ saving ? 'Saving…' : (editingSlug ? 'Update' : 'Create') }}
+        </button>
+      </template>
+    </ModalWrapper>
 
     <ConfirmDialog
       :open="deleteOpen"
