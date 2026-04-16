@@ -25,6 +25,9 @@ const triggerEvent = ref('')
 const cancellationEvent = ref('')
 const segmentFilter = ref('all')
 const isActive = ref(true)
+// Optional auto-expire. Stored as YYYY-MM-DDTHH:MM for datetime-local
+// input; serialised back to ISO at save time. Empty = never expires.
+const endDate = ref('')
 // Phase 3 — Send Time Optimization. When true, 0-delay sends defer to
 // the recipient's next optimal hour (from client_send_preferences,
 // refreshed nightly). Only meaningful on steps with DelayMinutes = 0;
@@ -143,6 +146,18 @@ const CONDITION_PARAM_FIELDS: Record<string, ParamField[]> = {
 function paramFieldsFor(condition: string): ParamField[] {
   return CONDITION_PARAM_FIELDS[condition] || []
 }
+
+// Detects steps authored in the Campaign Builder canvas that the flat
+// editor can't fully represent — wait-for-event (G6) and webhook actions
+// (G11). The steps round-trip correctly (we keep the extra fields on save)
+// but the operator should know they won't see the full config here.
+const builderOnlyStepIndices = computed<number[]>(() => {
+  const out: number[] = []
+  steps.value.forEach((s, i) => {
+    if (s.wait_for_event || s.webhook_url) out.push(i)
+  })
+  return out
+})
 // Coerce empty v-model to undefined so we don't persist blank strings that
 // would fail floatParam/stringParam checks server-side. Also ensures the
 // payload stays tidy — no condition_params: { threshold: "", ... } rows.
@@ -213,6 +228,15 @@ onMounted(async () => {
       cancellationEvent.value = campaign.cancellation_event || ''
       segmentFilter.value = campaign.segment_filter
       isActive.value = campaign.is_active
+      // Normalise ISO → YYYY-MM-DDTHH:MM for datetime-local. Accept either a
+      // full ISO (2026-05-01T00:00:00Z) or an already-trimmed value.
+      if (campaign.end_date) {
+        const d = new Date(campaign.end_date)
+        if (!isNaN(d.getTime())) {
+          const pad = (n: number) => String(n).padStart(2, '0')
+          endDate.value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+        }
+      }
       useSTO.value = (campaign as any).use_sto === true
       const qh = (campaign as any).quiet_hours
       if (qh && typeof qh === 'object') {
@@ -397,6 +421,10 @@ async function handleSubmit() {
       segment_filter: segmentFilter.value,
       cancellation_event: cancellationEvent.value || null,
       is_active: isActive.value,
+      // Empty input → null so the backend clears an existing end_date on
+      // re-save. Go parses ISO-8601; sending a bare datetime-local value
+      // would drop the zone, so convert through Date → toISOString().
+      end_date: endDate.value ? new Date(endDate.value).toISOString() : null,
       use_sto: useSTO.value,
       quiet_hours: (quietHours.value.start && quietHours.value.end)
         ? quietHours.value
@@ -482,6 +510,28 @@ async function handleSubmit() {
               <option v-for="seg in segments" :key="seg" :value="seg">{{ seg }}</option>
             </select>
           </div>
+          <div>
+            <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+              End date <span class="text-[var(--color-text-muted)] font-normal">(optional)</span>
+            </label>
+            <div class="flex items-stretch gap-2">
+              <input
+                v-model="endDate"
+                type="datetime-local"
+                class="flex-1 px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-focus-ring)]"
+              />
+              <button
+                v-if="endDate"
+                type="button"
+                @click="endDate = ''"
+                class="px-2.5 rounded-lg border border-[var(--color-border)] text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)]"
+                title="Clear end date"
+              >Clear</button>
+            </div>
+            <p class="mt-1 text-[11px] text-[var(--color-text-tertiary)] leading-snug">
+              Blocks new enrollments past this moment. In-flight enrollments continue until they complete.
+            </p>
+          </div>
           <div class="flex items-center gap-3 pt-6">
             <label class="relative inline-flex items-center cursor-pointer">
               <input v-model="isActive" type="checkbox" class="sr-only peer" aria-label="Campaign active" />
@@ -554,6 +604,32 @@ async function handleSubmit() {
           and tries <code class="px-1 py-[1px] rounded bg-[var(--color-bg-muted)]">key.ar-iq</code>
           → <code class="px-1 py-[1px] rounded bg-[var(--color-bg-muted)]">key.ar</code>
           → <code class="px-1 py-[1px] rounded bg-[var(--color-bg-muted)]">key</code>.
+        </p>
+
+        <!-- Builder-only steps notice — this campaign has wait-for-event or
+             webhook steps that the flat editor can't fully show. Values
+             round-trip on save, but editing those specific fields needs the
+             canvas. -->
+        <div
+          v-if="isEdit && builderOnlyStepIndices.length > 0"
+          class="flex items-start gap-3 rounded-lg border border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] px-3 py-2.5 text-xs text-[var(--color-warning-text)]"
+          role="note"
+        >
+          <span class="mt-0.5" aria-hidden="true">⚠</span>
+          <div class="flex-1">
+            <strong>Step{{ builderOnlyStepIndices.length > 1 ? 's' : '' }}
+              {{ builderOnlyStepIndices.map(i => i + 1).join(', ') }}
+              use advanced types</strong>
+            (wait-for-event or webhook) that the flat editor doesn't display.
+            Their config is preserved on save — open the visual builder to edit them.
+          </div>
+          <button
+            type="button"
+            @click="router.push(`/campaigns/${campaignId}/builder`)"
+            class="shrink-0 rounded border border-[var(--color-warning-border)] bg-[var(--color-bg-card)] px-2.5 py-1 text-[11px] font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)]"
+          >Open builder →</button>
+        </div>
+        <p class="text-[11px] text-[var(--color-text-muted)] -mt-1">
           WhatsApp is special: the base key is always used and the language is passed to Meta as a separate field.
         </p>
 

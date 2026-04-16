@@ -7,6 +7,10 @@ export interface CampaignDefinition {
   segment_filter: string
   cancellation_event?: string
   is_active: boolean
+  // Optional auto-expire. Serialised as ISO-8601 by the backend (Go
+  // *time.Time → JSON string). Enrollments already in-flight keep
+  // running past the end date; only new entries are blocked.
+  end_date?: string | null
   created_at: string
   updated_at: string
 }
@@ -27,6 +31,21 @@ export interface Step {
   variants?: StepVariant[]
   true_next?: number | null
   false_next?: number | null
+  // G6 — wait-for-event step: pauses until the customer emits the named
+  // event, or the timeout elapses (0 = wait forever). Authored in the
+  // Campaign Builder canvas; the flat editor preserves these fields on
+  // load/save but doesn't expose them for editing.
+  wait_for_event?: string
+  wait_for_event_timeout?: number
+  // G11 — webhook action step: calls an external URL instead of
+  // dispatching through a channel. Builder-only in the flat editor.
+  webhook_url?: string
+  webhook_method?: string
+  webhook_headers?: Record<string, string>
+  // Builder-only canvas coordinates. Preserved on round-trip so layout
+  // survives an edit through the flat editor.
+  position_x?: number | null
+  position_y?: number | null
 }
 
 export interface CampaignEnrollment {
@@ -192,6 +211,8 @@ export interface CampaignRequest {
   segment_filter: string
   cancellation_event?: string | null
   is_active: boolean
+  // Optional auto-expire. ISO-8601; null/undefined = never expires.
+  end_date?: string | null
   // Phase 3 — Send Time Optimization. When true, 0-delay steps fire at
   // each recipient's learned optimal hour (see client_send_preferences).
   use_sto?: boolean
