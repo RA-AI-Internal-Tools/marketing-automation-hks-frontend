@@ -17,6 +17,8 @@ import {
   type Broadcast, type BroadcastRequest,
 } from '@/api/broadcasts'
 import { getChannelVocabulary } from '@/api/channels'
+import { fetchSegments } from '@/api/dashboard'
+import type { Segment } from '@/api/types'
 import { PlusIcon, PlayIcon, StopIcon, TrashIcon, PencilSquareIcon, MegaphoneIcon } from '@heroicons/vue/24/outline'
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 
@@ -67,12 +69,23 @@ async function load() {
 // and the failure fallback — same pattern as ConsentsPage.
 const availableChannels = ref<string[]>(['email', 'sms', 'push', 'whatsapp'])
 
+// Populates the Segment dropdown so operators pick from real slugs instead
+// of typing one and risking a silent "nobody matched" send. Failure keeps
+// "all" as the only option, which is the safe default anyway.
+const availableSegments = ref<Segment[]>([])
+const segmentsLoading = ref(false)
+
 onMounted(() => {
   load()
   templatesStore.load()
   getChannelVocabulary()
     .then(v => { if (Array.isArray(v) && v.length > 0) availableChannels.value = v })
     .catch(() => { /* keep fallback */ })
+  segmentsLoading.value = true
+  fetchSegments()
+    .then(list => { availableSegments.value = (list || []).filter(s => s.is_active) })
+    .catch(() => { /* keep empty — "all" remains the default */ })
+    .finally(() => { segmentsLoading.value = false })
 })
 
 watch(statusFilter, load)
@@ -84,6 +97,20 @@ useKeyboardShortcuts([
 const templatesForChannel = computed(() =>
   templatesStore.templates.filter(t => t.channel === form.value.channel && !t.template_key.includes('.')),
 )
+
+// Slug → display name lookup so the row listing can show the friendly name
+// instead of the raw slug the backend persists. Falls back to the slug when
+// the segment isn't in the active list (renamed/archived), matching the
+// "(unlisted)" behavior in the editor dropdown.
+const segmentNameBySlug = computed(() => {
+  const m = new Map<string, string>()
+  for (const s of availableSegments.value) m.set(s.slug, s.name)
+  return m
+})
+function segmentLabel(slug: string): string {
+  if (!slug || slug === 'all') return 'All subscribers'
+  return segmentNameBySlug.value.get(slug) || slug
+}
 
 function openNew() {
   editing.value = null
@@ -204,7 +231,7 @@ function formatTime(iso: string) {
     <div class="bc-toolbar">
       <div class="bc-tabs">
         <button
-          v-for="s in ['', 'draft', 'scheduled', 'running', 'completed', 'cancelled']"
+          v-for="s in ['', 'draft', 'scheduled', 'running', 'completed', 'cancelled', 'failed']"
           :key="s"
           @click="statusFilter = s"
           :class="['bc-tab', { 'bc-tab-active': statusFilter === s }]"
@@ -240,7 +267,7 @@ function formatTime(iso: string) {
           <div class="bc-row-meta">
             <span>Template: <code>{{ b.template_key }}</code></span>
             <span class="bc-sep">·</span>
-            <span>Segment: <code>{{ b.segment_filter }}</code></span>
+            <span>Segment: <code :title="b.segment_filter">{{ segmentLabel(b.segment_filter) }}</code></span>
             <span class="bc-sep">·</span>
             <span>Scheduled: <strong>{{ formatTime(b.scheduled_at) }}</strong></span>
           </div>
@@ -303,8 +330,20 @@ function formatTime(iso: string) {
               <div class="bc-grid grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <label class="bc-field">
                   <span class="bc-field-lbl">Segment</span>
-                  <input v-model="form.segment_filter" type="text" placeholder="all" class="form-input" />
-                  <span class="bc-field-hint">Use "all" for everyone, or a segment slug (e.g. "vip", "dormant").</span>
+                  <select v-model="form.segment_filter" class="form-select" :disabled="segmentsLoading">
+                    <option value="all">All subscribers</option>
+                    <option v-for="s in availableSegments" :key="s.slug" :value="s.slug">
+                      {{ s.name }}<span v-if="s.member_count != null"> · {{ s.member_count.toLocaleString() }}</span>
+                    </option>
+                    <!-- Preserve an already-saved slug that's no longer in the active list
+                         (renamed/archived), so editing an existing broadcast doesn't silently
+                         shift its audience to "all" when the dropdown rehydrates. -->
+                    <option
+                      v-if="form.segment_filter && form.segment_filter !== 'all' && !availableSegments.some(s => s.slug === form.segment_filter)"
+                      :value="form.segment_filter"
+                    >{{ form.segment_filter }} (unlisted)</option>
+                  </select>
+                  <span class="bc-field-hint">Pick "All subscribers" for everyone, or a saved segment. Manage segments in Audience → Segments.</span>
                 </label>
                 <label class="bc-field">
                   <span class="bc-field-lbl">Scheduled for</span>

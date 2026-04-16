@@ -8,7 +8,8 @@ import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import {
   PlusIcon, PencilSquareIcon, TrashIcon, RocketLaunchIcon,
-  DocumentDuplicateIcon, SparklesIcon,
+  DocumentDuplicateIcon, SparklesIcon, MagnifyingGlassIcon,
+  Squares2X2Icon, TableCellsIcon,
 } from '@heroicons/vue/24/outline'
 import { cloneCampaign } from '@/api/dashboard'
 import BlueprintPickerModal from '@/components/BlueprintPickerModal.vue'
@@ -16,7 +17,10 @@ import ChannelChip from '@/components/ChannelChip.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import BaseCard from '@/components/BaseCard.vue'
+import DataTable, { type Column } from '@/components/DataTable.vue'
+import SkeletonTable from '@/components/SkeletonTable.vue'
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
+import type { CampaignDefinition } from '@/api/types'
 
 const router = useRouter()
 const store = useCampaignsStore()
@@ -34,6 +38,18 @@ const deleteOpen = computed({
   get: () => !!deleteTarget.value,
   set: (v) => { if (!v) deleteTarget.value = null },
 })
+
+// Search + view mode persist across the session so the operator who picked
+// table once doesn't get bumped back to cards on every navigation.
+const query = ref('')
+const VIEW_KEY = 'campaigns:view'
+const viewMode = ref<'cards' | 'table'>(
+  (typeof localStorage !== 'undefined' && localStorage.getItem(VIEW_KEY) as any) || 'cards',
+)
+function setView(m: 'cards' | 'table') {
+  viewMode.value = m
+  try { localStorage.setItem(VIEW_KEY, m) } catch { /* quota / private mode */ }
+}
 
 onMounted(() => store.load())
 
@@ -69,6 +85,56 @@ async function handleClone(id: number) {
 }
 
 const totalActive = computed(() => store.campaigns.filter(c => c.is_active).length)
+
+const filteredCampaigns = computed<CampaignDefinition[]>(() => {
+  const q = query.value.trim().toLowerCase()
+  if (!q) return store.campaigns
+  return store.campaigns.filter(c =>
+    c.name.toLowerCase().includes(q) ||
+    c.slug.toLowerCase().includes(q) ||
+    c.trigger_event.toLowerCase().includes(q) ||
+    (c.cancellation_event || '').toLowerCase().includes(q) ||
+    c.segment_filter.toLowerCase().includes(q),
+  )
+})
+
+const tableColumns: Column[] = [
+  { key: 'name', label: 'Name', sortable: true },
+  { key: 'trigger_event', label: 'Trigger', sortable: true },
+  { key: 'channels', label: 'Channels' },
+  { key: 'segment_filter', label: 'Segment', sortable: true },
+  { key: 'slug', label: 'Slug', sortable: true },
+  { key: 'step_count', label: 'Steps', sortable: true, align: 'right', width: '80px' },
+  { key: 'is_active', label: 'Status', sortable: true, width: '120px' },
+  { key: 'actions', label: '', align: 'right', width: '160px' },
+]
+
+// Flatten for DataTable sort (it sorts by the row key directly). We expose
+// step_count + channels as precomputed strings so sort stays stable.
+const tableRows = computed(() => filteredCampaigns.value.map(c => ({
+  ...c,
+  step_count: c.steps.length,
+  channels: Array.from(new Set(c.steps.map(s => s.channel))),
+})))
+
+const sortKey = ref<string | null>('name')
+const sortDir = ref<'asc' | 'desc' | null>('asc')
+
+const sortedTableRows = computed(() => {
+  const rows = [...tableRows.value]
+  const key = sortKey.value
+  const dir = sortDir.value
+  if (!key || !dir) return rows
+  rows.sort((a: any, b: any) => {
+    const av = a[key], bv = b[key]
+    if (av === bv) return 0
+    // Booleans: true first in 'asc'.
+    if (typeof av === 'boolean') return (av === bv) ? 0 : (av ? -1 : 1) * (dir === 'asc' ? 1 : -1)
+    if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * (dir === 'asc' ? 1 : -1)
+    return String(av ?? '').localeCompare(String(bv ?? '')) * (dir === 'asc' ? 1 : -1)
+  })
+  return rows
+})
 </script>
 
 <template>
@@ -98,11 +164,51 @@ const totalActive = computed(() => store.campaigns.filter(c => c.is_active).leng
       <span class="camp-meta-sep">·</span>
       <span class="camp-meta-num num-tabular">{{ totalActive }}</span>
       <span class="camp-meta-lbl">active</span>
+      <span class="camp-meta-sep" v-if="query">·</span>
+      <span v-if="query" class="camp-meta-num num-tabular">{{ filteredCampaigns.length }}</span>
+      <span v-if="query" class="camp-meta-lbl">matching</span>
       <span class="camp-meta-rule" />
     </div>
 
-    <!-- Skeletons -->
-    <div v-if="store.loading" class="camp-list grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+    <!-- Search + view toggle -->
+    <div v-if="!store.loading && store.campaigns.length" class="camp-toolbar">
+      <div class="camp-search">
+        <MagnifyingGlassIcon class="camp-search-icon" aria-hidden="true" />
+        <input
+          v-model="query"
+          type="text"
+          placeholder="Search by name, slug, trigger, or segment…"
+          class="camp-search-input"
+          aria-label="Search campaigns"
+        />
+        <button v-if="query" @click="query = ''" class="camp-search-clear" aria-label="Clear search">×</button>
+      </div>
+      <div class="camp-view-toggle" role="group" aria-label="View mode">
+        <button
+          @click="setView('cards')"
+          :aria-pressed="viewMode === 'cards'"
+          :class="['camp-view-btn', { 'is-active': viewMode === 'cards' }]"
+          title="Card view"
+        >
+          <Squares2X2Icon class="h-4 w-4" aria-hidden="true" />
+          <span>Cards</span>
+        </button>
+        <button
+          @click="setView('table')"
+          :aria-pressed="viewMode === 'table'"
+          :class="['camp-view-btn', { 'is-active': viewMode === 'table' }]"
+          title="Table view"
+        >
+          <TableCellsIcon class="h-4 w-4" aria-hidden="true" />
+          <span>Table</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Skeletons — match the active view so operators don't see a card-grid
+         flash before the table hydrates when table mode is remembered. -->
+    <SkeletonTable v-if="store.loading && viewMode === 'table'" :rows="6" :columns="tableColumns.length" />
+    <div v-else-if="store.loading" class="camp-list grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
       <BaseCard v-for="i in 3" :key="i" class="camp-card">
         <div class="camp-card-inner">
           <div class="skeleton h-5 w-48 mb-3"></div>
@@ -131,10 +237,91 @@ const totalActive = computed(() => store.campaigns.filter(c => c.is_active).leng
       </template>
     </EmptyState>
 
+    <!-- Search yielded zero matches -->
+    <EmptyState
+      v-else-if="filteredCampaigns.length === 0"
+      :icon="MagnifyingGlassIcon"
+      title="No campaigns match your search."
+      :description="`Nothing matches “${query}”. Try a different name, slug, or trigger.`"
+    >
+      <template #action>
+        <button @click="query = ''" class="btn btn-ghost">Clear search</button>
+      </template>
+    </EmptyState>
+
+    <!-- Table view -->
+    <div v-else-if="viewMode === 'table'" class="camp-table-wrap">
+      <DataTable
+        :columns="tableColumns"
+        :rows="sortedTableRows"
+        row-key="id"
+        sortable
+        :sort-key="sortKey"
+        :sort-dir="sortDir"
+        @update:sort-key="v => sortKey = v"
+        @update:sort-dir="v => sortDir = v"
+      >
+        <template #cell-name="{ row }">
+          <div class="camp-tbl-name">
+            <span class="camp-pulse" :data-active="row.is_active" aria-hidden="true" />
+            <!-- Route to the builder (view-only, no requiresWrite) so read-only
+                 users aren't bounced; writers still edit via the pencil icon. -->
+            <button
+              @click="router.push(`/campaigns/${row.id}/builder`)"
+              class="camp-tbl-name-btn"
+              :title="`Open flow for ${row.name}`"
+            >{{ row.name }}</button>
+          </div>
+        </template>
+        <template #cell-trigger_event="{ row }">
+          <code class="camp-trig-code">{{ row.trigger_event }}</code>
+          <div v-if="row.cancellation_event" class="camp-tbl-cancel">
+            cancel <code class="camp-trig-code">{{ row.cancellation_event }}</code>
+          </div>
+        </template>
+        <template #cell-channels="{ row }">
+          <div class="camp-tbl-channels">
+            <ChannelChip v-for="ch in row.channels" :key="ch" :channel="ch" />
+          </div>
+        </template>
+        <template #cell-segment_filter="{ row }">
+          <code class="camp-trig-code">{{ row.segment_filter }}</code>
+        </template>
+        <template #cell-slug="{ row }">
+          <code class="camp-trig-code">{{ row.slug }}</code>
+        </template>
+        <template #cell-step_count="{ row }">
+          <span class="num-tabular">{{ row.step_count }}</span>
+        </template>
+        <template #cell-is_active="{ row }">
+          <div class="camp-tbl-status">
+            <StatusBadge :status="row.is_active ? 'active' : 'inactive'" />
+            <label v-if="auth.canWrite" class="camp-toggle" :title="row.is_active ? 'Pause' : 'Activate'">
+              <input type="checkbox" :checked="row.is_active" @change="handleToggle(row.id)" />
+              <span class="camp-toggle-track"><span class="camp-toggle-thumb" /></span>
+            </label>
+          </div>
+        </template>
+        <template #cell-actions="{ row }">
+          <div v-if="auth.canWrite" class="camp-actions">
+            <button @click="handleClone(row.id)" class="camp-action" :aria-label="`Clone campaign ${row.name}`" title="Clone">
+              <DocumentDuplicateIcon class="h-4 w-4" />
+            </button>
+            <button @click="router.push(`/campaigns/${row.id}/edit`)" class="camp-action" :aria-label="`Edit campaign ${row.name}`" title="Edit">
+              <PencilSquareIcon class="h-4 w-4" />
+            </button>
+            <button @click="handleDelete(row.id, row.name)" class="camp-action camp-action-danger" :aria-label="`Delete campaign ${row.name}`" title="Delete">
+              <TrashIcon class="h-4 w-4" />
+            </button>
+          </div>
+        </template>
+      </DataTable>
+    </div>
+
     <!-- Campaign cards -->
     <div v-else class="camp-list stagger grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
       <BaseCard
-        v-for="campaign in store.campaigns"
+        v-for="campaign in filteredCampaigns"
         :key="campaign.id"
         interactive
         class="camp-card"
@@ -517,4 +704,134 @@ const totalActive = computed(() => store.campaigns.filter(c => c.is_active).leng
 }
 
 /* Empty state moved to <EmptyState> — single source of truth. */
+
+/* ── Toolbar (search + view toggle) ── */
+.camp-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.camp-search {
+  position: relative;
+  flex: 1;
+  min-width: 240px;
+  max-width: 420px;
+}
+.camp-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+.camp-search-input {
+  width: 100%;
+  padding: 8px 32px 8px 34px;
+  font-size: 13px;
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+  background: var(--color-bg-input);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.camp-search-input:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-light);
+}
+.camp-search-input::placeholder { color: var(--color-text-muted); }
+.camp-search-clear {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 18px;
+  line-height: 1;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.camp-search-clear:hover { background: var(--color-bg-hover); color: var(--color-text-primary); }
+
+.camp-view-toggle {
+  display: inline-flex;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 2px;
+  background: var(--color-bg-card);
+}
+.camp-view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: calc(var(--radius-md) - 2px);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.camp-view-btn:hover { color: var(--color-text-primary); background: var(--color-bg-hover); }
+.camp-view-btn.is-active {
+  background: var(--hks-deep-blue);
+  color: #fff;
+}
+.camp-view-btn.is-active:hover { background: var(--hks-deep-blue); }
+
+/* ── Table-cell helpers ── */
+.camp-table-wrap { min-width: 0; }
+.camp-tbl-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.camp-tbl-name-btn {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 13.5px;
+  color: var(--color-text-primary);
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.camp-tbl-name-btn:hover { color: var(--hks-deep-blue); text-decoration: underline; }
+.camp-tbl-cancel {
+  margin-top: 3px;
+  font-size: 10.5px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.02em;
+}
+.camp-tbl-channels {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.camp-tbl-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
 </style>
