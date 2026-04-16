@@ -40,6 +40,33 @@ function stopEvalPolling() {
 }
 const editingSlug = ref<string | null>(null)
 const eventInput = ref('')
+const eventMenuOpen = ref(false)
+const eventHighlight = ref(0)
+const eventInputEl = ref<HTMLInputElement | null>(null)
+
+type EventSuggestion = { value: string; category: string; description: string }
+
+const KNOWN_EVENTS: EventSuggestion[] = [
+  { value: 'client-registered', category: 'Lifecycle', description: 'New client account created' },
+  { value: 'client-updated', category: 'Lifecycle', description: 'Client profile updated' },
+  { value: 'account-registered', category: 'Lifecycle', description: 'Storefront account registered' },
+  { value: 'client-at-risk', category: 'Lifecycle', description: 'Client flagged as at-risk by RFM' },
+  { value: 'client-dormant', category: 'Lifecycle', description: 'Client crossed dormancy threshold' },
+  { value: 'winback-detected', category: 'Lifecycle', description: 'Win-back opportunity detected' },
+  { value: 'birthday-today', category: 'Lifecycle', description: 'Client birthday fires today' },
+  { value: 'kyc-completed', category: 'Lifecycle', description: 'KYC verification completed' },
+
+  { value: 'product-viewed', category: 'Storefront', description: 'Product detail page viewed' },
+  { value: 'add-to-cart', category: 'Storefront', description: 'Item added to cart' },
+  { value: 'cart-updated', category: 'Storefront', description: 'Cart contents changed' },
+
+  { value: 'checkout-started', category: 'Checkout', description: 'Checkout flow entered' },
+  { value: 'checkout-completed', category: 'Checkout', description: 'Checkout finished successfully' },
+  { value: 'order-completed', category: 'Checkout', description: 'Order placed and confirmed' },
+  { value: 'payment-processed', category: 'Checkout', description: 'Payment captured' },
+  { value: 'payment-succeeded', category: 'Checkout', description: 'Payment authorisation succeeded' },
+  { value: 'payment-failed', category: 'Checkout', description: 'Payment attempt failed' },
+]
 
 const ruleTypes = [
   { value: 'last_order_days', label: 'Last order days' },
@@ -205,14 +232,78 @@ async function handleEvaluateAll() {
 
 onBeforeUnmount(() => { stopEvalPolling() })
 
-function addEvent() {
-  const val = eventInput.value.trim()
+// Suggestions merge: curated catalog + events already used across loaded
+// segments (keeps the dropdown useful for custom events this workspace has
+// already adopted). Filtered by the current input and excludes already-added.
+const eventCatalog = computed<EventSuggestion[]>(() => {
+  const known = new Map(KNOWN_EVENTS.map(e => [e.value, e]))
+  for (const seg of segments.value) {
+    for (const evt of seg.entry_events || []) {
+      if (!known.has(evt)) {
+        known.set(evt, { value: evt, category: 'In use', description: 'Used by another segment' })
+      }
+    }
+  }
+  return Array.from(known.values())
+})
+
+const filteredEventSuggestions = computed<EventSuggestion[]>(() => {
+  const q = eventInput.value.trim().toLowerCase()
+  const selected = new Set(form.value.entry_events)
+  return eventCatalog.value
+    .filter(e => !selected.has(e.value))
+    .filter(e => !q || e.value.toLowerCase().includes(q) || e.description.toLowerCase().includes(q))
+})
+
+const groupedSuggestions = computed(() => {
+  const groups: Record<string, EventSuggestion[]> = {}
+  for (const e of filteredEventSuggestions.value) {
+    if (!groups[e.category]) groups[e.category] = []
+    groups[e.category].push(e)
+  }
+  return groups
+})
+
+function addEvent(value?: string) {
+  const val = (value ?? eventInput.value).trim()
   if (val && !form.value.entry_events.includes(val)) form.value.entry_events.push(val)
   eventInput.value = ''
+  eventHighlight.value = 0
+  eventMenuOpen.value = false
 }
 function removeEvent(event: string) { form.value.entry_events = form.value.entry_events.filter(e => e !== event) }
 function handleEventKeydown(e: KeyboardEvent) {
-  if (e.key === 'Enter') { e.preventDefault(); addEvent() }
+  const list = filteredEventSuggestions.value
+  if (e.key === 'ArrowDown') {
+    e.preventDefault()
+    eventMenuOpen.value = true
+    if (list.length) eventHighlight.value = (eventHighlight.value + 1) % list.length
+    return
+  }
+  if (e.key === 'ArrowUp') {
+    e.preventDefault()
+    eventMenuOpen.value = true
+    if (list.length) eventHighlight.value = (eventHighlight.value - 1 + list.length) % list.length
+    return
+  }
+  if (e.key === 'Enter') {
+    e.preventDefault()
+    const picked = eventMenuOpen.value && list[eventHighlight.value]
+    addEvent(picked ? picked.value : undefined)
+    return
+  }
+  if (e.key === 'Escape') { eventMenuOpen.value = false; return }
+  // Any other keystroke opens the menu and resets highlight.
+  eventMenuOpen.value = true
+  eventHighlight.value = 0
+}
+function handleEventBlur() {
+  // Delay so a click on a menu item still registers.
+  setTimeout(() => { eventMenuOpen.value = false }, 150)
+}
+function pickSuggestion(value: string) {
+  addEvent(value)
+  eventInputEl.value?.focus()
 }
 
 function formatOperator(op: string): string {
@@ -457,14 +548,57 @@ const totalMembers = computed(() =>
                   </button>
                 </span>
               </div>
-              <input
-                v-model="eventInput"
-                type="text"
-                @keydown="handleEventKeydown"
-                @blur="addEvent"
-                class="mono"
-                placeholder="Type event name and press Enter"
-              />
+              <div class="seg-combo">
+                <input
+                  ref="eventInputEl"
+                  v-model="eventInput"
+                  type="text"
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-controls="seg-event-menu"
+                  :aria-expanded="eventMenuOpen"
+                  @keydown="handleEventKeydown"
+                  @focus="eventMenuOpen = true"
+                  @blur="handleEventBlur"
+                  class="mono"
+                  placeholder="Search or type an event name…"
+                />
+                <div
+                  v-if="eventMenuOpen && filteredEventSuggestions.length"
+                  id="seg-event-menu"
+                  class="seg-combo-menu"
+                  role="listbox"
+                >
+                  <template v-for="(items, group) in groupedSuggestions" :key="group">
+                    <div class="seg-combo-group">{{ group }}</div>
+                    <button
+                      v-for="item in items"
+                      :key="item.value"
+                      type="button"
+                      role="option"
+                      class="seg-combo-item"
+                      :class="{ 'is-active': filteredEventSuggestions[eventHighlight]?.value === item.value }"
+                      @mousedown.prevent="pickSuggestion(item.value)"
+                      @mouseenter="eventHighlight = filteredEventSuggestions.findIndex(e => e.value === item.value)"
+                    >
+                      <span class="seg-combo-val">{{ item.value }}</span>
+                      <span class="seg-combo-desc">{{ item.description }}</span>
+                    </button>
+                  </template>
+                </div>
+                <div
+                  v-else-if="eventMenuOpen && eventInput.trim()"
+                  class="seg-combo-menu seg-combo-empty"
+                  role="listbox"
+                >
+                  <div class="seg-combo-hint">
+                    No match. Press <kbd>Enter</kbd> to add <code>{{ eventInput.trim() }}</code> as a custom event.
+                  </div>
+                </div>
+              </div>
+              <p class="seg-hint">
+                Pick from known events or type a custom one. Re-evaluation fires when any listed event arrives for a client.
+              </p>
             </div>
 
             <div class="seg-field-row">
@@ -930,6 +1064,90 @@ const totalMembers = computed(() =>
   transition: opacity var(--transition-fast), color var(--transition-fast);
 }
 .seg-event-chip button:hover { opacity: 1; color: var(--color-error); }
+
+/* ── Event combobox ── */
+.seg-combo { position: relative; }
+.seg-combo-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 10;
+  max-height: 260px;
+  overflow-y: auto;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 4px 0;
+}
+.seg-combo-group {
+  padding: 6px 12px 3px;
+  font-family: var(--font-sans);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+.seg-combo-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  width: 100%;
+  padding: 7px 12px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+.seg-combo-item:hover,
+.seg-combo-item.is-active {
+  background: var(--color-bg-subtle);
+}
+.seg-combo-val {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-text-primary);
+}
+.seg-combo-desc {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+}
+.seg-combo-empty { padding: 4px 0; }
+.seg-combo-hint {
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  line-height: 1.5;
+}
+.seg-combo-hint kbd {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  padding: 1px 5px;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-muted);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+}
+.seg-combo-hint code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 1px 5px;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-muted);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+}
+.seg-hint {
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: var(--color-text-tertiary);
+  line-height: 1.4;
+}
 
 .seg-modal-foot {
   display: flex;
