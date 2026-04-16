@@ -124,6 +124,10 @@ export interface MessageTemplate {
   is_active: boolean
   created_at: string
   updated_at: string
+  // In-app (channel="inbox") CTA fields. Ignored for other channels.
+  cta_url?: string | null
+  cta_label?: string | null
+  inbox_type?: 'info' | 'success' | 'warning' | 'danger' | 'promo' | null
 }
 
 export interface TemplateRequest {
@@ -138,6 +142,19 @@ export interface TemplateRequest {
   mjml_source?: string
   variables?: string[]
   is_active: boolean
+  // In-app (channel="inbox") CTA fields. Ignored for other channels.
+  cta_url?: string | null
+  cta_label?: string | null
+  inbox_type?: 'info' | 'success' | 'warning' | 'danger' | 'promo' | null
+}
+
+export interface InAppTemplateRequest extends TemplateRequest {
+  channel: 'inbox'
+  subject: string
+  body: string
+  cta_url?: string | null
+  cta_label?: string | null
+  inbox_type: 'info' | 'success' | 'warning' | 'danger' | 'promo'
 }
 
 export interface EmailTemplateRequest extends TemplateRequest {

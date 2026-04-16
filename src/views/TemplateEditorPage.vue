@@ -47,11 +47,17 @@ function applyLocaleSuffix() {
   if (needsLocaleSuffix.value) templateKey.value = localizedKey.value
 }
 
+// In-app inbox-only fields
+const ctaUrl = ref('')
+const ctaLabel = ref('')
+const inboxType = ref<'info' | 'success' | 'warning' | 'danger' | 'promo'>('info')
+const inboxTypes = ['info', 'success', 'warning', 'danger', 'promo'] as const
+
 const saving = ref(false)
 const error = ref('')
 const loading = ref(false)
 
-const channels = ['email', 'sms', 'whatsapp', 'push']
+const channels = ['email', 'sms', 'whatsapp', 'push', 'inbox']
 
 onMounted(async () => {
   if (isEdit.value) {
@@ -72,6 +78,9 @@ onMounted(async () => {
         body.value = tmpl.body
         variablesInput.value = tmpl.variables ? tmpl.variables.join(', ') : ''
         isActive.value = tmpl.is_active
+        ctaUrl.value = tmpl.cta_url || ''
+        ctaLabel.value = tmpl.cta_label || ''
+        inboxType.value = tmpl.inbox_type || 'info'
       }
     } catch {
       error.value = 'Failed to load template'
@@ -91,14 +100,20 @@ async function handleSubmit() {
       .map((v) => v.trim())
       .filter((v) => v.length > 0)
 
+    const isInbox = channel.value === 'inbox'
     const req: TemplateRequest = {
       template_key: templateKey.value,
       channel: channel.value,
       name: name.value,
-      subject: channel.value === 'email' ? subject.value || null : null,
+      subject: channel.value === 'email' || isInbox ? subject.value || null : null,
       body: body.value,
       variables: variables.length > 0 ? variables : undefined,
       is_active: isActive.value,
+      ...(isInbox && {
+        cta_url: ctaUrl.value || null,
+        cta_label: ctaLabel.value || null,
+        inbox_type: inboxType.value,
+      }),
     }
 
     if (isEdit.value) {
@@ -192,10 +207,16 @@ const inputClass = 'w-full px-3 py-2 border border-[var(--color-border)] rounded
               'bg-purple-100 text-purple-800': channel === 'sms',
               'bg-[var(--color-success-soft)] text-[var(--color-success-text)]': channel === 'whatsapp',
               'bg-orange-100 text-orange-800': channel === 'push',
+              'bg-blue-100 text-blue-800': channel === 'inbox',
             }"
           >
             {{ channel }}
           </span>
+        </div>
+
+        <div v-if="channel === 'inbox'">
+          <label class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Subject <span class="text-red-500">*</span></label>
+          <input v-model="subject" required :class="inputClass" placeholder="Notification subject line" maxlength="255" />
         </div>
 
         <!-- Language / locale-variant helper -->
@@ -247,6 +268,29 @@ const inputClass = 'w-full px-3 py-2 border border-[var(--color-border)] rounded
             :class="inputClass"
             placeholder="e.g. first_name, order_id, amount"
           />
+        </div>
+
+        <div v-if="channel === 'inbox'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Type</label>
+            <select v-model="inboxType" :class="inputClass">
+              <option v-for="t in inboxTypes" :key="t" :value="t">{{ t }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">CTA URL</label>
+            <input v-model="ctaUrl" :class="inputClass" placeholder="https://ar-pay.store/..." />
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">CTA Label</label>
+            <input
+              v-model="ctaLabel"
+              :class="inputClass"
+              placeholder="e.g. View order"
+              :disabled="!ctaUrl"
+              maxlength="64"
+            />
+          </div>
         </div>
 
         <div class="flex items-center justify-between py-1">
