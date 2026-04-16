@@ -392,6 +392,12 @@ function pctLabel(n: number, total: number): string {
                 <th class="perf-th-sort" @click="toggleSort('total_skipped')">
                   Skipped <span v-if="sortKey === 'total_skipped'" class="perf-sort-ind">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
                 </th>
+                <th class="perf-th-sort" @click="toggleSort('total_opened')" title="Opened (inbox + email)">
+                  Opened <span v-if="sortKey === 'total_opened'" class="perf-sort-ind">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+                </th>
+                <th class="perf-th-sort" @click="toggleSort('total_clicked')" title="Clicked (CTA + email links)">
+                  Clicked <span v-if="sortKey === 'total_clicked'" class="perf-sort-ind">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+                </th>
                 <th class="perf-th-sort" @click="toggleSort('enrollments')">
                   Enrollments <span v-if="sortKey === 'enrollments'" class="perf-sort-ind">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
                 </th>
@@ -409,12 +415,14 @@ function pctLabel(n: number, total: number): string {
                 <td class="num-pos">{{ c.total_sent.toLocaleString() }}</td>
                 <td class="num-neg">{{ c.total_failed.toLocaleString() }}</td>
                 <td class="num-muted">{{ c.total_skipped.toLocaleString() }}</td>
+                <td>{{ (c.total_opened ?? 0).toLocaleString() }}</td>
+                <td class="num-accent">{{ (c.total_clicked ?? 0).toLocaleString() }}</td>
                 <td>{{ c.enrollments.toLocaleString() }}</td>
                 <td class="num-accent">{{ c.completions.toLocaleString() }}</td>
                 <td class="num-muted">{{ pctLabel(c.completions, c.enrollments) }}</td>
               </tr>
               <tr v-if="campaigns.length === 0">
-                <td colspan="7" class="perf-empty">No campaign data yet.</td>
+                <td colspan="9" class="perf-empty">No campaign data yet.</td>
               </tr>
             </tbody>
           </table>
