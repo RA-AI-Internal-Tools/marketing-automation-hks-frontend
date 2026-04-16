@@ -332,6 +332,12 @@ const totalMembers = computed(() =>
                   {{ segment.name }}
                 </router-link>
               </div>
+              <!-- Surface description here so operators scanning the catalogue
+                   can tell segments apart without clicking through to edit.
+                   Truncates via CSS; full text on hover via title attr. -->
+              <p v-if="segment.description" class="seg-desc" :title="segment.description">
+                {{ segment.description }}
+              </p>
             </td>
             <td class="seg-td">
               <code class="seg-code">{{ segment.slug }}</code>
@@ -632,6 +638,18 @@ const totalMembers = computed(() =>
   transition: color var(--transition-fast);
 }
 .seg-name:hover { color: var(--hks-cyan); }
+
+.seg-desc {
+  margin-top: 3px;
+  font-size: 11.5px;
+  color: var(--color-text-tertiary);
+  line-height: 1.35;
+  max-width: 320px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 
 .seg-code, .seg-threshold {
   display: inline-block;

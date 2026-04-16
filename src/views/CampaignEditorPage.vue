@@ -91,6 +91,72 @@ const conditions = [
   'cart_contains_category',
   'rfm_segment',
 ]
+
+// Schema for condition_params editing. Mirrors the registry in
+// internal/condition/ — each condition that reads params advertises the
+// fields it expects so the UI can render typed inputs instead of a JSON
+// blob. Conditions whose params are filled in at runtime by the engine
+// (message_opened, no_purchase_since_enrollment, kyc_not_completed) are
+// intentionally absent — operators shouldn't set those by hand.
+//
+// Keep in lockstep with condition files: anything new here needs a
+// matching params[...] reader in Evaluate() and vice-versa.
+type ParamKind = 'number' | 'text' | 'rfm_segment'
+interface ParamField {
+  key: string
+  label: string
+  kind: ParamKind
+  placeholder?: string
+  hint?: string
+  default?: string | number
+}
+const RFM_SEGMENT_OPTIONS = [
+  'champions', 'loyal', 'potential_loyal', 'recent', 'promising',
+  'need_attention', 'about_to_sleep', 'at_risk', 'cant_lose',
+  'hibernating', 'lost',
+]
+const CONDITION_PARAM_FIELDS: Record<string, ParamField[]> = {
+  no_order_in_days: [
+    { key: 'days', label: 'Days without an order', kind: 'number', placeholder: '30', hint: 'How many days of inactivity count as "no order". Defaults to 30.', default: 30 },
+  ],
+  cart_value_gte: [
+    { key: 'threshold', label: 'Cart total ≥', kind: 'number', placeholder: '50', hint: 'Evaluates against the most recent checkout_started cart_total.' },
+  ],
+  cart_value_lte: [
+    { key: 'threshold', label: 'Cart total ≤', kind: 'number', placeholder: '50', hint: 'Evaluates against the most recent checkout_started cart_total.' },
+  ],
+  viewed_product_category: [
+    { key: 'category', label: 'Category', kind: 'text', placeholder: 'e.g. wallets', hint: 'Matches products.category exactly.' },
+    { key: 'within_days', label: 'Within last N days', kind: 'number', placeholder: '30', hint: 'Lookback window for product_views. Defaults to 30.', default: 30 },
+  ],
+  viewed_product_count_gte: [
+    { key: 'count', label: 'Views ≥', kind: 'number', placeholder: '5', hint: 'Minimum number of product_views rows to match.', default: 1 },
+    { key: 'within_days', label: 'Within last N days', kind: 'number', placeholder: '7', hint: 'Lookback window for product_views. Defaults to 7.', default: 7 },
+  ],
+  cart_contains_category: [
+    { key: 'category', label: 'Category', kind: 'text', placeholder: 'e.g. wallets', hint: 'Any item in the latest cart whose product.category matches.' },
+  ],
+  rfm_segment: [
+    { key: 'segment', label: 'RFM segment', kind: 'rfm_segment', hint: 'Matches the client\'s current RFM segment label. Scored nightly.' },
+  ],
+}
+function paramFieldsFor(condition: string): ParamField[] {
+  return CONDITION_PARAM_FIELDS[condition] || []
+}
+// Coerce empty v-model to undefined so we don't persist blank strings that
+// would fail floatParam/stringParam checks server-side. Also ensures the
+// payload stays tidy — no condition_params: { threshold: "", ... } rows.
+function onConditionChange(step: Step) {
+  // Reset params to defaults when the condition type changes — stale keys
+  // from the previous condition would just be ignored server-side but look
+  // confusing on re-edit.
+  const fields = paramFieldsFor(step.condition || '')
+  const next: Record<string, any> = {}
+  for (const f of fields) {
+    if (f.default !== undefined) next[f.key] = f.default
+  }
+  step.condition_params = next
+}
 // Segments loaded dynamically from the backend. 'all' is the universal
 // implicit bucket and always first — the stored list contains only
 // operator-managed segments (includes RFM categories once the nightly
@@ -534,9 +600,53 @@ async function handleSubmit() {
             </div>
             <div>
               <label class="block text-xs text-[var(--color-text-tertiary)] mb-1">Condition</label>
-              <select v-model="step.condition" class="w-full px-2 py-1.5 border border-[var(--color-border)] rounded text-sm">
+              <select v-model="step.condition" @change="onConditionChange(step)" class="w-full px-2 py-1.5 border border-[var(--color-border)] rounded text-sm">
                 <option v-for="cond in conditions" :key="cond" :value="cond">{{ cond }}</option>
               </select>
+            </div>
+          </div>
+
+          <!-- Condition params editor — renders only when the selected
+               condition accepts params. Skips runtime-injected conditions
+               like message_opened that the engine fills in itself. -->
+          <div
+            v-if="paramFieldsFor(step.condition || '').length > 0"
+            class="mt-3 rounded-lg border border-[var(--color-border-muted)] bg-[var(--color-bg-subtle)] px-3 py-2.5"
+          >
+            <div class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
+              Condition parameters
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div v-for="f in paramFieldsFor(step.condition || '')" :key="f.key">
+                <label class="block text-xs text-[var(--color-text-tertiary)] mb-1">{{ f.label }}</label>
+                <select
+                  v-if="f.kind === 'rfm_segment'"
+                  :value="(step.condition_params || {})[f.key] || ''"
+                  @change="step.condition_params = { ...(step.condition_params || {}), [f.key]: ($event.target as HTMLSelectElement).value }"
+                  class="w-full px-2 py-1.5 border border-[var(--color-border)] rounded text-sm bg-[var(--color-bg-input)]"
+                >
+                  <option value="">— pick a segment —</option>
+                  <option v-for="seg in RFM_SEGMENT_OPTIONS" :key="seg" :value="seg">{{ seg }}</option>
+                </select>
+                <input
+                  v-else-if="f.kind === 'number'"
+                  type="number"
+                  min="0"
+                  :value="(step.condition_params || {})[f.key] ?? ''"
+                  @input="step.condition_params = { ...(step.condition_params || {}), [f.key]: ($event.target as HTMLInputElement).value === '' ? undefined : Number(($event.target as HTMLInputElement).value) }"
+                  :placeholder="f.placeholder"
+                  class="w-full px-2 py-1.5 border border-[var(--color-border)] rounded text-sm"
+                />
+                <input
+                  v-else
+                  type="text"
+                  :value="(step.condition_params || {})[f.key] || ''"
+                  @input="step.condition_params = { ...(step.condition_params || {}), [f.key]: ($event.target as HTMLInputElement).value }"
+                  :placeholder="f.placeholder"
+                  class="w-full px-2 py-1.5 border border-[var(--color-border)] rounded text-sm"
+                />
+                <p v-if="f.hint" class="mt-1 text-[10.5px] text-[var(--color-text-muted)] leading-snug">{{ f.hint }}</p>
+              </div>
             </div>
           </div>
 
