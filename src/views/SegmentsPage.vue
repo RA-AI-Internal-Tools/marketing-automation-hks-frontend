@@ -258,8 +258,8 @@ const filteredEventSuggestions = computed<EventSuggestion[]>(() => {
 const groupedSuggestions = computed(() => {
   const groups: Record<string, EventSuggestion[]> = {}
   for (const e of filteredEventSuggestions.value) {
-    if (!groups[e.category]) groups[e.category] = []
-    groups[e.category].push(e)
+    const bucket = groups[e.category] ?? (groups[e.category] = [])
+    bucket.push(e)
   }
   return groups
 })
