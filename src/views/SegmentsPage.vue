@@ -43,6 +43,12 @@ const eventInput = ref('')
 const eventMenuOpen = ref(false)
 const eventHighlight = ref(0)
 const eventInputEl = ref<HTMLInputElement | null>(null)
+const menuTop = ref(0)
+const menuBottom = ref(0)
+const menuLeft = ref(0)
+const menuWidth = ref(0)
+const menuFlipUp = ref(false)
+const MENU_MAX_H = 280
 
 type EventSuggestion = { value: string; category: string; description: string }
 
@@ -230,7 +236,15 @@ async function handleEvaluateAll() {
   } finally { evaluatingAll.value = false }
 }
 
-onBeforeUnmount(() => { stopEvalPolling() })
+onMounted(() => {
+  window.addEventListener('resize', onViewportChange)
+  window.addEventListener('scroll', onViewportChange, true)
+})
+onBeforeUnmount(() => {
+  stopEvalPolling()
+  window.removeEventListener('resize', onViewportChange)
+  window.removeEventListener('scroll', onViewportChange, true)
+})
 
 // Suggestions merge: curated catalog + events already used across loaded
 // segments (keeps the dropdown useful for custom events this workspace has
@@ -276,13 +290,13 @@ function handleEventKeydown(e: KeyboardEvent) {
   const list = filteredEventSuggestions.value
   if (e.key === 'ArrowDown') {
     e.preventDefault()
-    eventMenuOpen.value = true
+    openEventMenu()
     if (list.length) eventHighlight.value = (eventHighlight.value + 1) % list.length
     return
   }
   if (e.key === 'ArrowUp') {
     e.preventDefault()
-    eventMenuOpen.value = true
+    openEventMenu()
     if (list.length) eventHighlight.value = (eventHighlight.value - 1 + list.length) % list.length
     return
   }
@@ -294,7 +308,7 @@ function handleEventKeydown(e: KeyboardEvent) {
   }
   if (e.key === 'Escape') { eventMenuOpen.value = false; return }
   // Any other keystroke opens the menu and resets highlight.
-  eventMenuOpen.value = true
+  openEventMenu()
   eventHighlight.value = 0
 }
 function handleEventBlur() {
@@ -304,6 +318,30 @@ function handleEventBlur() {
 function pickSuggestion(value: string) {
   addEvent(value)
   eventInputEl.value?.focus()
+}
+
+// Menu is Teleported to <body> so it escapes the modal's overflow container.
+// We compute its position from the input's bounding rect each time it opens
+// or the viewport changes, and flip above the input when there's no room below.
+function updateMenuPosition() {
+  const el = eventInputEl.value
+  if (!el) return
+  const rect = el.getBoundingClientRect()
+  const spaceBelow = window.innerHeight - rect.bottom
+  const spaceAbove = rect.top
+  menuFlipUp.value = spaceBelow < MENU_MAX_H + 8 && spaceAbove > spaceBelow
+  menuLeft.value = rect.left
+  menuWidth.value = rect.width
+  menuTop.value = rect.bottom + 4
+  menuBottom.value = window.innerHeight - rect.top + 4
+}
+function openEventMenu() {
+  eventMenuOpen.value = true
+  // Position after DOM paints — the input may have just been mounted or scrolled.
+  requestAnimationFrame(updateMenuPosition)
+}
+function onViewportChange() {
+  if (eventMenuOpen.value) updateMenuPosition()
 }
 
 function formatOperator(op: string): string {
@@ -558,43 +596,57 @@ const totalMembers = computed(() =>
                   aria-controls="seg-event-menu"
                   :aria-expanded="eventMenuOpen"
                   @keydown="handleEventKeydown"
-                  @focus="eventMenuOpen = true"
+                  @focus="openEventMenu"
                   @blur="handleEventBlur"
                   class="mono"
                   placeholder="Search or type an event name…"
                 />
-                <div
-                  v-if="eventMenuOpen && filteredEventSuggestions.length"
-                  id="seg-event-menu"
-                  class="seg-combo-menu"
-                  role="listbox"
-                >
-                  <template v-for="(items, group) in groupedSuggestions" :key="group">
-                    <div class="seg-combo-group">{{ group }}</div>
-                    <button
-                      v-for="item in items"
-                      :key="item.value"
-                      type="button"
-                      role="option"
-                      class="seg-combo-item"
-                      :class="{ 'is-active': filteredEventSuggestions[eventHighlight]?.value === item.value }"
-                      @mousedown.prevent="pickSuggestion(item.value)"
-                      @mouseenter="eventHighlight = filteredEventSuggestions.findIndex(e => e.value === item.value)"
-                    >
-                      <span class="seg-combo-val">{{ item.value }}</span>
-                      <span class="seg-combo-desc">{{ item.description }}</span>
-                    </button>
-                  </template>
-                </div>
-                <div
-                  v-else-if="eventMenuOpen && eventInput.trim()"
-                  class="seg-combo-menu seg-combo-empty"
-                  role="listbox"
-                >
-                  <div class="seg-combo-hint">
-                    No match. Press <kbd>Enter</kbd> to add <code>{{ eventInput.trim() }}</code> as a custom event.
+                <Teleport to="body">
+                  <div
+                    v-if="eventMenuOpen && filteredEventSuggestions.length"
+                    id="seg-event-menu"
+                    class="seg-combo-menu"
+                    role="listbox"
+                    :style="{
+                      top: menuFlipUp ? 'auto' : menuTop + 'px',
+                      bottom: menuFlipUp ? menuBottom + 'px' : 'auto',
+                      left: menuLeft + 'px',
+                      width: menuWidth + 'px',
+                    }"
+                  >
+                    <template v-for="(items, group) in groupedSuggestions" :key="group">
+                      <div class="seg-combo-group">{{ group }}</div>
+                      <button
+                        v-for="item in items"
+                        :key="item.value"
+                        type="button"
+                        role="option"
+                        class="seg-combo-item"
+                        :class="{ 'is-active': filteredEventSuggestions[eventHighlight]?.value === item.value }"
+                        @mousedown.prevent="pickSuggestion(item.value)"
+                        @mouseenter="eventHighlight = filteredEventSuggestions.findIndex(e => e.value === item.value)"
+                      >
+                        <span class="seg-combo-val">{{ item.value }}</span>
+                        <span class="seg-combo-desc">{{ item.description }}</span>
+                      </button>
+                    </template>
                   </div>
-                </div>
+                  <div
+                    v-else-if="eventMenuOpen && eventInput.trim()"
+                    class="seg-combo-menu seg-combo-empty"
+                    role="listbox"
+                    :style="{
+                      top: menuFlipUp ? 'auto' : menuTop + 'px',
+                      bottom: menuFlipUp ? menuBottom + 'px' : 'auto',
+                      left: menuLeft + 'px',
+                      width: menuWidth + 'px',
+                    }"
+                  >
+                    <div class="seg-combo-hint">
+                      No match. Press <kbd>Enter</kbd> to add <code>{{ eventInput.trim() }}</code> as a custom event.
+                    </div>
+                  </div>
+                </Teleport>
               </div>
               <p class="seg-hint">
                 Pick from known events or type a custom one. Re-evaluation fires when any listed event arrives for a client.
@@ -1065,15 +1117,35 @@ const totalMembers = computed(() =>
 }
 .seg-event-chip button:hover { opacity: 1; color: var(--color-error); }
 
-/* ── Event combobox ── */
+/* .seg-combo is the input-wrapper; only it lives inside the component tree.
+   The menu itself is teleported to <body> and styled by the unscoped block
+   at the bottom of this file. */
 .seg-combo { position: relative; }
+
+.seg-hint {
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: var(--color-text-tertiary);
+  line-height: 1.4;
+}
+
+.seg-modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 14px;
+  margin-top: 6px;
+  border-top: 1px solid var(--color-divider);
+}
+</style>
+
+<!-- Unscoped block: the entry-events menu is teleported to <body>, so scoped
+     styles wouldn't reach it. Selectors are prefixed to avoid collisions. -->
+<style>
 .seg-combo-menu {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  z-index: 10;
-  max-height: 260px;
+  position: fixed;
+  z-index: 1100;
+  max-height: 280px;
   overflow-y: auto;
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
@@ -1141,20 +1213,5 @@ const totalMembers = computed(() =>
   border: 1px solid var(--color-border-muted);
   border-radius: var(--radius-sm);
   color: var(--color-text-primary);
-}
-.seg-hint {
-  margin-top: 4px;
-  font-size: 11.5px;
-  color: var(--color-text-tertiary);
-  line-height: 1.4;
-}
-
-.seg-modal-foot {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding-top: 14px;
-  margin-top: 6px;
-  border-top: 1px solid var(--color-divider);
 }
 </style>
