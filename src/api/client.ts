@@ -24,9 +24,11 @@ const api = axios.create({
 // rewrites outgoing URLs from `/api/...` to `/api/{activeEnv}/...` here so call
 // sites elsewhere in the app stay unchanged. See docs/DUAL_ENV.md.
 //
-// Default to `production` when no value is stored: a missing toggle should not
-// silently downgrade a production user into sandbox writes. The visible
-// env-toggle UI is the authoritative way to enter sandbox.
+// Default to `sandbox` when no value is stored. Aligns with the Pinia
+// store's cold-boot default (src/stores/environment.ts) so a user with
+// cleared/empty localStorage cannot have a write silently hit production
+// before they have explicitly clicked into the production environment.
+// Entering production requires a deliberate click on the env-toggle UI.
 function getActiveEnv(): 'sandbox' | 'production' {
   try {
     const v = localStorage.getItem(STORAGE_KEYS.ENVIRONMENT)
@@ -34,7 +36,7 @@ function getActiveEnv(): 'sandbox' | 'production' {
   } catch {
     /* localStorage unavailable — fall through to safe default */
   }
-  return 'production'
+  return 'sandbox'
 }
 
 // Paths that bypass env prefixing. These are env-agnostic by design:
