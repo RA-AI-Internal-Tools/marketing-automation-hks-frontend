@@ -26,7 +26,7 @@ outgoing URL based on `localStorage['ma_environment']`:
 | ------------ | ------------------------- | ------------------------------------ |
 | `sandbox`    | `/api/integrations`       | `/api/sandbox/integrations`          |
 | `production` | `/api/integrations`       | `/api/production/integrations`       |
-| _(missing)_  | `/api/integrations`       | `/api/production/integrations`       |
+| _(missing)_  | `/api/integrations`       | `/api/sandbox/integrations`          |
 | any          | `/api/sandbox/foo`        | `/api/sandbox/foo` _(idempotent)_    |
 | any          | `/api/sse`                | `/api/sse` _(bypass — see below)_    |
 | any          | `https://other.com/x`     | _(untouched — only `/api/*` rewrites)_ |
@@ -38,19 +38,19 @@ store already persists every mutation back to `localStorage` under the key
 `STORAGE_KEYS.ENVIRONMENT` (`ma_environment`). This means call sites that
 import `api` from `@/api/client` don't need to import the store.
 
-## Default = production, not sandbox
+## Default = sandbox (explicit click required to enter production)
 
 If nothing is stored (first load, cleared storage, private window) the
-interceptor sends `production`. Defaulting to sandbox would silently
-downgrade real customers' writes into sandbox data on any storage hiccup.
-The env-toggle UI is the only supported way to opt into sandbox.
+interceptor sends `sandbox`. This aligns with the Pinia store's cold-boot
+default (`src/stores/environment.ts`), so a user with empty/cleared
+localStorage cannot have a write silently hit production before they have
+deliberately clicked the env-toggle into production. Entering production
+is an explicit user action, not a silent fallback.
 
-> **Note:** The Pinia store itself defaults the in-memory `mode` to
-> `sandbox` on cold boot so the toggle UI shows the safer side highlighted.
-> The axios interceptor's `production` fallback only triggers when the store
-> hasn't yet persisted a value at all (very first paint, before any toggle
-> interaction). In practice the two defaults converge as soon as the user
-> sees the toggle.
+> **Note:** Both the Pinia store's in-memory `mode` and the axios
+> interceptor's localStorage-empty fallback default to `sandbox`. The two
+> defaults stay aligned; there is no "very first paint" window where the
+> store reads sandbox while the interceptor sends production.
 
 ## Bypasses
 
