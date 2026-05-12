@@ -16,9 +16,48 @@ const api = axios.create({
   withCredentials: true,
 })
 
-// Inject environment header on every request
+// Dual-env routing (Option B): the host nginx terminates TLS and routes
+// /api/sandbox/*  → 127.0.0.1:8081 (api-sandbox backend, MA_ENVIRONMENT=sandbox)
+// /api/production/* → 127.0.0.1:8082 (api-production backend, MA_ENVIRONMENT=production)
+// before stripping the env prefix. Each backend is structurally pinned to its
+// env via enforceEnvScope, so a misrouted request can't cross-write. The SPA
+// rewrites outgoing URLs from `/api/...` to `/api/{activeEnv}/...` here so call
+// sites elsewhere in the app stay unchanged. See docs/DUAL_ENV.md.
+//
+// Default to `production` when no value is stored: a missing toggle should not
+// silently downgrade a production user into sandbox writes. The visible
+// env-toggle UI is the authoritative way to enter sandbox.
+function getActiveEnv(): 'sandbox' | 'production' {
+  try {
+    const v = localStorage.getItem(STORAGE_KEYS.ENVIRONMENT)
+    if (v === 'sandbox' || v === 'production') return v
+  } catch {
+    /* localStorage unavailable — fall through to safe default */
+  }
+  return 'production'
+}
+
+// Paths that bypass env prefixing. These are env-agnostic by design:
+//   /api/sse        — single SSE stream (host nginx routes to sandbox today;
+//                     splitting it is a separate frontend change)
+// Anything else under /api/ that already has an env prefix is left untouched
+// (idempotent — safe if a call site explicitly built /api/sandbox/... itself).
+function rewriteApiUrl(url: string | undefined): string | undefined {
+  if (!url) return url
+  if (!url.startsWith('/api/')) return url
+  if (url.startsWith('/api/sandbox/') || url.startsWith('/api/production/')) return url
+  if (url === '/api/sse' || url.startsWith('/api/sse?') || url.startsWith('/api/sse/')) return url
+  const env = getActiveEnv()
+  return `/api/${env}/${url.slice('/api/'.length)}`
+}
+
 api.interceptors.request.use((config) => {
-  const env = localStorage.getItem('ma_environment') || 'sandbox'
+  config.url = rewriteApiUrl(config.url)
+  // Keep X-Environment header for the migration window: backends still honour
+  // it for telemetry / audit log breadcrumbs even though the URL is now the
+  // load-bearing routing signal. Safe to drop once both backends are deployed
+  // and the legacy /api/* 410 catch is verified live.
+  const env = getActiveEnv()
   config.headers['X-Environment'] = env
   return config
 })
