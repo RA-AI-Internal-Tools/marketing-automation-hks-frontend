@@ -68,11 +68,18 @@ api.interceptors.request.use((config) => {
 })
 
 // On 401 responses, clear auth state and redirect to login
-// Skip redirect for public routes (e.g. /preferences) that use token-based auth
+// Skip redirect for public routes (e.g. /preferences) that use token-based auth.
+// The preference centre now lives at /preferences/:token and
+// /preferences/confirm/:shortToken as well as the legacy bare /preferences, so
+// this matches the whole subtree — an exact-match check would bounce a
+// customer holding an expired link to the operator login page. Those pages use
+// the interceptor-free instance in ./publicPreferences and should never reach
+// here; this is the belt to that braces.
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const isPublicRoute = window.location.pathname === '/preferences'
+    const path = window.location.pathname
+    const isPublicRoute = path === '/preferences' || path.startsWith('/preferences/')
     if (
       error.response?.status === 401 &&
       !error.config.url?.includes('/auth/login') &&

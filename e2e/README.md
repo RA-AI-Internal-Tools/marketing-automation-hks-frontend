@@ -4,8 +4,14 @@ End-to-end suite for the MA frontend. Runs against a **deployed** instance —
 there's no dev-server bootstrap in `playwright.config.ts`, so point
 `E2E_BASE_URL` at a live target (staging / prod / local `vite dev`).
 
-All specs auto-skip when `E2E_EMAIL` / `E2E_PASSWORD` are absent so CI jobs
-without secrets stay green.
+Most specs auto-skip when `E2E_EMAIL` / `E2E_PASSWORD` are absent so CI jobs
+without secrets stay green. `preferences-mobile.spec.ts` is the exception: the
+preference-centre routes are public, so it needs no credentials — only a target,
+and it skips when `E2E_BASE_URL` is unset. A local `npm run dev` is enough:
+
+```bash
+E2E_BASE_URL=http://localhost:5173 npx playwright test e2e/preferences-mobile.spec.ts
+```
 
 ## Running
 
@@ -31,6 +37,7 @@ If browsers are missing, run `npx playwright install chromium` once.
 | `auth.spec.ts` | Valid login lands authenticated; wrong password keeps user on `/login` with an error; unauthenticated `/overview` visit redirects to `/login`. |
 | `smoke.spec.ts` | End-to-end happy path: login → campaigns list → create a campaign → analytics executive page renders. |
 | `visual.spec.ts` | Full-page light + dark screenshots for 17 key routes (34 tests). Masks volatile regions. Requires baselines; see below. |
+| `preferences-mobile.spec.ts` | Public preference centre + confirmation page at a 375px viewport: 44px touch targets, no horizontal overflow, error/notice text wraps, and the confirm button spends its single-use token only on tap. **Needs no credentials** — the routes are public and every API call is stubbed with `page.route()`. Skips unless `E2E_BASE_URL` is set. |
 
 ## Visual regression baselines
 
