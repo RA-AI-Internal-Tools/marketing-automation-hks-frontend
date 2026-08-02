@@ -135,6 +135,17 @@ export interface PaginatedResponse<T> {
   total: number
 }
 
+export type InboxType = 'info' | 'success' | 'warning' | 'danger' | 'promo'
+
+/**
+ * A stored variable declaration. The backend's canonical shape is
+ * `{name, required}` (internal/model/template.go TemplateVariable); the
+ * editor writes the flat string form because it auto-extracts `{{tokens}}`
+ * and cannot know which are required. ParseVariables accepts both, so both
+ * can come back on a read — use `variableNames()` rather than indexing.
+ */
+export type StoredVariable = string | { name: string; required?: boolean }
+
 export interface MessageTemplate {
   id: number
   template_key: string
@@ -142,16 +153,31 @@ export interface MessageTemplate {
   name: string
   subject?: string
   body: string
-  variables?: string[]
+  // Optional MJML source for templates authored in the Visual editor.
+  mjml_source?: string
+  variables?: StoredVariable[]
   is_active: boolean
   created_at: string
   updated_at: string
+  // Email authoring fields.
+  preheader?: string | null
+  category?: string | null
+  sample_payload?: Record<string, any> | null
   // In-app (channel="inbox") CTA fields. Ignored for other channels.
   cta_url?: string | null
   cta_label?: string | null
-  inbox_type?: 'info' | 'success' | 'warning' | 'danger' | 'promo' | null
+  inbox_type?: InboxType | null
 }
 
+/**
+ * Write contract for POST/PUT /api/templates.
+ *
+ * The backend binds this with DisallowUnknownFields (see
+ * internal/api/routes_templates.go bindTemplateJSON), so ANY field added here
+ * must exist on Go's `templateRequest` or every save 400s. That strictness is
+ * deliberate: 14 fields used to be accepted by TypeScript, sent over the wire,
+ * and silently dropped by the server — invisible until the author reloaded.
+ */
 export interface TemplateRequest {
   template_key: string
   channel: string
@@ -167,7 +193,7 @@ export interface TemplateRequest {
   // In-app (channel="inbox") CTA fields. Ignored for other channels.
   cta_url?: string | null
   cta_label?: string | null
-  inbox_type?: 'info' | 'success' | 'warning' | 'danger' | 'promo' | null
+  inbox_type?: InboxType | null
 }
 
 export interface InAppTemplateRequest extends TemplateRequest {
@@ -176,21 +202,30 @@ export interface InAppTemplateRequest extends TemplateRequest {
   body: string
   cta_url?: string | null
   cta_label?: string | null
-  inbox_type: 'info' | 'success' | 'warning' | 'danger' | 'promo'
+  inbox_type: InboxType
 }
 
+/**
+ * Email-only additions.
+ *
+ * Removed here (and from SettingsPanel) rather than persisted, because nothing
+ * consumes them and nothing plausibly would without a separate feature:
+ *   from_name / from_email — SES takes both from config (internal/channel/
+ *     ses.go NewSES); Elastic Email resolves the sender provider-side. A
+ *     per-template override is a feature request, not this bug.
+ *   reply_to              — no sender sets a Reply-To header at all.
+ *   html_body / text_body — never produced by any editor, never read.
+ *   tags                  — no consumer in either repo.
+ *   editor_mode           — was a hardcoded 'code' literal, never read.
+ *   language              — redundant with the `key.locale` suffix mechanism
+ *     the resolver, SeedLocalizedTemplates and InboxSender already use. It
+ *     stays as a UI-only composer for the template key and is derived back
+ *     from the key on load.
+ */
 export interface EmailTemplateRequest extends TemplateRequest {
   preheader?: string | null
-  html_body?: string | null
-  text_body?: string | null
-  from_name?: string | null
-  from_email?: string | null
-  reply_to?: string | null
   category?: string | null
-  language?: string | null
-  tags?: string[]
   sample_payload?: Record<string, any> | null
-  editor_mode?: 'code' | 'visual'
 }
 
 export interface TemplateVariable {

@@ -9,7 +9,12 @@ const EmailTemplateEditor = defineAsyncComponent(
 )
 import { useTemplatesStore } from '@/stores/templates'
 import type { MessageTemplate, TemplateRequest } from '@/api/types'
-import { TEMPLATE_LANGUAGES, buildLocalizedTemplateKey } from '@/utils/email-template'
+import {
+  TEMPLATE_LANGUAGES,
+  buildLocalizedTemplateKey,
+  localeFromTemplateKey,
+  variableNames,
+} from '@/utils/email-template'
 
 const route = useRoute()
 const router = useRouter()
@@ -76,8 +81,13 @@ onMounted(async () => {
         name.value = tmpl.name
         subject.value = tmpl.subject || ''
         body.value = tmpl.body
-        variablesInput.value = tmpl.variables ? tmpl.variables.join(', ') : ''
+        // variables can come back as ["a"] or [{name,required}] — join()ing
+        // the raw array rendered "[object Object]" for the rich form.
+        variablesInput.value = variableNames(tmpl.variables).join(', ')
         isActive.value = tmpl.is_active
+        // Language is derived from the key suffix, not stored — same contract
+        // as the email editor.
+        language.value = localeFromTemplateKey(tmpl.template_key)
         ctaUrl.value = tmpl.cta_url || ''
         ctaLabel.value = tmpl.cta_label || ''
         inboxType.value = tmpl.inbox_type || 'info'
