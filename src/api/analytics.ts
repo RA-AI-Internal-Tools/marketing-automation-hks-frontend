@@ -30,8 +30,14 @@ export async function fetchFunnel(since?: string, until?: string): Promise<Funne
   return data
 }
 
+// Canonical path is /api/analytics/clients. `/api/analytics/users` was a
+// legacy alias the backend scheduled for removal after 2026-07-12; it is only
+// still answering because that cleanup hasn't shipped yet. Both paths bind to
+// the same Go handler (handleAnalyticsUsers — see routes_analytics.go:52-53
+// and the delegation at :75), so the response shape is identical and this is a
+// pure path swap with no behavioural change.
 export async function fetchUsers(since?: string, until?: string): Promise<UsersData> {
-  const { data } = await api.get('/api/analytics/users', params(since, until))
+  const { data } = await api.get('/api/analytics/clients', params(since, until))
   return data
 }
 
