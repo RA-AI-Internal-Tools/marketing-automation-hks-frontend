@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import ErrorState from '@/components/ErrorState.vue'
 import { useReportsStore } from '@/stores/reports'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
@@ -226,6 +227,14 @@ async function confirmDelete() {
     </teleport>
 
     <div v-if="store.loading" class="text-center py-12 text-[var(--color-text-muted)]">Loading...</div>
+    <!-- Failed load — otherwise the store's (previously catch-less) rejection
+         left an empty list rendering "No report schedules configured". -->
+    <ErrorState
+      v-else-if="store.error"
+      :message="store.error"
+      retryable
+      @retry="store.load()"
+    />
     <div v-else class="space-y-6">
       <div v-if="!store.reports.length" class="text-center py-12">
         <p class="text-[var(--color-text-muted)] mb-4">No report schedules configured</p>

@@ -318,7 +318,22 @@ export async function fetchSegmentMembers(slug: string): Promise<SegmentMember[]
   return Array.isArray(data) ? data : []
 }
 
-export async function evaluateSegment(slug: string): Promise<{ evaluated: number }> {
+/**
+ * Re-evaluate one segment's membership.
+ *
+ * `failed` counts clients whose membership write (create or exit) errored —
+ * see routes_segments.go:320-323. Two outcomes matter to the caller:
+ *
+ *   - `failed > 0` with some writes landing: HTTP 200, a PARTIAL success.
+ *     The body is otherwise indistinguishable from a clean run, so a caller
+ *     that ignores `failed` reports "Evaluation complete" over a run that
+ *     half-failed.
+ *   - every write failed: HTTP 500 with an `error` key (routes_segments.go:329-334),
+ *     which reaches the caller as a rejection.
+ */
+export async function evaluateSegment(
+  slug: string,
+): Promise<{ evaluated: number; entered?: number; exited?: number; failed?: number }> {
   const { data } = await api.post(`/api/segments/${slug}/evaluate`)
   return data
 }

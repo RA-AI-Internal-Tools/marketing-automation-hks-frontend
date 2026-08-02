@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
+import ErrorState from '@/components/ErrorState.vue'
 import { ArrowLeftIcon, UsersIcon } from '@heroicons/vue/24/outline'
 import { fetchSegment, fetchSegmentMembers } from '@/api/dashboard'
 import type { Segment, SegmentMember } from '@/api/types'
@@ -11,6 +12,7 @@ const route = useRoute()
 const router = useRouter()
 
 const loading = ref(true)
+const error = ref<string | null>(null)
 const segment = ref<Segment | null>(null)
 const members = ref<SegmentMember[]>([])
 const slug = route.params.slug as string
@@ -31,7 +33,9 @@ function formatDate(iso: string): string {
   return new Date(iso).toLocaleString()
 }
 
-onMounted(async () => {
+async function load() {
+  loading.value = true
+  error.value = null
   try {
     const [seg, mem] = await Promise.all([
       fetchSegment(slug),
@@ -40,11 +44,19 @@ onMounted(async () => {
     segment.value = seg
     members.value = mem
   } catch (e: any) {
-    console.error('Failed to load segment detail', e)
+    // A 404 genuinely means the slug doesn't exist — that keeps the
+    // "Segment not found" branch. Anything else (network down, 500, timeout)
+    // was previously console.error-only and fell through to the same
+    // "not found" copy, which lies about why the page is blank.
+    if (e.response?.status !== 404) {
+      error.value = e.response?.data?.error || e.message || 'Failed to load segment detail'
+    }
   } finally {
     loading.value = false
   }
-})
+}
+
+onMounted(load)
 </script>
 
 <template>
@@ -72,6 +84,15 @@ onMounted(async () => {
         <div v-for="i in 3" :key="i" class="skeleton h-10 w-full mb-2"></div>
       </div>
     </div>
+
+    <!-- Failed load — outranks the "Segment not found" fallback, which is
+         reserved for a real 404. -->
+    <ErrorState
+      v-else-if="error"
+      :message="error"
+      retryable
+      @retry="load()"
+    />
 
     <template v-else-if="segment">
       <PageHeader :title="segment.name" :description="segment.description || undefined" />
