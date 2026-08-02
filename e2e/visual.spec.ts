@@ -19,8 +19,54 @@
  * `src/composables/useTheme.ts` plus a direct `data-theme` attribute on
  * <html> — setting both avoids any flash between initTheme() and paint.
  */
-import { test, expect } from '@playwright/test'
+import fs from 'node:fs'
+import { test, expect, type TestInfo } from '@playwright/test'
 import { hasE2ECreds, login } from './helpers/login'
+
+/**
+ * Fail loudly when a baseline is missing instead of quietly minting one.
+ *
+ * Playwright's default is `updateSnapshots: 'missing'`
+ * (node_modules/playwright/lib/common/index.js:584 — `takeFirst(cli, user,
+ * 'missing')`, and this repo's playwright.config.ts sets no override). Under
+ * that mode `handleMissing()` WRITES the baseline to disk and returns
+ * `pass: true` with a soft error. The practical consequence is that the very
+ * first run bootstraps a baseline out of whatever the app happened to render
+ * — including a broken layout, an error state, or an empty page — and every
+ * later run then compares against that unreviewed artefact and goes green.
+ * A regression captured on run #1 becomes the definition of "correct".
+ *
+ * The guard runs in a `beforeEach` that declares NO fixtures, so it fires
+ * before the `page` fixture is built and before the creds check. Both of those
+ * placements are deliberate: a missing baseline is a repository-state problem,
+ * not an environment problem, so it must fail on a machine with no E2E
+ * credentials and no browser binary. Otherwise the suite reports success while
+ * asserting nothing at all — which is the whole defect.
+ *
+ * To (re)generate baselines, run against a seeded, deterministic environment:
+ *   E2E_EMAIL=… E2E_PASSWORD=… npx playwright test e2e/visual.spec.ts --update-snapshots
+ * and commit the resulting `e2e/visual.spec.ts-snapshots/` directory.
+ */
+function requireBaseline(snapshotName: string, info: TestInfo): void {
+  // Stand down only for the two explicit baseline-authoring modes.
+  // `--update-snapshots` presets to 'changed' and `--update-snapshots=all` to
+  // 'all' (program.js:202); both write missing baselines on purpose. Crucially
+  // neither is reachable without passing the flag — the no-flag default is
+  // 'missing' (common/index.js:584) — so allowing them does not reopen the
+  // silent self-heal hole this guard exists to close.
+  const mode = info.config.updateSnapshots
+  if (mode === 'all' || mode === 'changed') return
+
+  const expectedPath = info.snapshotPath(snapshotName, { kind: 'screenshot' })
+  if (fs.existsSync(expectedPath)) return
+
+  throw new Error(
+    `Visual baseline missing: ${expectedPath}\n` +
+      `The visual regression suite cannot assert anything without committed baselines.\n` +
+      `Generate them against a seeded environment, review the images, then commit them:\n` +
+      `  E2E_EMAIL=… E2E_PASSWORD=… npx playwright test e2e/visual.spec.ts --update-snapshots`,
+  )
+}
 
 const PAGES: ReadonlyArray<{ path: string; name: string }> = [
   { path: '/overview', name: 'overview' },
@@ -44,9 +90,28 @@ const PAGES: ReadonlyArray<{ path: string; name: string }> = [
 
 const THEMES = ['light', 'dark'] as const
 
+const testTitle = (theme: string, name: string) => `visual ${theme} - ${name}`
+const snapshotFor = (theme: string, name: string) => `${theme}-${name}.png`
+
+/** Test title → expected baseline filename, for the fixture-free guard below. */
+const BASELINE_BY_TITLE = new Map<string, string>(
+  THEMES.flatMap((theme) =>
+    PAGES.map(({ name }) => [testTitle(theme, name), snapshotFor(theme, name)] as const),
+  ),
+)
+
+// Declares no fixtures — `{}` keeps Playwright from constructing `page`, so a
+// missing baseline fails without launching a browser at all.
+test.beforeEach(async ({}, testInfo) => {
+  const snapshotName = BASELINE_BY_TITLE.get(testInfo.title)
+  if (snapshotName) requireBaseline(snapshotName, testInfo)
+})
+
 for (const theme of THEMES) {
   for (const { path, name } of PAGES) {
-    test(`visual ${theme} - ${name}`, async ({ page }) => {
+    test(testTitle(theme, name), async ({ page }) => {
+      const snapshotName = snapshotFor(theme, name)
+
       test.skip(!hasE2ECreds(), 'E2E creds missing')
 
       await login(page)
@@ -65,7 +130,7 @@ for (const theme of THEMES) {
 
       // Mask volatile regions: timestamps, counts, live chart canvases.
       // Components can opt in to stability by adding `data-volatile`.
-      await expect(page).toHaveScreenshot(`${theme}-${name}.png`, {
+      await expect(page).toHaveScreenshot(snapshotName, {
         fullPage: true,
         maxDiffPixelRatio: 0.02,
         mask: [page.locator('time, .num-tabular, canvas, [data-volatile]')],
