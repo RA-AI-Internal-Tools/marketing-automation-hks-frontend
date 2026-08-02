@@ -3,6 +3,7 @@ import { onMounted, watch } from 'vue'
 import AnalyticsLayout from '@/components/AnalyticsLayout.vue'
 import MetricCard from '@/components/MetricCard.vue'
 import BaseCard from '@/components/BaseCard.vue'
+import DegradedNotice from '@/components/DegradedNotice.vue'
 import { useAnalyticsStore } from '@/stores/analytics'
 import { fetchExecutiveOverview } from '@/api/analytics'
 import type { ExecutiveOverview } from '@/api/types'
@@ -55,6 +56,22 @@ function fmt(n: number): string {
     <div v-if="loading" class="text-center py-12 text-[var(--color-text-muted)]">Loading...</div>
     <div v-else-if="error" class="bg-[var(--color-error-bg)] border border-[var(--color-error-border)] rounded-xl p-4 text-[var(--color-error-text)] text-sm">{{ error }}</div>
     <div v-else-if="data" class="space-y-6">
+      <!--
+        This is the only endpoint that reports both halves, and it genuinely
+        can degrade one at a time — hence two independently-rendered notices
+        rather than one "dashboard unavailable" banner. Conversion rate is
+        orders ÷ traffic, so it is named under both.
+      -->
+      <DegradedNotice
+        v-if="data.crm_degraded"
+        source="crm"
+        affects="Revenue, orders and conversion rate"
+      />
+      <DegradedNotice
+        v-if="data.tracardi_degraded"
+        source="tracardi"
+        affects="Traffic, active clients and conversion rate"
+      />
       <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <MetricCard title="Revenue" :value="'$' + fmt(data.revenue)" :delta="data.revenue_delta" delta-label="vs prev" />
         <MetricCard title="Traffic" :value="fmt(data.traffic)" :delta="data.traffic_delta" delta-label="vs prev" />

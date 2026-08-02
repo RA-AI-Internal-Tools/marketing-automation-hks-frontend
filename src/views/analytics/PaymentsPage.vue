@@ -3,6 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import AnalyticsLayout from '@/components/AnalyticsLayout.vue'
 import MetricCard from '@/components/MetricCard.vue'
 import DonutChart from '@/components/DonutChart.vue'
+import DegradedNotice from '@/components/DegradedNotice.vue'
 import { useAnalyticsStore } from '@/stores/analytics'
 import { fetchPayments } from '@/api/analytics'
 import type { PaymentsData } from '@/api/types'
@@ -36,6 +37,17 @@ watch(() => analytics.queryParams, load)
       <div class="bg-[var(--color-warning-bg)] border border-[var(--color-warning-border)] text-[var(--color-warning-text)] px-4 py-3 rounded-lg text-sm">
         Payment analytics are partially derived from staging event payloads. Methods and failure reasons may be incomplete when upstream events omit PSP-specific metadata.
       </div>
+      <!--
+        Scoped tightly on purpose: `methods` is the ONLY CRM-sourced field on
+        this endpoint (routes_analytics.go:825-828). Approval and decline
+        rates come from Tracardi and stay trustworthy when the CRM is down,
+        so the notice must not cast doubt on them.
+      -->
+      <DegradedNotice
+        v-if="data.crm_degraded"
+        source="crm"
+        affects="The payment method breakdown"
+      />
       <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <MetricCard title="Approval Rate" :value="data.approval_rate.toFixed(1) + '%'" accent="green" />
         <MetricCard title="Decline Rate" :value="data.decline_rate.toFixed(1) + '%'" accent="red" />

@@ -223,7 +223,30 @@ export interface CampaignRequest {
 
 // Analytics types
 
-export interface ExecutiveOverview {
+// Degradation flags.
+//
+// Every analytics endpoint below is fail-soft: a failed upstream query zeroes
+// its own field and the response is still served with HTTP 200, because a
+// dashboard with partial numbers beats an error page. The cost is that a
+// zero is ambiguous — "genuinely zero" and "could not determine" render
+// identically. These flags are how the backend disambiguates, and any widget
+// fed by the named source must not be presented as a confident number when
+// its flag is set.
+//
+//   crm_degraded      — at least one CRM/Postgres query failed.
+//                       routes_analytics.go:326 (executive), :453 (orders),
+//                       :828 (payments), :879 (retention), :1029 (data-health)
+//   tracardi_degraded — the Tracardi event-store half failed.
+//                       routes_analytics.go:325 — /analytics/executive ONLY.
+//
+// Both are optional here: they are absent from any response served by a
+// backend older than the deploy that added them, and `undefined` must read
+// as "not degraded", never as degraded.
+export interface CrmDegradable {
+  crm_degraded?: boolean
+}
+
+export interface ExecutiveOverview extends CrmDegradable {
   revenue: number
   revenue_delta: number
   traffic: number
@@ -237,6 +260,8 @@ export interface ExecutiveOverview {
   total_campaigns_active: number
   daily_revenue: { date: string; revenue: number }[]
   daily_traffic: { date: string; count: number }[]
+  /** Tracardi-sourced figures (traffic, active clients) are unreliable. */
+  tracardi_degraded?: boolean
 }
 
 export interface AcquisitionData {
@@ -283,7 +308,8 @@ export interface ProductsData {
   }[]
 }
 
-export interface PaymentsData {
+export interface PaymentsData extends CrmDegradable {
+  /** The only CRM-sourced field here — approval/decline rates come from Tracardi. */
   methods: { method: string; count: number; percentage: number }[]
   approval_rate: number
   decline_rate: number
@@ -291,7 +317,7 @@ export interface PaymentsData {
   daily_approvals: { date: string; approved: number; declined: number }[]
 }
 
-export interface OrdersData {
+export interface OrdersData extends CrmDegradable {
   aov: number
   aov_delta: number
   total_revenue: number
@@ -302,7 +328,7 @@ export interface OrdersData {
   order_status: { status: string; count: number }[]
 }
 
-export interface RetentionData {
+export interface RetentionData extends CrmDegradable {
   cohorts: {
     cohort: string
     total: number
@@ -323,11 +349,21 @@ export interface RetentionData {
   }[]
 }
 
-export interface DataHealthData {
+export interface DataHealthData extends CrmDegradable {
   services: { name: string; status: string }[]
   event_freshness: { event_type: string; last_seen: string; count_24h: number; avg_7d?: number }[]
   volume_anomalies: { event_type: string; current: number; average: number; deviation: number }[]
-  table_stats: { table: string; row_count: number }[]
+  /**
+   * Row counts, one per safelisted table.
+   *
+   * `row_count` is null exactly when `available` is false — the count query
+   * errored and the backend refuses to guess (routes_analytics.go:1061). It
+   * used to send 0 there, which on the one page whose whole purpose is
+   * telling operators what is broken was the most misleading zero available.
+   * `available` is optional so a response from an older backend, which had
+   * neither field, still type-checks; treat a missing flag as available.
+   */
+  table_stats: { table: string; row_count: number | null; available?: boolean }[]
 }
 
 // User management types
