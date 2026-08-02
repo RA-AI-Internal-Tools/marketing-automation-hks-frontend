@@ -31,6 +31,26 @@ function mountForm(options: { visible?: boolean; provider?: string } = {}) {
   })
 }
 
+// The component loads credentials from a `watch` on `visible` that is NOT
+// immediate, so mounting straight into visible:true never triggers it. Real
+// usage always flips the prop false → true (the modal is opened), which is what
+// this helper reproduces — needed for any assertion about reloadRows().
+async function mountFormOpened(
+  options: { provider?: string; initialEnvironment?: 'sandbox' | 'production' } = {},
+) {
+  const w = mount(IntegrationForm, {
+    props: {
+      visible: false,
+      provider: options.provider ?? 'openai',
+      initialEnvironment: options.initialEnvironment,
+    },
+    global: { stubs: globalStubs },
+  })
+  await w.setProps({ visible: true })
+  await flushPromises()
+  return w
+}
+
 describe('IntegrationForm', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -77,5 +97,50 @@ describe('IntegrationForm', () => {
     await flushPromises()
 
     expect(testIntegration).toHaveBeenCalledWith('openai', 'production')
+  })
+
+  // --- Single-container topology (2026-07-30) -------------------------------
+  // enforceEnvScope (internal/api/routes_integrations.go:440) 400s any
+  // credential read/write scoped to an env other than the instance's own, and
+  // the live instance is pinned to production. Sandbox must therefore not be
+  // reachable from this form.
+
+  it('defaults the environment tab to production and loads production creds', async () => {
+    const auth = useAuthStore()
+    auth.$patch({ email: 'a@b.com', role: 'admin' })
+
+    const w = await mountFormOpened({ provider: 'openai' })
+
+    expect(listCredentials).toHaveBeenCalledWith('production')
+    expect(w.find('[data-test="env-tab-production"]').attributes('aria-selected')).toBe('true')
+  })
+
+  it('disables the sandbox tab and clicking it cannot switch environment', async () => {
+    const auth = useAuthStore()
+    auth.$patch({ email: 'a@b.com', role: 'admin' })
+
+    const w = await mountFormOpened({ provider: 'openai' })
+
+    const sandboxTab = w.find('[data-test="env-tab-sandbox"]')
+    expect(sandboxTab.exists()).toBe(true)
+    expect(sandboxTab.attributes('disabled')).toBeDefined()
+
+    // Clicking it must not move the form into an unwritable environment —
+    // enforceEnvScope would 400 every read and write.
+    await sandboxTab.trigger('click')
+    await flushPromises()
+    expect(listCredentials).not.toHaveBeenCalledWith('sandbox')
+    expect(w.find('[data-test="env-tab-production"]').attributes('aria-selected')).toBe('true')
+  })
+
+  it('ignores an initialEnvironment of sandbox', async () => {
+    const auth = useAuthStore()
+    auth.$patch({ email: 'a@b.com', role: 'admin' })
+
+    const w = await mountFormOpened({ provider: 'openai', initialEnvironment: 'sandbox' })
+
+    expect(listCredentials).toHaveBeenCalledWith('production')
+    expect(listCredentials).not.toHaveBeenCalledWith('sandbox')
+    expect(w.find('[data-test="env-tab-production"]').attributes('aria-selected')).toBe('true')
   })
 })

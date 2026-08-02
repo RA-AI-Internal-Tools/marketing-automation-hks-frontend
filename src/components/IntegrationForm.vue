@@ -24,7 +24,7 @@ const props = defineProps<{
   provider?: string
   /** Optional: the catalog row, used for displaying title/metadata only. */
   integration?: Integration | null
-  /** Initial env tab to open (defaults to sandbox). */
+  /** Initial env tab to open (defaults to production — the only writable env). */
   initialEnvironment?: Environment
 }>()
 
@@ -54,7 +54,18 @@ const title = computed(() =>
 )
 
 // ---- Environment tab ------------------------------------------------------
-const environment = ref<Environment>('sandbox')
+// The live deployment is a SINGLE api container pinned to
+// MA_ENVIRONMENT=production (collapsed 2026-07-30). enforceEnvScope
+// (internal/api/routes_integrations.go:440) rejects every credential read AND
+// write whose `environment` != the instance's own env with a 400
+// ("this instance manages env=production; refusing to write to sandbox"), so a
+// sandbox tab cannot succeed at anything. Default to production and disable the
+// sandbox tab rather than offering an option that only ever errors.
+const WRITABLE_ENVIRONMENTS: Environment[] = ['production']
+function envSelectable(env: Environment): boolean {
+  return WRITABLE_ENVIRONMENTS.includes(env)
+}
+const environment = ref<Environment>('production')
 
 // ---- Credential metadata --------------------------------------------------
 const rows = ref<CredentialRow[]>([])
@@ -132,7 +143,9 @@ watch(() => props.visible, (v) => {
       revealed.value = {}
       lastShownProviderKey.value = providerKey.value
     }
-    environment.value = props.initialEnvironment ?? 'sandbox'
+    // Ignore a caller-supplied env that this instance cannot serve.
+    const requested = props.initialEnvironment
+    environment.value = requested && envSelectable(requested) ? requested : 'production'
     reloadRows()
   }
 })
@@ -334,19 +347,30 @@ async function handleDelete() {
           <!-- Environment tab bar -->
           <div class="px-6 pt-4">
             <div role="tablist" aria-label="Environment" class="inline-flex items-center gap-1 p-1 rounded-lg bg-[var(--color-bg-subtle)] border border-[var(--color-border)]">
+              <!-- Sandbox is rendered but disabled: this instance manages
+                   production only, so selecting it would just produce 400s
+                   from enforceEnvScope. Kept visible (rather than removed) so
+                   operators can see why it is unavailable. -->
               <button
                 v-for="envOpt in (['sandbox', 'production'] as Environment[])"
                 :key="envOpt"
                 type="button"
                 role="tab"
                 :aria-selected="environment === envOpt"
+                :disabled="!envSelectable(envOpt)"
+                :aria-disabled="!envSelectable(envOpt)"
+                :title="envSelectable(envOpt)
+                  ? undefined
+                  : 'This deployment manages the production environment only.'"
                 :data-test="`env-tab-${envOpt}`"
-                @click="environment = envOpt"
+                @click="envSelectable(envOpt) && (environment = envOpt)"
                 :class="[
                   'px-3 py-1.5 text-xs font-medium rounded-md capitalize transition-colors',
-                  environment === envOpt
-                    ? 'bg-[var(--color-bg-card)] text-[var(--color-text-primary)] shadow-sm'
-                    : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]',
+                  !envSelectable(envOpt)
+                    ? 'text-[var(--color-text-muted)] opacity-50 cursor-not-allowed'
+                    : environment === envOpt
+                      ? 'bg-[var(--color-bg-card)] text-[var(--color-text-primary)] shadow-sm'
+                      : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]',
                 ]"
               >
                 {{ envOpt }}

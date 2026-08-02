@@ -16,53 +16,24 @@ const api = axios.create({
   withCredentials: true,
 })
 
-// Dual-env routing (Option B): the host nginx terminates TLS and routes
-// /api/sandbox/*  → 127.0.0.1:8081 (api-sandbox backend, MA_ENVIRONMENT=sandbox)
-// /api/production/* → 127.0.0.1:8082 (api-production backend, MA_ENVIRONMENT=production)
-// before stripping the env prefix. Each backend is structurally pinned to its
-// env via enforceEnvScope, so a misrouted request can't cross-write. The SPA
-// rewrites outgoing URLs from `/api/...` to `/api/{activeEnv}/...` here so call
-// sites elsewhere in the app stay unchanged. See docs/DUAL_ENV.md.
+// SINGLE-CONTAINER TOPOLOGY (reversed the dual-env split on 2026-07-30).
 //
-// Default to `sandbox` when no value is stored. Aligns with the Pinia
-// store's cold-boot default (src/stores/environment.ts) so a user with
-// cleared/empty localStorage cannot have a write silently hit production
-// before they have explicitly clicked into the production environment.
-// Entering production requires a deliberate click on the env-toggle UI.
-function getActiveEnv(): 'sandbox' | 'production' {
-  try {
-    const v = localStorage.getItem(STORAGE_KEYS.ENVIRONMENT)
-    if (v === 'sandbox' || v === 'production') return v
-  } catch {
-    /* localStorage unavailable — fall through to safe default */
-  }
-  return 'sandbox'
-}
-
-// Paths that bypass env prefixing. These are env-agnostic by design:
-//   /api/sse        — single SSE stream (host nginx routes to sandbox today;
-//                     splitting it is a separate frontend change)
-// Anything else under /api/ that already has an env prefix is left untouched
-// (idempotent — safe if a call site explicitly built /api/sandbox/... itself).
-function rewriteApiUrl(url: string | undefined): string | undefined {
-  if (!url) return url
-  if (!url.startsWith('/api/')) return url
-  if (url.startsWith('/api/sandbox/') || url.startsWith('/api/production/')) return url
-  if (url === '/api/sse' || url.startsWith('/api/sse?') || url.startsWith('/api/sse/')) return url
-  const env = getActiveEnv()
-  return `/api/${env}/${url.slice('/api/'.length)}`
-}
-
-api.interceptors.request.use((config) => {
-  config.url = rewriteApiUrl(config.url)
-  // Keep X-Environment header for the migration window: backends still honour
-  // it for telemetry / audit log breadcrumbs even though the URL is now the
-  // load-bearing routing signal. Safe to drop once both backends are deployed
-  // and the legacy /api/* 410 catch is verified live.
-  const env = getActiveEnv()
-  config.headers['X-Environment'] = env
-  return config
-})
+// Call sites emit bare `/api/...` and that is exactly what gets sent. There is
+// ONE api container (127.0.0.1:8081, ENVIRONMENT/MA_ENVIRONMENT=production) and
+// the host nginx serves plain `/api/*`. The `/api/sandbox/*` and
+// `/api/production/*` routes are RETIRED and now return 404.
+//
+// DO NOT reintroduce a request interceptor that rewrites `/api/x` into
+// `/api/{env}/x`. The previous version of this file did exactly that; against
+// the current nginx it 404s every single API call and takes the whole dashboard
+// down. Environment is a property of the deployment (MA_ENVIRONMENT on the
+// container), not of the request.
+//
+// The `X-Environment` request header was also dropped here. The Go backend
+// never reads it — its only mention is the Access-Control-Allow-Headers list in
+// internal/middleware/cors.go, and requests are same-origin (VITE_API_URL is
+// empty, see .env.production) so CORS never engages. It was a no-op that
+// implied a per-request env the server does not honour.
 
 // Double-submit CSRF: the backend sets a non-HttpOnly `ma_csrf` cookie on any
 // authenticated request, and requires a matching X-CSRF-Token header on every
