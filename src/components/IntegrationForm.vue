@@ -131,6 +131,17 @@ function isRevealed(keyName: string): boolean {
   return !!revealed.value[valKey(keyName)]
 }
 
+// Stable DOM id per (provider, env, field) so each <label> can be associated
+// with its control via for/id. Without the association the visible label text
+// is not the control's accessible name: screen readers announce an unnamed
+// textbox, clicking the label doesn't focus the input, and `getByLabel()` —
+// which e2e/README.md tells every spec to prefer — matches nothing. e2e/
+// credentials.spec.ts relied on `getByLabel(/api.?key/i)` and silently found
+// no field.
+function fieldId(keyName: string): string {
+  return `cred-${providerKey.value || 'unknown'}-${environment.value}-${keyName}`
+}
+
 // ---- Lifecycle ------------------------------------------------------------
 // Remember the provider key from the last time the modal was opened, so
 // reopening the same provider (e.g. after an accidental backdrop click)
@@ -335,7 +346,7 @@ async function handleDelete() {
     >
       <div v-if="visible" class="fixed inset-0 z-[var(--z-modal)] flex items-start justify-center p-4 pt-20">
         <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" @click="emit('close')" />
-        <div class="relative bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-xl w-full max-w-xl max-h-[85vh] overflow-y-auto">
+        <div data-test="integration-form" class="relative bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-xl w-full max-w-xl max-h-[85vh] overflow-y-auto">
           <!-- Header -->
           <div class="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)]">
             <h2 class="text-base font-semibold text-[var(--color-text-primary)]">{{ title }}</h2>
@@ -391,10 +402,19 @@ async function handleDelete() {
 
             <div v-for="f in fields" :key="f.key_name" class="space-y-1">
               <div class="flex items-baseline justify-between gap-2">
-                <label class="block text-sm font-medium text-[var(--color-text-secondary)]">
+                <label :for="fieldId(f.key_name)" class="block text-sm font-medium text-[var(--color-text-secondary)]">
                   {{ f.label }}
                 </label>
-                <span v-if="rowFor(f.key_name)" class="text-[11px] text-[var(--color-text-muted)]">
+                <!-- Present iff the SERVER returned a stored row for this key
+                     on the last reloadRows(). That makes it the honest
+                     "the write persisted" / "the delete took" signal for
+                     e2e/credentials.spec.ts — it survives a re-read, unlike a
+                     toast. -->
+                <span
+                  v-if="rowFor(f.key_name)"
+                  :data-test="`cred-stored-${f.key_name}`"
+                  class="text-[11px] text-[var(--color-text-muted)]"
+                >
                   Rotated: {{ relativeTime(rowFor(f.key_name)!.updated_at) }}
                 </span>
               </div>
@@ -402,6 +422,8 @@ async function handleDelete() {
               <!-- Multiline secret -->
               <template v-if="f.multiline">
                 <textarea
+                  :id="fieldId(f.key_name)"
+                  :data-test="`cred-field-${f.key_name}`"
                   :value="getValue(f.key_name)"
                   @input="(e) => setValue(f.key_name, (e.target as HTMLTextAreaElement).value)"
                   :disabled="!auth.isAdmin"
@@ -415,6 +437,8 @@ async function handleDelete() {
               <template v-else>
                 <div class="relative">
                   <input
+                    :id="fieldId(f.key_name)"
+                    :data-test="`cred-field-${f.key_name}`"
                     :value="getValue(f.key_name)"
                     @input="(e) => setValue(f.key_name, (e.target as HTMLInputElement).value)"
                     :disabled="!auth.isAdmin"
@@ -443,6 +467,8 @@ async function handleDelete() {
             <!-- Test result -->
             <div
               v-if="testResult"
+              data-test="test-result"
+              role="status"
               :class="[
                 'text-xs px-3 py-2 rounded-lg border',
                 testResult.status === 'ok'

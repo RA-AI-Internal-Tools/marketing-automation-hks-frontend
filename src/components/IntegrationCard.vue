@@ -61,7 +61,7 @@ function maskEndpointUrl(url: string): string {
 </script>
 
 <template>
-  <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-5 card-interactive group">
+  <div data-test="integration-card" class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-5 card-interactive group">
     <div class="flex items-start justify-between mb-4">
       <div class="flex items-center gap-3">
         <div class="flex items-center justify-center h-10 w-10 rounded-lg bg-[var(--color-primary-light)] text-[var(--color-primary)]">
@@ -87,6 +87,7 @@ function maskEndpointUrl(url: string): string {
       <StatusBadge :status="integration.status" />
       <span
         v-if="credentialStatus === 'full' && credentialEnvironment"
+        data-test="credential-status-chip"
         class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] border border-[var(--color-border)]"
         :title="`Credentials stored for ${credentialEnvironment}`"
       >
