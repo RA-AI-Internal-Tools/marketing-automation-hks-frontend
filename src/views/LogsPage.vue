@@ -11,6 +11,7 @@ import { useToast } from '@/composables/useToast'
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 import { usePreferencesStore } from '@/stores/preferences'
 import type { CampaignLog } from '@/api/types'
+import { LOG_STATUSES } from '@/constants/logStatus'
 
 const route = useRoute()
 const router = useRouter()
@@ -154,23 +155,13 @@ function formatDate(d?: string): string {
         class="rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm"
       />
       <select v-model="filterStatus" class="rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm bg-[var(--color-bg-card)]">
-        <!-- Full LogStatus vocabulary from internal/model/campaign.go.
-             Keep synced so operators can filter to every terminal state
-             the executor emits (bounced/opened/clicked/complaint/
-             quiet_hour_deferred were missing and hid events). -->
+        <!-- Options are generated from the single LOG_STATUSES source of
+             truth (src/constants/logStatus.ts) instead of being hand-kept
+             in sync with StatusBadge's statusConfig — a status added to
+             one and not the other previously hid events (bounced/opened/
+             clicked/complaint/quiet_hour_deferred, then gate_unavailable). -->
         <option value="">All statuses</option>
-        <option value="sent">Sent</option>
-        <option value="delivered">Delivered</option>
-        <option value="opened">Opened</option>
-        <option value="clicked">Clicked</option>
-        <option value="bounced">Bounced</option>
-        <option value="failed">Failed</option>
-        <option value="complaint">Complaint</option>
-        <option value="skipped">Skipped</option>
-        <option value="frequency_capped">Frequency Capped</option>
-        <option value="no_consent">No Consent</option>
-        <option value="condition_not_met">Condition Not Met</option>
-        <option value="quiet_hour_deferred">Quiet Hour Deferred</option>
+        <option v-for="opt in LOG_STATUSES" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
       </select>
       <select v-model="filterChannel" class="rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm bg-[var(--color-bg-card)]">
         <option value="">All channels</option>

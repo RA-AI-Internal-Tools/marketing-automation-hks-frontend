@@ -30,6 +30,19 @@ const statusConfig: Record<string, { bg: string; text: string; dot: string }> = 
   no_consent: { bg: 'bg-[var(--color-warning-bg)]', text: 'text-[var(--color-warning-text)]', dot: 'bg-[var(--color-warning)]' },
   condition_not_met: { bg: 'bg-[var(--color-bg-subtle)]', text: 'text-[var(--color-text-tertiary)]', dot: 'bg-[var(--color-text-muted)]' },
   quiet_hour_deferred: { bg: 'bg-[var(--color-warning-bg)]', text: 'text-[var(--color-warning-text)]', dot: 'bg-[var(--color-warning)]' },
+  // `gate_unavailable`: the frequency-cap/consent/condition gate could not
+  // be *evaluated* (Redis blip, store error) — as opposed to the gate
+  // running and declining the send. Deliberately NOT grey: grey means
+  // "nothing wrong, policy or environment held it back on purpose" and
+  // this is an infra blind spot that may warrant investigation. Also
+  // deliberately NOT the warning/amber used by frequency_capped/
+  // no_consent/quiet_hour_deferred just above — reusing that colour
+  // would recreate, one layer up, exactly the conflation this status
+  // was created to eliminate (an infra failure reading as a policy
+  // outcome). NOT error/red either: the campaign itself isn't broken,
+  // only the gate check is. Info/blue is otherwise unused by any
+  // skip/deferred LogStatus, so it reads as its own category.
+  gate_unavailable: { bg: 'bg-[var(--color-info-bg)]', text: 'text-[var(--color-info-text)]', dot: 'bg-[var(--color-info)]' },
   // ─── EnrollmentStatus — `waiting` covers G6 wait-for-event holds ─────
   waiting: { bg: 'bg-[var(--color-info-bg)]', text: 'text-[var(--color-info-text)]', dot: 'bg-[var(--color-info)]' },
   up: { bg: 'bg-[var(--color-success-bg)]', text: 'text-[var(--color-success-text)]', dot: 'bg-[var(--color-success)]' },
