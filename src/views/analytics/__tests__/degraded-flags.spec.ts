@@ -82,9 +82,12 @@ const orders = (over: Record<string, unknown> = {}) => ({
   total_orders: 0, total_orders_delta: 0, revenue_trend: [], order_status: [],
   ...over,
 })
+// methods_supported defaults to TRUE here on purpose. The healthy baseline has
+// to be a backend that can supply methods and simply had none in-window,
+// otherwise "no notice rendered" would prove nothing about the flag.
 const payments = (over: Record<string, unknown> = {}) => ({
   methods: [], approval_rate: 0, decline_rate: 0,
-  failure_reasons: [], daily_approvals: [],
+  failure_reasons: [], daily_approvals: [], methods_supported: true,
   ...over,
 })
 const retention = (over: Record<string, unknown> = {}) => ({
@@ -198,6 +201,89 @@ describe('analytics pages surface backend degradation flags', () => {
     const w = mount(PaymentsPage, mountOpts)
     await flushPromises()
     expect(notices(w).length).toBe(0)
+    expect(w.find('[data-test="methods-unsupported"]').exists()).toBe(false)
+  })
+
+  // ── PaymentsPage: capability absence is NOT degradation ─────────────────
+  //
+  // This is the shape production is actually in, on every request. The CRM
+  // database is reachable; it simply has no payment-method column, because the
+  // `orders` table belongs to the CRM service. Until 2026-08-03 the backend
+  // reported that through crm_degraded, so this page permanently rendered "We
+  // could not reach the CRM database, so these figures are unavailable — they
+  // are not zero." Every word of that is false, and no operator could clear it.
+
+  it('PaymentsPage states the capability is absent, not broken, when methods_supported is false', async () => {
+    fetchPayments.mockResolvedValue(
+      payments({
+        methods_supported: false,
+        methods_unavailable_reason:
+          'payment method distribution unavailable: the CRM-owned public.orders table has no payment-method column',
+        approval_rate: 92.5,
+      }),
+    )
+    const w = mount(PaymentsPage, mountOpts)
+    await flushPromises()
+
+    // No outage notice. This is the assertion the old behaviour failed.
+    expect(notices(w).length).toBe(0)
+    expect(w.text()).not.toContain('could not be loaded')
+    expect(w.text()).not.toContain('could not reach')
+    expect(w.text()).not.toContain('they are not zero')
+
+    // A capability statement in its place, naming the real cause.
+    const statement = w.find('[data-test="methods-unsupported"]')
+    expect(statement.exists()).toBe(true)
+    expect(statement.text()).toContain('not tracked in this database')
+    expect(statement.text()).toContain('orders')
+    // methods_unavailable_reason had zero consumers across src/ and dist/ when
+    // it shipped. It is rendered now, so drift between the copy and the real
+    // backend reason is visible on the page rather than only in a payload.
+    expect(statement.text()).toContain('has no payment-method column')
+
+    // The Tracardi half is untouched and must still render as fact.
+    expect(w.text()).toContain('92.5%')
+  })
+
+  it('PaymentsPage does not report zero payment methods when it cannot count them', async () => {
+    fetchPayments.mockResolvedValue(payments({ methods_supported: false }))
+    const w = mount(PaymentsPage, mountOpts)
+    await flushPromises()
+
+    const card = w
+      .findAll('*')
+      .map((n) => n.text())
+      .find((t) => t.startsWith('Payment Methods'))
+    expect(card).toBeDefined()
+    // `methods.length` is 0 here, and "0" on a metric card is a confident
+    // claim that nobody used any payment method.
+    expect(card).toContain('Not tracked')
+    expect(card).not.toContain('0')
+  })
+
+  it('PaymentsPage treats an absent methods_supported as supported', async () => {
+    // A backend older than the deploy that added the field omits it. Undefined
+    // must not render the capability statement — that would tell every operator
+    // on an older build that a feature they have is missing.
+    const { methods_supported: _omitted, ...older } = payments()
+    fetchPayments.mockResolvedValue(older)
+    const w = mount(PaymentsPage, mountOpts)
+    await flushPromises()
+
+    expect(w.find('[data-test="methods-unsupported"]').exists()).toBe(false)
+    expect(notices(w).length).toBe(0)
+  })
+
+  it('PaymentsPage still shows the outage notice when a real query fails', async () => {
+    // Both signals at once is the only combination that proves they are
+    // independent: a genuine failure on a backend that DOES support methods.
+    fetchPayments.mockResolvedValue(payments({ crm_degraded: true, methods_supported: true }))
+    const w = mount(PaymentsPage, mountOpts)
+    await flushPromises()
+
+    expect(notices(w).length).toBe(1)
+    expect(w.text()).toContain('The payment method breakdown could not be loaded')
+    expect(w.find('[data-test="methods-unsupported"]').exists()).toBe(false)
   })
 
   // ── RetentionPage ──────────────────────────────────────────────────────

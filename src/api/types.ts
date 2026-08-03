@@ -268,11 +268,14 @@ export interface CampaignRequest {
 // fed by the named source must not be presented as a confident number when
 // its flag is set.
 //
-//   crm_degraded      — at least one CRM/Postgres query failed.
-//                       routes_analytics.go:326 (executive), :453 (orders),
-//                       :828 (payments), :879 (retention), :1029 (data-health)
+//   crm_degraded      — at least one CRM/Postgres query FAILED. It does not
+//                       mean "this data is missing"; see PaymentsData
+//                       .methods_supported for the capability-absence case,
+//                       which must never be reported through this flag.
+//                       routes_analytics.go (executive, orders, payments,
+//                       retention, data-health)
 //   tracardi_degraded — the Tracardi event-store half failed.
-//                       routes_analytics.go:325 — /analytics/executive ONLY.
+//                       /analytics/executive ONLY.
 //
 // Both are optional here: they are absent from any response served by a
 // backend older than the deploy that added them, and `undefined` must read
@@ -350,6 +353,34 @@ export interface PaymentsData extends CrmDegradable {
   decline_rate: number
   failure_reasons: { reason: string; count: number }[]
   daily_approvals: { date: string; approved: number; declined: number }[]
+  /**
+   * Whether this backend's database can supply a payment-method breakdown AT
+   * ALL. Distinct from `crm_degraded`, and the distinction is the point:
+   *
+   *   methods_supported === false   structural. The CRM-owned `orders` table
+   *                                 has no payment-method column, so there is
+   *                                 nothing to chart. Permanent, nothing is
+   *                                 broken, no operator action exists.
+   *   crm_degraded === true         a query that should have worked failed.
+   *                                 Transient and worth someone's attention.
+   *
+   * Against production today the first is always true and the second never is.
+   * Until 2026-08-03 the backend reported the structural case as
+   * `crm_degraded`, so this page rendered "We could not reach the CRM database"
+   * permanently — false, and unclearable. Render a capability statement for
+   * this flag, never an outage notice.
+   *
+   * Optional for the same reason as `crm_degraded`: a backend older than the
+   * deploy that added it omits the field, and `undefined` must read as
+   * "supported", never as unsupported.
+   */
+  methods_supported?: boolean
+  /**
+   * Why the breakdown is unavailable, from the backend. Present only alongside
+   * `methods_supported === false`. Naming the missing column is what stops the
+   * UI copy drifting away from the real reason.
+   */
+  methods_unavailable_reason?: string
 }
 
 export interface OrdersData extends CrmDegradable {
@@ -549,7 +580,13 @@ export interface Segment {
   entry_events: string[]
   is_built_in: boolean
   is_active: boolean
-  member_count: number
+  // null when the backend could not count members. GET /api/segments emits
+  // `member_count: null` + `member_count_error: true` for that row rather than
+  // 0, because 0 is byte-identical to a genuinely empty segment and hides the
+  // failure. Every read site must handle null (`?? 0`, or a null check) —
+  // typing this as a bare `number` is what would let the next one through.
+  member_count: number | null
+  member_count_error?: boolean
   sync_to_tracardi: boolean
   tracardi_event_type?: string
   created_at: string
