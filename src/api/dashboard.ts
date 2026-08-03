@@ -134,10 +134,24 @@ export async function fetchConsents(clientId: number): Promise<ClientConsent[]> 
   return data
 }
 
+// `purpose` is REQUIRED by the backend as of 2026-08-02 and is no longer
+// defaulted to 'marketing' server-side. Omitting it now returns 400 instead of
+// writing a guess — deliberately, because the defaulted write silently created
+// or mutated the (client, 'marketing', channel) row, which no caller had named.
+// That is the row every send gate reads, so the guess was a real consent
+// change. On a legacy consent (stored purpose '') it is doubly wrong: the row
+// the operator was looking at is not the row that changed, while the UI
+// reported success. A blank-purpose row is itself inert — send gating matches
+// purpose exactly, so it gates nothing in either direction. Callers must state
+// the purpose they mean.
+//
+// Live, read-only 2026-08-03: 131 client_consents rows, 0 with purpose '' and 0
+// with purpose NULL.
+//
+// See internal/api/routes_consent.go (consentToggleRequest) for the full
+// ruling, including why the cookie-auth surface this file talks to is not
+// exempted from it.
 export async function optOut(clientId: number, channel: string, purpose?: string): Promise<void> {
-  // `purpose` defaults to 'marketing' server-side when omitted. Pass it
-  // explicitly when the caller knows (e.g. flipping a personalization
-  // consent row) so the backend doesn't mutate the wrong record.
   const body: Record<string, unknown> = { client_id: clientId, channel }
   if (purpose) body.purpose = purpose
   await api.post('/api/consents/opt-out', body)
