@@ -15,6 +15,7 @@ import { cloneCampaign } from '@/api/dashboard'
 import BlueprintPickerModal from '@/components/BlueprintPickerModal.vue'
 import ChannelChip from '@/components/ChannelChip.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import ErrorState from '@/components/ErrorState.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import BaseCard from '@/components/BaseCard.vue'
 import DataTable, { type Column } from '@/components/DataTable.vue'
@@ -219,6 +220,16 @@ const sortedTableRows = computed(() => {
         </div>
       </BaseCard>
     </div>
+
+    <!-- Failed load — must be visually distinct from "empty". Showing the
+         empty state on a failed fetch tells the operator the catalogue is
+         empty when it is merely unreachable. -->
+    <ErrorState
+      v-else-if="store.error"
+      :message="store.error"
+      retryable
+      @retry="store.load()"
+    />
 
     <!-- Empty -->
     <EmptyState

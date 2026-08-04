@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
+import DegradedNotice from '@/components/DegradedNotice.vue'
 import { fetchDataHealth } from '@/api/analytics'
 import type { DataHealthData } from '@/api/types'
 
@@ -26,6 +27,17 @@ onMounted(async () => {
     <div v-if="loading" class="text-center py-12 text-[var(--color-text-muted)]">Loading...</div>
     <div v-else-if="error" class="bg-[var(--color-error-bg)] border border-[var(--color-error-border)] rounded-xl p-4 text-[var(--color-error-text)] text-sm">{{ error }}</div>
     <div v-else-if="data" class="space-y-6">
+      <!--
+        Only the row counts are CRM-sourced; service status and event
+        freshness come from elsewhere and remain valid. This is the page
+        operators open when something is ALREADY broken, so it is the last
+        place that should quietly report a zero it could not verify.
+      -->
+      <DegradedNotice
+        v-if="data.crm_degraded"
+        source="crm"
+        affects="One or more table row counts"
+      />
       <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
         <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Service Status</h3>
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -54,6 +66,36 @@ onMounted(async () => {
               <td class="py-2 text-right text-xs" :class="e.last_seen && e.last_seen !== 'never' ? 'text-[var(--color-success-text)]' : 'text-[var(--color-text-muted)]'">{{ e.last_seen || 'never' }}</td>
               <td class="py-2 text-right" :class="e.count_24h > 0 ? 'text-[var(--color-text-secondary)]' : 'text-[var(--color-text-muted)]'">{{ e.count_24h.toLocaleString() }}</td>
               <td class="py-2 text-right text-[var(--color-text-secondary)]">{{ Math.round((e.avg_7d ?? 0) * 7).toLocaleString() }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!--
+        table_stats has been in the payload all along but was never rendered.
+        It is worth rendering now precisely because each entry carries
+        `available`: the backend sends row_count: null rather than 0 for a
+        table it could not count, and a per-row "unavailable" is a finer,
+        truer signal than the endpoint-level flag above. Use the finest
+        granularity the API offers.
+      -->
+      <div v-if="data.table_stats?.length" class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
+        <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Table Row Counts</h3>
+        <table class="w-full text-sm">
+          <thead><tr class="text-left text-[var(--color-text-tertiary)] text-xs uppercase">
+            <th class="pb-2">Table</th><th class="pb-2 text-right">Rows</th>
+          </tr></thead>
+          <tbody>
+            <tr v-for="t in data.table_stats" :key="t.table" class="border-t border-[var(--color-border-muted)]">
+              <td class="py-2 text-[var(--color-text-primary)] font-mono text-xs">{{ t.table }}</td>
+              <td
+                v-if="t.available === false"
+                class="py-2 text-right text-xs text-[var(--color-warning-text)]"
+                title="The row-count query for this table failed. This is not a count of zero."
+              >Unavailable</td>
+              <td v-else class="py-2 text-right text-[var(--color-text-secondary)]">
+                {{ (t.row_count ?? 0).toLocaleString() }}
+              </td>
             </tr>
           </tbody>
         </table>

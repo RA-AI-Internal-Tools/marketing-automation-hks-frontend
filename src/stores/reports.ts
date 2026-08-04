@@ -11,11 +11,18 @@ import {
 export const useReportsStore = defineStore('reports', () => {
   const reports = ref<ReportSchedule[]>([])
   const loading = ref(false)
+  const error = ref<string | null>(null)
 
   async function load() {
     loading.value = true
+    error.value = null
     try {
       reports.value = await fetchReports()
+    } catch (e: any) {
+      // Previously a bare try/finally: a rejection escaped as an unhandled
+      // promise and the page fell through to "No scheduled reports", telling
+      // the operator the data was absent when it was actually unreachable.
+      error.value = e.response?.data?.error || e.message || 'Failed to load reports'
     } finally {
       loading.value = false
     }
@@ -42,7 +49,8 @@ export const useReportsStore = defineStore('reports', () => {
   function $reset() {
     reports.value = []
     loading.value = false
+    error.value = null
   }
 
-  return { reports, loading, load, create, update, remove, $reset }
+  return { reports, loading, error, load, create, update, remove, $reset }
 })

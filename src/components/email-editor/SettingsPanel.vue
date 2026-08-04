@@ -11,17 +11,17 @@ const aiSubjectOpen = ref(false)
 // configured. Failure treated as disabled (fail-closed).
 fetchAIStatus().then(s => { aiEnabled.value = !!s.enabled }).catch(() => {})
 
+// fromName / fromEmail / replyTo / tags used to live here. Nothing consumed
+// them — the API never stored them and neither email sender reads them — so
+// asking authors to fill them in was worse than not asking. See
+// src/api/types.ts EmailTemplateRequest for the per-field rationale.
 const props = defineProps<{
   name: string
   templateKey: string
   subject: string
   preheader: string
-  fromName: string
-  fromEmail: string
-  replyTo: string
   category: string
   language: string
-  tags: string[]
   isActive: boolean
 }>()
 
@@ -30,38 +30,10 @@ const emit = defineEmits<{
   'update:templateKey': [value: string]
   'update:subject': [value: string]
   'update:preheader': [value: string]
-  'update:fromName': [value: string]
-  'update:fromEmail': [value: string]
-  'update:replyTo': [value: string]
   'update:category': [value: string]
   'update:language': [value: string]
-  'update:tags': [value: string[]]
   'update:isActive': [value: boolean]
 }>()
-
-const tagInput = ref('')
-
-function addTag() {
-  const tag = tagInput.value.trim()
-  if (tag && !props.tags.includes(tag)) {
-    emit('update:tags', [...props.tags, tag])
-  }
-  tagInput.value = ''
-}
-
-function removeTag(tag: string) {
-  emit('update:tags', props.tags.filter((t) => t !== tag))
-}
-
-function handleTagKeydown(e: KeyboardEvent) {
-  if (e.key === 'Enter' || e.key === ',') {
-    e.preventDefault()
-    addTag()
-  }
-  if (e.key === 'Backspace' && !tagInput.value && props.tags.length > 0) {
-    removeTag(props.tags[props.tags.length - 1]!)
-  }
-}
 
 // Auto-generate template key from name
 const autoKey = ref(true)
@@ -171,38 +143,17 @@ const labelClass = 'block text-xs font-medium text-[var(--color-text-secondary)]
 
     <hr class="border-[var(--color-border-muted)]" />
 
-    <!-- Sender Identity -->
-    <h4 class="text-xs font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">Sender Identity</h4>
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <div>
-        <label :class="labelClass">From Name</label>
-        <input
-          :value="fromName"
-          @input="emit('update:fromName', ($event.target as HTMLInputElement).value)"
-          :class="inputClass"
-          placeholder="e.g. AR-PAY"
-        />
-      </div>
-      <div>
-        <label :class="labelClass">From Email</label>
-        <input
-          :value="fromEmail"
-          @input="emit('update:fromEmail', ($event.target as HTMLInputElement).value)"
-          :class="inputClass"
-          type="email"
-          placeholder="e.g. noreply@hks.com"
-        />
-      </div>
-    </div>
-    <div>
-      <label :class="labelClass">Reply-To</label>
-      <input
-        :value="replyTo"
-        @input="emit('update:replyTo', ($event.target as HTMLInputElement).value)"
-        :class="inputClass"
-        type="email"
-        placeholder="e.g. support@hks.com"
-      />
+    <!-- Sender identity is intentionally NOT editable here. Both senders take
+         it from configuration, not the template: SES uses SES_FROM_EMAIL /
+         SES_FROM_NAME (internal/channel/ses.go NewSES) and Elastic Email
+         resolves the sender on its own side. The inputs that used to sit here
+         were collected and discarded on every save. -->
+    <div class="rounded-lg border border-[var(--color-border-muted)] bg-[var(--color-bg-subtle)] px-3 py-2">
+      <p class="text-[11px] text-[var(--color-text-muted)]">
+        <span class="font-medium text-[var(--color-text-secondary)]">Sender identity</span>
+        is set once per environment, not per template. Ask an administrator to change the
+        From name, From address or Reply-To.
+      </p>
     </div>
 
     <hr class="border-[var(--color-border-muted)]" />
@@ -244,28 +195,6 @@ const labelClass = 'block text-xs font-medium text-[var(--color-text-secondary)]
             Apply to key
           </button>
         </p>
-      </div>
-    </div>
-
-    <!-- Tags -->
-    <div>
-      <label :class="labelClass">Tags</label>
-      <div class="flex flex-wrap items-center gap-1.5 p-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-input)] min-h-[38px] focus-within:ring-2 focus-within:ring-[var(--color-accent)]/40 focus-within:border-[var(--color-accent)]">
-        <span
-          v-for="tag in tags"
-          :key="tag"
-          class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-[var(--color-info-bg)] text-[var(--color-primary)] rounded-md"
-        >
-          {{ tag }}
-          <button @click="removeTag(tag)" class="text-[var(--color-primary-border)] hover:text-[var(--color-error-text)] ml-0.5">&times;</button>
-        </span>
-        <input
-          v-model="tagInput"
-          @keydown="handleTagKeydown"
-          @blur="addTag()"
-          class="flex-1 min-w-[80px] text-sm outline-none bg-transparent text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
-          placeholder="Add tag..."
-        />
       </div>
     </div>
 

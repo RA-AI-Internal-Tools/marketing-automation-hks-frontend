@@ -81,6 +81,37 @@ async function confirmPendingOptOut() {
 async function toggleConsent(consent: ClientConsent) {
   // Thread `purpose` through so toggling a personalization row doesn't
   // collide with the user's marketing consent on the same channel.
+  //
+  // A legacy row (stored purpose '', rendered as "legacy / unspecified") sends
+  // no purpose and now gets a 400 shown in the error banner. That is a
+  // deliberate improvement, not a regression: previously the server defaulted
+  // to 'marketing', so the upsert silently created or mutated
+  // (client, 'marketing', channel) — a row the operator never named and was not
+  // looking at — while the UI reported success against the legacy row.
+  //
+  // Scope this correctly before treating it as urgent. The blank-purpose row is
+  // inert: send gating matches purpose exactly, so such a row gates nothing in
+  // either direction. The 400 is a visibility fix, not a compliance incident.
+  // The BLANK-PURPOSE 400 specifically is not currently reachable — read-only
+  // against production on 2026-08-03, 0 of 131 client_consents rows had purpose
+  // '' or NULL. If one ever appears, the fix is a backend backfill of its
+  // intended purpose, never a client-side guess.
+  //
+  // That is NOT the same as "no 400 is reachable from this toggle". It posts
+  // `consent.purpose` verbatim and the button renders on every row (for any
+  // operator with write access), while the backend accepts only
+  // allowedPurposes = {marketing, transactional, analytics}
+  // (internal/api/routes_consent.go:47). Live on 2026-08-03 the 131 rows are
+  // marketing 78 / service 44 / personalization 9 — so 53 of them put this very
+  // error banner on screen today. purposeLabel() below already special-cases
+  // 'personalization', so this file knows those rows exist.
+  //
+  // That is a separate, PRE-EXISTING issue, not a regression from requiring
+  // `purpose`: the old handler only defaulted a MISSING purpose, and 'service'
+  // / 'personalization' are not missing — they never reached the default, they
+  // hit isValidPurpose and were rejected identically before the change. Fixing
+  // it means reconciling allowedPurposes with the purposes actually stored, on
+  // the backend.
   if (consent.opted_in) {
     requestOptOut(consent.client_id, consent.channel, consent.purpose)
     return
@@ -114,10 +145,21 @@ function purposeLabel(purpose?: string, channel?: string) {
   return purpose || 'legacy / unspecified'
 }
 
+// Quick opt-out creates a brand-new consent row for a channel the client has
+// none for. The purpose is stated explicitly rather than left to a server-side
+// default: the backend stopped defaulting a missing `purpose` to 'marketing'
+// on 2026-08-02 (a consent write must not be inferred), so an omitted purpose
+// is now a 400. The button GROUP is labelled with the purpose it writes — the
+// heading above the buttons, not the buttons themselves, which read
+// "Opt out <channel>"; the ConfirmDialog does not repeat the purpose either —
+// so the operator can see what they are recording. This is a named default
+// surfaced in the UI, not an inference hidden in the server.
+const QUICK_OPT_OUT_PURPOSE = 'marketing'
+
 function createOptOut(channel: string) {
   const id = parseInt(clientId.value)
   if (!id) return
-  requestOptOut(id, channel)
+  requestOptOut(id, channel, QUICK_OPT_OUT_PURPOSE)
 }
 </script>
 
@@ -194,7 +236,7 @@ function createOptOut(channel: string) {
 
       <!-- Quick opt-out for channels not yet in the table -->
       <div v-if="consents.length < allChannels.length" class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] p-4">
-        <p class="text-xs text-[var(--color-text-tertiary)] mb-2">Quick opt-out (implicit opt-in channels):</p>
+        <p class="text-xs text-[var(--color-text-tertiary)] mb-2">Quick opt-out (implicit opt-in channels) — records a <strong>{{ QUICK_OPT_OUT_PURPOSE }}</strong> opt-out:</p>
         <div v-if="auth.canWrite" class="flex gap-2 flex-wrap">
           <button
             v-for="ch in allChannels.filter(c => !consents.find(x => x.channel === c))"

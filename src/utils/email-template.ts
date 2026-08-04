@@ -252,3 +252,42 @@ export function buildLocalizedTemplateKey(baseKey: string, locale: string): stri
   const root = trimmed.replace(/\.([a-z]{2}(-[a-z]{2})?)$/i, '')
   return `${root}.${loc}`
 }
+
+/**
+ * Inverse of buildLocalizedTemplateKey: read the locale back off a stored key.
+ *
+ * The template's language is NOT a column — the `key.locale` suffix is the
+ * single source of truth, the same one internal/locale/resolver.go and
+ * InboxSender's languageFromTemplateKey read. Persisting a separate `language`
+ * field would create a second, silently-diverging answer. The editor's Language
+ * select is re-hydrated through here on load.
+ *
+ *   "welcome.ar-iq" → "ar-iq"
+ *   "welcome"       → ""
+ *   "order.summary" → ""      (".summary" is not a locale)
+ */
+export function localeFromTemplateKey(key: string): string {
+  const m = (key || '').trim().match(/\.([a-z]{2}(?:-[a-z]{2})?)$/i)
+  return m ? m[1]!.toLowerCase() : ''
+}
+
+/**
+ * Flatten a template's stored `variables` to plain names.
+ *
+ * The column accepts two shapes — `["a","b"]` (what the editor writes) and
+ * `[{name,required}]` (the backend's canonical TemplateVariable). Reading it
+ * without normalising is how `variables.join(', ')` used to render
+ * "[object Object]" for any rich-form row.
+ */
+export function variableNames(vars: unknown): string[] {
+  if (!Array.isArray(vars)) return []
+  return vars
+    .map((v) => {
+      if (typeof v === 'string') return v
+      if (v && typeof v === 'object' && typeof (v as { name?: unknown }).name === 'string') {
+        return (v as { name: string }).name
+      }
+      return ''
+    })
+    .filter((n) => n.length > 0)
+}

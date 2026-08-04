@@ -8,6 +8,7 @@ import CloneVariantDialog from '@/components/CloneVariantDialog.vue'
 import TestSendModal from '@/components/TestSendModal.vue'
 import ChannelChip from '@/components/ChannelChip.vue'
 import BaseCard from '@/components/BaseCard.vue'
+import ErrorState from '@/components/ErrorState.vue'
 import { useTemplatesStore } from '@/stores/templates'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
@@ -294,6 +295,16 @@ async function confirmClone(locale: string) {
       <div class="tpl-spinner" />
       <p>Loading catalogue…</p>
     </div>
+
+    <!-- Failed load — distinct from "no matches". The filter-empty copy below
+         blames the operator's filters for what is actually an unreachable
+         backend, so the error branch has to win. -->
+    <ErrorState
+      v-else-if="store.error"
+      :message="store.error"
+      retryable
+      @retry="store.load(channelFilter || undefined)"
+    />
 
     <div v-else-if="visible.length === 0" class="tpl-empty">
       <p class="tpl-empty-headline">No templates match these filters.</p>

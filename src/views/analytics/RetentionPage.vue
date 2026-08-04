@@ -2,6 +2,7 @@
 import { ref, onMounted, watch } from 'vue'
 import AnalyticsLayout from '@/components/AnalyticsLayout.vue'
 import CohortTable from '@/components/CohortTable.vue'
+import DegradedNotice from '@/components/DegradedNotice.vue'
 import { useAnalyticsStore } from '@/stores/analytics'
 import { fetchRetention } from '@/api/analytics'
 import type { RetentionData } from '@/api/types'
@@ -32,6 +33,17 @@ watch(() => analytics.queryParams, load)
     <div v-if="loading" class="text-center py-12 text-[var(--color-text-muted)]">Loading...</div>
     <div v-else-if="error" class="bg-[var(--color-error-bg)] border border-[var(--color-error-border)] text-[var(--color-error-text)] px-4 py-3 rounded-lg text-sm">{{ error }}</div>
     <div v-else-if="data" class="space-y-6">
+      <!--
+        All three arrays here are CRM-sourced, and all three have an
+        encouraging empty-state message underneath ("requires at least 2
+        weeks of events…"). Those messages are actively wrong when the
+        queries errored, which is exactly what this notice heads off.
+      -->
+      <DegradedNotice
+        v-if="data.crm_degraded"
+        source="crm"
+        affects="Cohorts, campaign conversions and consent stats"
+      />
       <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
         <h3 class="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Cohort Retention</h3>
         <CohortTable v-if="data.cohorts.length" :cohorts="data.cohorts" />

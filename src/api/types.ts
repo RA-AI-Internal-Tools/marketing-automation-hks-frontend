@@ -135,6 +135,17 @@ export interface PaginatedResponse<T> {
   total: number
 }
 
+export type InboxType = 'info' | 'success' | 'warning' | 'danger' | 'promo'
+
+/**
+ * A stored variable declaration. The backend's canonical shape is
+ * `{name, required}` (internal/model/template.go TemplateVariable); the
+ * editor writes the flat string form because it auto-extracts `{{tokens}}`
+ * and cannot know which are required. ParseVariables accepts both, so both
+ * can come back on a read — use `variableNames()` rather than indexing.
+ */
+export type StoredVariable = string | { name: string; required?: boolean }
+
 export interface MessageTemplate {
   id: number
   template_key: string
@@ -142,16 +153,31 @@ export interface MessageTemplate {
   name: string
   subject?: string
   body: string
-  variables?: string[]
+  // Optional MJML source for templates authored in the Visual editor.
+  mjml_source?: string
+  variables?: StoredVariable[]
   is_active: boolean
   created_at: string
   updated_at: string
+  // Email authoring fields.
+  preheader?: string | null
+  category?: string | null
+  sample_payload?: Record<string, any> | null
   // In-app (channel="inbox") CTA fields. Ignored for other channels.
   cta_url?: string | null
   cta_label?: string | null
-  inbox_type?: 'info' | 'success' | 'warning' | 'danger' | 'promo' | null
+  inbox_type?: InboxType | null
 }
 
+/**
+ * Write contract for POST/PUT /api/templates.
+ *
+ * The backend binds this with DisallowUnknownFields (see
+ * internal/api/routes_templates.go bindTemplateJSON), so ANY field added here
+ * must exist on Go's `templateRequest` or every save 400s. That strictness is
+ * deliberate: 14 fields used to be accepted by TypeScript, sent over the wire,
+ * and silently dropped by the server — invisible until the author reloaded.
+ */
 export interface TemplateRequest {
   template_key: string
   channel: string
@@ -167,7 +193,7 @@ export interface TemplateRequest {
   // In-app (channel="inbox") CTA fields. Ignored for other channels.
   cta_url?: string | null
   cta_label?: string | null
-  inbox_type?: 'info' | 'success' | 'warning' | 'danger' | 'promo' | null
+  inbox_type?: InboxType | null
 }
 
 export interface InAppTemplateRequest extends TemplateRequest {
@@ -176,21 +202,30 @@ export interface InAppTemplateRequest extends TemplateRequest {
   body: string
   cta_url?: string | null
   cta_label?: string | null
-  inbox_type: 'info' | 'success' | 'warning' | 'danger' | 'promo'
+  inbox_type: InboxType
 }
 
+/**
+ * Email-only additions.
+ *
+ * Removed here (and from SettingsPanel) rather than persisted, because nothing
+ * consumes them and nothing plausibly would without a separate feature:
+ *   from_name / from_email — SES takes both from config (internal/channel/
+ *     ses.go NewSES); Elastic Email resolves the sender provider-side. A
+ *     per-template override is a feature request, not this bug.
+ *   reply_to              — no sender sets a Reply-To header at all.
+ *   html_body / text_body — never produced by any editor, never read.
+ *   tags                  — no consumer in either repo.
+ *   editor_mode           — was a hardcoded 'code' literal, never read.
+ *   language              — redundant with the `key.locale` suffix mechanism
+ *     the resolver, SeedLocalizedTemplates and InboxSender already use. It
+ *     stays as a UI-only composer for the template key and is derived back
+ *     from the key on load.
+ */
 export interface EmailTemplateRequest extends TemplateRequest {
   preheader?: string | null
-  html_body?: string | null
-  text_body?: string | null
-  from_name?: string | null
-  from_email?: string | null
-  reply_to?: string | null
   category?: string | null
-  language?: string | null
-  tags?: string[]
   sample_payload?: Record<string, any> | null
-  editor_mode?: 'code' | 'visual'
 }
 
 export interface TemplateVariable {
@@ -223,7 +258,33 @@ export interface CampaignRequest {
 
 // Analytics types
 
-export interface ExecutiveOverview {
+// Degradation flags.
+//
+// Every analytics endpoint below is fail-soft: a failed upstream query zeroes
+// its own field and the response is still served with HTTP 200, because a
+// dashboard with partial numbers beats an error page. The cost is that a
+// zero is ambiguous — "genuinely zero" and "could not determine" render
+// identically. These flags are how the backend disambiguates, and any widget
+// fed by the named source must not be presented as a confident number when
+// its flag is set.
+//
+//   crm_degraded      — at least one CRM/Postgres query FAILED. It does not
+//                       mean "this data is missing"; see PaymentsData
+//                       .methods_supported for the capability-absence case,
+//                       which must never be reported through this flag.
+//                       routes_analytics.go (executive, orders, payments,
+//                       retention, data-health)
+//   tracardi_degraded — the Tracardi event-store half failed.
+//                       /analytics/executive ONLY.
+//
+// Both are optional here: they are absent from any response served by a
+// backend older than the deploy that added them, and `undefined` must read
+// as "not degraded", never as degraded.
+export interface CrmDegradable {
+  crm_degraded?: boolean
+}
+
+export interface ExecutiveOverview extends CrmDegradable {
   revenue: number
   revenue_delta: number
   traffic: number
@@ -237,6 +298,8 @@ export interface ExecutiveOverview {
   total_campaigns_active: number
   daily_revenue: { date: string; revenue: number }[]
   daily_traffic: { date: string; count: number }[]
+  /** Tracardi-sourced figures (traffic, active clients) are unreliable. */
+  tracardi_degraded?: boolean
 }
 
 export interface AcquisitionData {
@@ -283,15 +346,44 @@ export interface ProductsData {
   }[]
 }
 
-export interface PaymentsData {
+export interface PaymentsData extends CrmDegradable {
+  /** The only CRM-sourced field here — approval/decline rates come from Tracardi. */
   methods: { method: string; count: number; percentage: number }[]
   approval_rate: number
   decline_rate: number
   failure_reasons: { reason: string; count: number }[]
   daily_approvals: { date: string; approved: number; declined: number }[]
+  /**
+   * Whether this backend's database can supply a payment-method breakdown AT
+   * ALL. Distinct from `crm_degraded`, and the distinction is the point:
+   *
+   *   methods_supported === false   structural. The CRM-owned `orders` table
+   *                                 has no payment-method column, so there is
+   *                                 nothing to chart. Permanent, nothing is
+   *                                 broken, no operator action exists.
+   *   crm_degraded === true         a query that should have worked failed.
+   *                                 Transient and worth someone's attention.
+   *
+   * Against production today the first is always true and the second never is.
+   * Until 2026-08-03 the backend reported the structural case as
+   * `crm_degraded`, so this page rendered "We could not reach the CRM database"
+   * permanently — false, and unclearable. Render a capability statement for
+   * this flag, never an outage notice.
+   *
+   * Optional for the same reason as `crm_degraded`: a backend older than the
+   * deploy that added it omits the field, and `undefined` must read as
+   * "supported", never as unsupported.
+   */
+  methods_supported?: boolean
+  /**
+   * Why the breakdown is unavailable, from the backend. Present only alongside
+   * `methods_supported === false`. Naming the missing column is what stops the
+   * UI copy drifting away from the real reason.
+   */
+  methods_unavailable_reason?: string
 }
 
-export interface OrdersData {
+export interface OrdersData extends CrmDegradable {
   aov: number
   aov_delta: number
   total_revenue: number
@@ -302,7 +394,7 @@ export interface OrdersData {
   order_status: { status: string; count: number }[]
 }
 
-export interface RetentionData {
+export interface RetentionData extends CrmDegradable {
   cohorts: {
     cohort: string
     total: number
@@ -323,11 +415,21 @@ export interface RetentionData {
   }[]
 }
 
-export interface DataHealthData {
+export interface DataHealthData extends CrmDegradable {
   services: { name: string; status: string }[]
   event_freshness: { event_type: string; last_seen: string; count_24h: number; avg_7d?: number }[]
   volume_anomalies: { event_type: string; current: number; average: number; deviation: number }[]
-  table_stats: { table: string; row_count: number }[]
+  /**
+   * Row counts, one per safelisted table.
+   *
+   * `row_count` is null exactly when `available` is false — the count query
+   * errored and the backend refuses to guess (routes_analytics.go:1061). It
+   * used to send 0 there, which on the one page whose whole purpose is
+   * telling operators what is broken was the most misleading zero available.
+   * `available` is optional so a response from an older backend, which had
+   * neither field, still type-checks; treat a missing flag as available.
+   */
+  table_stats: { table: string; row_count: number | null; available?: boolean }[]
 }
 
 // User management types
@@ -420,7 +522,14 @@ export interface PushSendResponse {
 // Integration types
 
 export type ProviderType = 'email' | 'sms' | 'push' | 'webhook' | 'crm' | 'analytics' | 'infrastructure' | 'ai'
-export type IntegrationStatus = 'connected' | 'degraded' | 'not_configured' | 'error' | 'disabled'
+// `configured` (credential present, unverified) and `misconfigured` are
+// already keyed in StatusBadge.vue's colour table (info/blue and
+// warning/amber respectively) — see IntegrationCard.vue:87. The backend's
+// asStatus() (internal/api/routes_integrations.go) currently only emits
+// `configured` on the wire for this pair (`misconfigured` collapses to
+// `error` there), but the union stays honest to what the DTO type allows a
+// caller to construct, not just today's asStatus() output.
+export type IntegrationStatus = 'connected' | 'configured' | 'degraded' | 'not_configured' | 'misconfigured' | 'error' | 'disabled'
 
 export interface Integration {
   id: number
@@ -435,6 +544,16 @@ export interface Integration {
   api_key_configured: boolean
   last_tested_at?: string
   last_test_success?: boolean
+  /**
+   * Whether POST /integrations/credentials/:provider/test can run a real
+   * probe for this provider. False means the endpoint always answers
+   * `not_supported` — the Test button should be disabled rather than let an
+   * operator click it and read that as an outage. Always present on the DTO
+   * (internal/api/routes_integrations.go: integrationDTO.TestSupported).
+   */
+  test_supported?: boolean
+  /** Populated only when test_supported is false; the catalog's recorded reason no probe exists. */
+  test_unsupported_reason?: string
   updated_at: string
   created_at: string
 }
@@ -478,7 +597,13 @@ export interface Segment {
   entry_events: string[]
   is_built_in: boolean
   is_active: boolean
-  member_count: number
+  // null when the backend could not count members. GET /api/segments emits
+  // `member_count: null` + `member_count_error: true` for that row rather than
+  // 0, because 0 is byte-identical to a genuinely empty segment and hides the
+  // failure. Every read site must handle null (`?? 0`, or a null check) —
+  // typing this as a bare `number` is what would let the next one through.
+  member_count: number | null
+  member_count_error?: boolean
   sync_to_tracardi: boolean
   tracardi_event_type?: string
   created_at: string

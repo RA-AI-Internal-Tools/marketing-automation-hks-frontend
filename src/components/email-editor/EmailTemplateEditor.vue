@@ -10,6 +10,7 @@ import {
   getDefaultSampleData,
   DEFAULT_EMAIL_HTML,
   extractVariablesFromMultiple,
+  localeFromTemplateKey,
 } from '@/utils/email-template'
 import type { MessageTemplate, EmailTemplateRequest } from '@/api/types'
 
@@ -45,12 +46,11 @@ const templateKey = ref('')
 const subject = ref('')
 const preheader = ref('')
 const body = ref('')
-const fromName = ref('')
-const fromEmail = ref('')
-const replyTo = ref('')
 const category = ref('')
+// `language` is NOT persisted — it is a composer for the template key's
+// `.locale` suffix, which is the resolver's single source of truth. It is
+// derived back off the key on load (see populateFromTemplate).
 const language = ref('')
-const tags = ref<string[]>([])
 // mjmlSource is the author-side MJML persisted alongside the compiled
 // HTML body. Populated by the Visual tab's <VisualEditor>; left empty
 // for templates authored purely in Code mode.
@@ -90,7 +90,7 @@ const sidebarOpen = ref(false)
 
 // Fingerprint for unsaved changes detection
 const fingerprint = computed(() =>
-  JSON.stringify({ name: name.value, templateKey: templateKey.value, subject: subject.value, preheader: preheader.value, body: body.value, fromName: fromName.value, fromEmail: fromEmail.value, replyTo: replyTo.value, category: category.value, language: language.value, tags: tags.value, isActive: isActive.value }),
+  JSON.stringify({ name: name.value, templateKey: templateKey.value, subject: subject.value, preheader: preheader.value, body: body.value, mjmlSource: mjmlSource.value, category: category.value, sampleData: sampleData.value, isActive: isActive.value }),
 )
 const { isDirty, markClean } = useUnsavedChanges(fingerprint)
 
@@ -111,6 +111,10 @@ const { errors, warnings, hasErrors, errorCount, warningCount } = useEmailValida
 // Code editor ref for variable insertion
 const codeEditorRef = ref<InstanceType<typeof CodeEditor>>()
 
+// No `as any` here on purpose. The load path was cast to any, which is why the
+// round-trip looked plausible: TypeScript could not see that preheader,
+// category and sample_payload were never actually coming back from the server.
+// Every field read below is now on MessageTemplate and persisted by the API.
 function populateFromTemplate(tmpl: MessageTemplate) {
   name.value = tmpl.name
   templateKey.value = tmpl.template_key
@@ -118,20 +122,15 @@ function populateFromTemplate(tmpl: MessageTemplate) {
   body.value = tmpl.body || ''
   isActive.value = tmpl.is_active
 
-  // Extended fields (may not exist on older templates)
-  const ext = tmpl as any
-  mjmlSource.value = ext.mjml_source || ''
+  mjmlSource.value = tmpl.mjml_source || ''
   // If the loaded template has MJML, open on Visual; else Code.
   activeTab.value = mjmlSource.value ? 'visual' : 'code'
-  preheader.value = ext.preheader || ''
-  fromName.value = ext.from_name || ''
-  fromEmail.value = ext.from_email || ''
-  replyTo.value = ext.reply_to || ''
-  category.value = ext.category || ''
-  language.value = ext.language || ''
-  tags.value = ext.tags || []
-  if (ext.sample_payload) {
-    sampleData.value = ext.sample_payload
+  preheader.value = tmpl.preheader || ''
+  category.value = tmpl.category || ''
+  // Derived from the key suffix, not a stored column — see localeFromTemplateKey.
+  language.value = localeFromTemplateKey(tmpl.template_key)
+  if (tmpl.sample_payload && Object.keys(tmpl.sample_payload).length > 0) {
+    sampleData.value = tmpl.sample_payload
   }
 }
 
@@ -164,6 +163,28 @@ onMounted(async () => {
   }
 })
 
+// Single builder for both save and duplicate — the two used to construct the
+// payload independently and had already drifted (duplicate omitted
+// mjml_source). With DisallowUnknownFields on the server, drift here is a 400,
+// not a silent drop, but one builder is still the right shape.
+function buildRequest(overrides: Partial<EmailTemplateRequest> = {}): EmailTemplateRequest {
+  const variables = extractVariablesFromMultiple(subject.value, preheader.value, body.value)
+  return {
+    template_key: templateKey.value,
+    channel: 'email',
+    name: name.value,
+    subject: subject.value || null,
+    body: body.value,
+    mjml_source: mjmlSource.value || undefined,
+    variables: variables.length > 0 ? variables : undefined,
+    is_active: isActive.value,
+    preheader: preheader.value || null,
+    category: category.value || null,
+    sample_payload: Object.keys(sampleData.value).length > 0 ? sampleData.value : null,
+    ...overrides,
+  }
+}
+
 // Save handler
 async function handleSave() {
   error.value = ''
@@ -176,27 +197,7 @@ async function handleSave() {
 
   saving.value = true
   try {
-    const variables = extractVariablesFromMultiple(subject.value, preheader.value, body.value)
-
-    const req: EmailTemplateRequest = {
-      template_key: templateKey.value,
-      channel: 'email',
-      name: name.value,
-      subject: subject.value || null,
-      body: body.value,
-      mjml_source: mjmlSource.value || undefined,
-      variables: variables.length > 0 ? variables : undefined,
-      is_active: isActive.value,
-      preheader: preheader.value || null,
-      from_name: fromName.value || null,
-      from_email: fromEmail.value || null,
-      reply_to: replyTo.value || null,
-      category: category.value || null,
-      language: language.value || null,
-      tags: tags.value.length > 0 ? tags.value : undefined,
-      sample_payload: Object.keys(sampleData.value).length > 0 ? sampleData.value : null,
-      editor_mode: 'code',
-    }
+    const req = buildRequest()
 
     if (isEdit.value && props.templateId) {
       await store.update(props.templateId, req)
@@ -248,25 +249,11 @@ function handleImportHtml(content: string) {
 async function handleDuplicate() {
   if (!isEdit.value || !props.templateId) return
   try {
-    const variables = extractVariablesFromMultiple(subject.value, preheader.value, body.value)
-    const req: EmailTemplateRequest = {
+    const req = buildRequest({
       template_key: templateKey.value + '_copy',
-      channel: 'email',
       name: name.value + ' (Copy)',
-      subject: subject.value || null,
-      body: body.value,
-      variables: variables.length > 0 ? variables : undefined,
       is_active: false,
-      preheader: preheader.value || null,
-      from_name: fromName.value || null,
-      from_email: fromEmail.value || null,
-      reply_to: replyTo.value || null,
-      category: category.value || null,
-      language: language.value || null,
-      tags: tags.value.length > 0 ? tags.value : undefined,
-      sample_payload: Object.keys(sampleData.value).length > 0 ? sampleData.value : null,
-      editor_mode: 'code',
-    }
+    })
     const created = await store.create(req)
     showToast('Template duplicated', 'success')
     router.push(`/templates/${created.id}/edit`)
@@ -404,12 +391,8 @@ function handleKeydown(e: KeyboardEvent) {
               v-model:templateKey="templateKey"
               v-model:subject="subject"
               v-model:preheader="preheader"
-              v-model:fromName="fromName"
-              v-model:fromEmail="fromEmail"
-              v-model:replyTo="replyTo"
               v-model:category="category"
               v-model:language="language"
-              v-model:tags="tags"
               v-model:isActive="isActive"
             />
           </div>

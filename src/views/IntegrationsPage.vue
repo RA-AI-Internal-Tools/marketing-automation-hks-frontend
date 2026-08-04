@@ -25,7 +25,18 @@ const editingIntegration = ref<Integration | null>(null)
 const credentials = ref<CredentialRow[]>([])
 // Admin-scoped credential environment toggle. Non-admins fall back to the
 // global env store (which is what the read-only catalog view has always used).
-const credEnv = ref<Environment>('sandbox')
+//
+// Defaults to production and disables sandbox for the same reason as
+// IntegrationForm.vue: the collapsed single-container deployment is pinned to
+// MA_ENVIRONMENT=production, and enforceEnvScope
+// (internal/api/routes_integrations.go:440, called from handleListCredentials
+// at :489) 400s cross-env *reads* too — so a sandbox default made this page
+// fail to load credentials on mount.
+const WRITABLE_ENVIRONMENTS: Environment[] = ['production']
+function envSelectable(env: Environment): boolean {
+  return WRITABLE_ENVIRONMENTS.includes(env)
+}
+const credEnv = ref<Environment>('production')
 
 async function reloadCredentials() {
   if (!auth.isAdmin) return
@@ -131,12 +142,19 @@ function credStatusFor(providerKey: string, environment: Environment): CredStatu
           type="button"
           role="tab"
           :aria-selected="credEnv === envOpt"
-          @click="credEnv = envOpt"
+          :disabled="!envSelectable(envOpt)"
+          :aria-disabled="!envSelectable(envOpt)"
+          :title="envSelectable(envOpt)
+            ? undefined
+            : 'This deployment manages the production environment only.'"
+          @click="envSelectable(envOpt) && (credEnv = envOpt)"
           :class="[
             'px-3 py-1.5 text-xs font-medium rounded-md capitalize transition-colors',
-            credEnv === envOpt
-              ? 'bg-[var(--color-bg-card)] text-[var(--color-text-primary)] shadow-sm'
-              : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]',
+            !envSelectable(envOpt)
+              ? 'text-[var(--color-text-muted)] opacity-50 cursor-not-allowed'
+              : credEnv === envOpt
+                ? 'bg-[var(--color-bg-card)] text-[var(--color-text-primary)] shadow-sm'
+                : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]',
           ]"
         >
           {{ envOpt }}

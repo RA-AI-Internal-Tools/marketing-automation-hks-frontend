@@ -66,4 +66,16 @@ defineEmits<{ (e: 'retry'): void }>()
 .error-state-retry {
   margin-top: 14px;
 }
+/* `.btn` is sized for a mouse and lands at ~37px tall, which is under the 44px
+   touch floor. That is tolerable on an operator dashboard and not tolerable on
+   the public preference centre, which renders this component to a customer on a
+   phone in a mail client — "Try again" is their only way out of a failed
+   unsubscribe. Widen the target on small viewports only, so no desktop layout
+   moves. */
+@media (max-width: 640px) {
+  .error-state-retry {
+    min-height: 44px;
+    padding-inline: 18px;
+  }
+}
 </style>

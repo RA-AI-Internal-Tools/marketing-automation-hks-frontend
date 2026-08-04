@@ -15,9 +15,28 @@ const router = createRouter({
       component: () => import('@/views/LoginPage.vue'),
       meta: { public: true, title: 'Login' },
     },
+    // Public preference centre. Anonymous: the recipient of a marketing email
+    // has no session, and the subject is resolved server-side from the token.
+    // `/preferences/:token` is canonical; the bare `/preferences` form stays
+    // for the `?token=` links already sitting in inboxes.
+    //
+    // `/preferences/confirm/:shortToken` is three segments and `:token` is
+    // two, so the confirm route cannot be swallowed by the token route.
     {
       path: '/preferences',
       name: 'preferences',
+      component: () => import('@/views/PreferenceCenterPage.vue'),
+      meta: { public: true, title: 'Preferences' },
+    },
+    {
+      path: '/preferences/confirm/:shortToken',
+      name: 'preferences-confirm',
+      component: () => import('@/views/PreferenceConfirmPage.vue'),
+      meta: { public: true, title: 'Confirm preference' },
+    },
+    {
+      path: '/preferences/:token',
+      name: 'preferences-token',
       component: () => import('@/views/PreferenceCenterPage.vue'),
       meta: { public: true, title: 'Preferences' },
     },
@@ -319,20 +338,19 @@ router.beforeEach((to) => {
   if (to.meta.requiresWrite && role !== 'admin' && role !== 'editor') {
     return { name: 'overview' }
   }
-  // Production guard: prompt confirmation before entering write routes in production
+  // Production guard: confirm ONCE per session before entering write routes
+  // in production. `needsProductionGuard` is false after the operator has
+  // acknowledged for the current environment, and switching environment
+  // re-arms it — see the scope rationale in stores/environment.ts.
+  //
+  // Two of these routes (/template-library, /catalog) are plain sidebar
+  // entries, so without the memory this fired on every ordinary click.
   if (to.meta.requiresWrite) {
     const envStore = useEnvironmentStore()
-    if (envStore.isProduction) {
-      return new Promise<boolean>((resolve) => {
-        envStore.triggerGuard(() => resolve(true))
-        // If the user cancels, the promise never resolves — use cancelGuard to reject
-        const originalCancel = envStore.cancelGuard.bind(envStore)
-        envStore.cancelGuard = () => {
-          originalCancel()
-          resolve(false)
-          envStore.cancelGuard = originalCancel
-        }
-      })
+    if (envStore.needsProductionGuard) {
+      // requestGuard owns both outcomes, so nothing here reassigns store
+      // actions; confirm resolves true, cancel/supersede resolves false.
+      return new Promise<boolean>((resolve) => envStore.requestGuard(resolve))
     }
   }
 })

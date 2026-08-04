@@ -1,9 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import { XMarkIcon, EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
 import ConfirmDialog from './ConfirmDialog.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
+import {
+  INTEGRATION_TEST_STATUS,
+  classifyTestProbeError,
+  type IntegrationTestOutcome,
+} from '@/constants/integrationTestStatus'
 import {
   listCredentials,
   upsertCredential,
@@ -24,7 +29,7 @@ const props = defineProps<{
   provider?: string
   /** Optional: the catalog row, used for displaying title/metadata only. */
   integration?: Integration | null
-  /** Initial env tab to open (defaults to sandbox). */
+  /** Initial env tab to open (defaults to production — the only writable env). */
   initialEnvironment?: Environment
 }>()
 
@@ -54,7 +59,18 @@ const title = computed(() =>
 )
 
 // ---- Environment tab ------------------------------------------------------
-const environment = ref<Environment>('sandbox')
+// The live deployment is a SINGLE api container pinned to
+// MA_ENVIRONMENT=production (collapsed 2026-07-30). enforceEnvScope
+// (internal/api/routes_integrations.go:440) rejects every credential read AND
+// write whose `environment` != the instance's own env with a 400
+// ("this instance manages env=production; refusing to write to sandbox"), so a
+// sandbox tab cannot succeed at anything. Default to production and disable the
+// sandbox tab rather than offering an option that only ever errors.
+const WRITABLE_ENVIRONMENTS: Environment[] = ['production']
+function envSelectable(env: Environment): boolean {
+  return WRITABLE_ENVIRONMENTS.includes(env)
+}
+const environment = ref<Environment>('production')
 
 // ---- Credential metadata --------------------------------------------------
 const rows = ref<CredentialRow[]>([])
@@ -120,6 +136,17 @@ function isRevealed(keyName: string): boolean {
   return !!revealed.value[valKey(keyName)]
 }
 
+// Stable DOM id per (provider, env, field) so each <label> can be associated
+// with its control via for/id. Without the association the visible label text
+// is not the control's accessible name: screen readers announce an unnamed
+// textbox, clicking the label doesn't focus the input, and `getByLabel()` —
+// which e2e/README.md tells every spec to prefer — matches nothing. e2e/
+// credentials.spec.ts relied on `getByLabel(/api.?key/i)` and silently found
+// no field.
+function fieldId(keyName: string): string {
+  return `cred-${providerKey.value || 'unknown'}-${environment.value}-${keyName}`
+}
+
 // ---- Lifecycle ------------------------------------------------------------
 // Remember the provider key from the last time the modal was opened, so
 // reopening the same provider (e.g. after an accidental backdrop click)
@@ -132,7 +159,9 @@ watch(() => props.visible, (v) => {
       revealed.value = {}
       lastShownProviderKey.value = providerKey.value
     }
-    environment.value = props.initialEnvironment ?? 'sandbox'
+    // Ignore a caller-supplied env that this instance cannot serve.
+    const requested = props.initialEnvironment
+    environment.value = requested && envSelectable(requested) ? requested : 'production'
     reloadRows()
   }
 })
@@ -145,7 +174,107 @@ watch(environment, () => {
 // ---- Actions --------------------------------------------------------------
 const saving = ref(false)
 const testing = ref(false)
-const testResult = ref<{ status: string; detail: string } | null>(null)
+const testResult = ref<IntegrationTestOutcome | null>(null)
+
+// ---- Throttle countdown ---------------------------------------------------
+// Both probe routes are capped at 5 requests/minute per (principal, provider)
+// by `testLimiter` (internal/api/routes_integrations.go). On refusal the
+// middleware returns 429 + retry_after; we hold the button closed for that long
+// rather than only printing a message.
+//
+// Disabling is the right shape here for two reasons. (1) It matches how this
+// component already expresses "this action cannot succeed right now" — the
+// sandbox env tab and the Test button under test_supported:false are both
+// :disabled + :title, not prose. (2) It is not merely cosmetic: the middleware
+// runs `INCR` and then `EXPIRE key window` unconditionally, BEFORE the
+// `count > max` check, so every refused request refreshes the Redis TTL to the
+// full window. An operator hammering a still-enabled button would keep pushing
+// their own unlock further away and never understand why.
+//
+// The countdown only engages when the server actually supplied a duration.
+// A 429 with no retry_after leaves the button live and shows the message alone
+// — better than inventing a number that expires early into another refusal.
+const retryAfterAt = ref<number | null>(null)
+const nowMs = ref(Date.now())
+let retryTicker: ReturnType<typeof setInterval> | null = null
+
+function stopRetryTicker() {
+  if (retryTicker !== null) {
+    clearInterval(retryTicker)
+    retryTicker = null
+  }
+}
+
+const retryAfterSeconds = computed(() => {
+  if (retryAfterAt.value === null) return 0
+  return Math.max(0, Math.ceil((retryAfterAt.value - nowMs.value) / 1000))
+})
+const throttled = computed(() => retryAfterSeconds.value > 0)
+
+function startRetryCountdown(seconds: number | undefined) {
+  if (seconds === undefined) return
+  stopRetryTicker()
+  nowMs.value = Date.now()
+  retryAfterAt.value = nowMs.value + seconds * 1000
+  retryTicker = setInterval(() => {
+    nowMs.value = Date.now()
+    if (retryAfterAt.value !== null && nowMs.value >= retryAfterAt.value) {
+      clearRetryCountdown()
+    }
+  }, 1000)
+}
+
+function clearRetryCountdown() {
+  stopRetryTicker()
+  retryAfterAt.value = null
+  // The banner sentence is frozen into `detail` at classification time
+  // (rateLimitedDetail), unlike the button label which reads the live
+  // retryAfterSeconds computed. So without this the button recovers to "Test
+  // connection" while the banner still reads "Try again in 7s." — drop the
+  // throttle result outright, since once the window has passed there is
+  // nothing left to report. Only the throttle result: a real ok/error/
+  // not_configured/not_supported outcome is still the last thing that
+  // happened and must survive.
+  if (testResult.value?.status === INTEGRATION_TEST_STATUS.RATE_LIMITED) {
+    testResult.value = null
+  }
+}
+
+// The throttle bucket is keyed per (principal, provider) server-side, so a
+// countdown earned on provider A must not disable the button for provider B.
+// It deliberately DOES survive closing and reopening the modal on the same
+// provider — the server-side window does.
+watch(providerKey, () => clearRetryCountdown())
+onUnmounted(() => stopRetryTicker())
+
+// Tone per probe outcome, keyed by the shared vocabulary so a state cannot be
+// styled here under a name the vocabulary does not have. rate_limited gets the
+// info (blue) tokens already used elsewhere for transient, non-fault states
+// (StatusBadge: waiting / processing / gate_unavailable) — it is neither a
+// fault (red `error`) nor something the operator must supply (amber
+// `not_configured`); it is "come back shortly".
+//
+// The fallback below is load-bearing: `status` on the 200 path is whatever the
+// server sent, unvalidated, so an unrecognised value must read as a failure
+// rather than fall through to an unstyled div.
+const TEST_RESULT_TONES: Readonly<Record<string, string>> = Object.freeze({
+  [INTEGRATION_TEST_STATUS.OK]:
+    'bg-[var(--color-success-bg)] border-[var(--color-success-border)] text-[var(--color-success-text)]',
+  [INTEGRATION_TEST_STATUS.NOT_SUPPORTED]:
+    'bg-[var(--color-bg-subtle)] border-[var(--color-border)] text-[var(--color-text-tertiary)]',
+  [INTEGRATION_TEST_STATUS.NOT_CONFIGURED]:
+    'bg-[var(--color-warning-bg)] border-[var(--color-warning-border)] text-[var(--color-warning-text)]',
+  [INTEGRATION_TEST_STATUS.RATE_LIMITED]:
+    'bg-[var(--color-info-bg)] border-[var(--color-info-border)] text-[var(--color-info-text)]',
+  [INTEGRATION_TEST_STATUS.ERROR]:
+    'bg-[var(--color-error-bg)] border-[var(--color-error-border)] text-[var(--color-error-text)]',
+})
+const FAILURE_TONE = TEST_RESULT_TONES[INTEGRATION_TEST_STATUS.ERROR]!
+const testResultTone = computed(() => {
+  const status = testResult.value?.status
+  if (status === undefined) return FAILURE_TONE
+  return TEST_RESULT_TONES[status] ?? FAILURE_TONE
+})
 
 async function handleSave() {
   if (!auth.isAdmin) {
@@ -227,14 +356,24 @@ async function handleTest() {
     showToast('Admin role required', 'error')
     return
   }
+  // Belt to the :disabled brace. A click that the throttle would refuse must
+  // not reach the server at all: the middleware re-EXPIREs the bucket on every
+  // request it rejects, so an extra probe here lengthens the operator's wait.
+  if (throttled.value) return
   testing.value = true
   testResult.value = null
   try {
     testResult.value = await testIntegration(providerKey.value, environment.value)
-  } catch (e: any) {
-    testResult.value = {
-      status: 'failed',
-      detail: e.response?.data?.error || e.message || 'Request failed',
+  } catch (e: unknown) {
+    // classifyTestProbeError owns the 429-vs-everything-else decision. It
+    // answers `rate_limited` for a throttled probe (NOT a failed test — the
+    // integration was never contacted) and `error` for a genuine fault. Note
+    // src/api/client.ts's response interceptor branches on 401 only, so a 429
+    // arrives here untouched with its body and headers intact.
+    const outcome = classifyTestProbeError(e)
+    testResult.value = outcome
+    if (outcome.status === INTEGRATION_TEST_STATUS.RATE_LIMITED) {
+      startRetryCountdown(outcome.retryAfterSeconds)
     }
   } finally {
     testing.value = false
@@ -322,7 +461,7 @@ async function handleDelete() {
     >
       <div v-if="visible" class="fixed inset-0 z-[var(--z-modal)] flex items-start justify-center p-4 pt-20">
         <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" @click="emit('close')" />
-        <div class="relative bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-xl w-full max-w-xl max-h-[85vh] overflow-y-auto">
+        <div data-test="integration-form" class="relative bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-xl w-full max-w-xl max-h-[85vh] overflow-y-auto">
           <!-- Header -->
           <div class="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)]">
             <h2 class="text-base font-semibold text-[var(--color-text-primary)]">{{ title }}</h2>
@@ -334,19 +473,30 @@ async function handleDelete() {
           <!-- Environment tab bar -->
           <div class="px-6 pt-4">
             <div role="tablist" aria-label="Environment" class="inline-flex items-center gap-1 p-1 rounded-lg bg-[var(--color-bg-subtle)] border border-[var(--color-border)]">
+              <!-- Sandbox is rendered but disabled: this instance manages
+                   production only, so selecting it would just produce 400s
+                   from enforceEnvScope. Kept visible (rather than removed) so
+                   operators can see why it is unavailable. -->
               <button
                 v-for="envOpt in (['sandbox', 'production'] as Environment[])"
                 :key="envOpt"
                 type="button"
                 role="tab"
                 :aria-selected="environment === envOpt"
+                :disabled="!envSelectable(envOpt)"
+                :aria-disabled="!envSelectable(envOpt)"
+                :title="envSelectable(envOpt)
+                  ? undefined
+                  : 'This deployment manages the production environment only.'"
                 :data-test="`env-tab-${envOpt}`"
-                @click="environment = envOpt"
+                @click="envSelectable(envOpt) && (environment = envOpt)"
                 :class="[
                   'px-3 py-1.5 text-xs font-medium rounded-md capitalize transition-colors',
-                  environment === envOpt
-                    ? 'bg-[var(--color-bg-card)] text-[var(--color-text-primary)] shadow-sm'
-                    : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]',
+                  !envSelectable(envOpt)
+                    ? 'text-[var(--color-text-muted)] opacity-50 cursor-not-allowed'
+                    : environment === envOpt
+                      ? 'bg-[var(--color-bg-card)] text-[var(--color-text-primary)] shadow-sm'
+                      : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]',
                 ]"
               >
                 {{ envOpt }}
@@ -367,10 +517,19 @@ async function handleDelete() {
 
             <div v-for="f in fields" :key="f.key_name" class="space-y-1">
               <div class="flex items-baseline justify-between gap-2">
-                <label class="block text-sm font-medium text-[var(--color-text-secondary)]">
+                <label :for="fieldId(f.key_name)" class="block text-sm font-medium text-[var(--color-text-secondary)]">
                   {{ f.label }}
                 </label>
-                <span v-if="rowFor(f.key_name)" class="text-[11px] text-[var(--color-text-muted)]">
+                <!-- Present iff the SERVER returned a stored row for this key
+                     on the last reloadRows(). That makes it the honest
+                     "the write persisted" / "the delete took" signal for
+                     e2e/credentials.spec.ts — it survives a re-read, unlike a
+                     toast. -->
+                <span
+                  v-if="rowFor(f.key_name)"
+                  :data-test="`cred-stored-${f.key_name}`"
+                  class="text-[11px] text-[var(--color-text-muted)]"
+                >
                   Rotated: {{ relativeTime(rowFor(f.key_name)!.updated_at) }}
                 </span>
               </div>
@@ -378,6 +537,8 @@ async function handleDelete() {
               <!-- Multiline secret -->
               <template v-if="f.multiline">
                 <textarea
+                  :id="fieldId(f.key_name)"
+                  :data-test="`cred-field-${f.key_name}`"
                   :value="getValue(f.key_name)"
                   @input="(e) => setValue(f.key_name, (e.target as HTMLTextAreaElement).value)"
                   :disabled="!auth.isAdmin"
@@ -391,6 +552,8 @@ async function handleDelete() {
               <template v-else>
                 <div class="relative">
                   <input
+                    :id="fieldId(f.key_name)"
+                    :data-test="`cred-field-${f.key_name}`"
                     :value="getValue(f.key_name)"
                     @input="(e) => setValue(f.key_name, (e.target as HTMLInputElement).value)"
                     :disabled="!auth.isAdmin"
@@ -417,19 +580,53 @@ async function handleDelete() {
             </div>
 
             <!-- Test result -->
+            <!-- POST /credentials/:provider/test (probeProvider,
+                 internal/api/routes_integrations.go) answers exactly one of
+                 four `status` values: ok | error | not_configured |
+                 not_supported. not_configured means "no probe ran because
+                 the credential is empty" — not a failure, so it must not
+                 render in the same red as `error`. It is deliberately
+                 distinct from not_supported (grey, "no probe exists for this
+                 provider at all"): amber here says the operator can fix it
+                 by filling in the field above.
+
+                 A fifth outcome, rate_limited, exists only on the client: it
+                 is synthesised from the 429 the shared testLimiter returns
+                 (see src/constants/integrationTestStatus.ts), because a probe
+                 the throttle refused to run is not a probe result and the
+                 server therefore has no `status` to report. Blue, not red:
+                 nothing about the integration is broken. Tone lookup lives in
+                 <script> so the chain does not grow a branch per state. -->
             <div
               v-if="testResult"
-              :class="[
-                'text-xs px-3 py-2 rounded-lg border',
-                testResult.status === 'ok'
-                  ? 'bg-[var(--color-success-bg)] border-[var(--color-success-border)] text-[var(--color-success-text)]'
-                  : testResult.status === 'not_supported'
-                    ? 'bg-[var(--color-bg-subtle)] border-[var(--color-border)] text-[var(--color-text-tertiary)]'
-                    : 'bg-[var(--color-error-bg)] border-[var(--color-error-border)] text-[var(--color-error-text)]',
-              ]"
+              data-test="test-result"
+              role="status"
+              :class="['text-xs px-3 py-2 rounded-lg border', testResultTone]"
             >
-              <strong class="capitalize">{{ testResult.status.replace('_', ' ') }}:</strong>
+              <!-- Falls back to the error vocabulary member rather than
+                   dereferencing `status` directly: the 200 path assigns the
+                   server's `status` through unvalidated, so an absent one used
+                   to throw HERE — before testResultTone's `status === undefined
+                   -> FAILURE_TONE` guard could colour anything — taking the
+                   whole banner down with an unhandled rejection. -->
+              <strong class="capitalize"
+                >{{ (testResult.status || INTEGRATION_TEST_STATUS.ERROR).replace('_', ' ') }}:</strong
+              >
               {{ testResult.detail }}
+            </div>
+
+            <!-- Passive "why is Test disabled" note — visible before the
+                 operator ever clicks, not just after (see test-result above,
+                 which only appears post-click). Uses the DTO fields carried
+                 on the catalog row itself (test_supported /
+                 test_unsupported_reason), independent of whatever the last
+                 click returned. -->
+            <div
+              v-if="integration && integration.test_supported === false"
+              data-test="test-unsupported-note"
+              class="text-xs px-3 py-2 rounded-lg border bg-[var(--color-bg-subtle)] border-[var(--color-border)] text-[var(--color-text-tertiary)]"
+            >
+              Testing is not supported for this integration<template v-if="integration.test_unsupported_reason">: {{ integration.test_unsupported_reason }}</template>.
             </div>
           </div>
 
@@ -453,10 +650,15 @@ async function handleDelete() {
                 type="button"
                 data-test="test-connection-btn"
                 class="btn btn-ghost"
-                :disabled="testing || !providerKey"
+                :disabled="testing || !providerKey || integration?.test_supported === false || throttled"
+                :title="integration?.test_supported === false
+                  ? (integration.test_unsupported_reason || 'No automated test is supported for this integration')
+                  : throttled
+                    ? `Rate limited — this integration allows 5 tests per minute. Try again in ${retryAfterSeconds}s.`
+                    : undefined"
                 @click="handleTest"
               >
-                {{ testing ? 'Testing…' : 'Test connection' }}
+                {{ testing ? 'Testing…' : throttled ? `Retry in ${retryAfterSeconds}s` : 'Test connection' }}
               </button>
               <button
                 v-if="auth.isAdmin"

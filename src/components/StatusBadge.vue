@@ -1,5 +1,8 @@
 <script setup lang="ts">
-defineProps<{ status: string }>()
+import { computed } from 'vue'
+import { LOG_STATUS_LABELS, logStatusLabel } from '@/constants/logStatus'
+
+const props = defineProps<{ status: string }>()
 
 const statusConfig: Record<string, { bg: string; text: string; dot: string }> = {
   active: { bg: 'bg-[var(--color-success-bg)]', text: 'text-[var(--color-success-text)]', dot: 'bg-[var(--color-success)]' },
@@ -30,6 +33,19 @@ const statusConfig: Record<string, { bg: string; text: string; dot: string }> = 
   no_consent: { bg: 'bg-[var(--color-warning-bg)]', text: 'text-[var(--color-warning-text)]', dot: 'bg-[var(--color-warning)]' },
   condition_not_met: { bg: 'bg-[var(--color-bg-subtle)]', text: 'text-[var(--color-text-tertiary)]', dot: 'bg-[var(--color-text-muted)]' },
   quiet_hour_deferred: { bg: 'bg-[var(--color-warning-bg)]', text: 'text-[var(--color-warning-text)]', dot: 'bg-[var(--color-warning)]' },
+  // `gate_unavailable`: the frequency-cap/consent/condition gate could not
+  // be *evaluated* (Redis blip, store error) — as opposed to the gate
+  // running and declining the send. Deliberately NOT grey: grey means
+  // "nothing wrong, policy or environment held it back on purpose" and
+  // this is an infra blind spot that may warrant investigation. Also
+  // deliberately NOT the warning/amber used by frequency_capped/
+  // no_consent/quiet_hour_deferred just above — reusing that colour
+  // would recreate, one layer up, exactly the conflation this status
+  // was created to eliminate (an infra failure reading as a policy
+  // outcome). NOT error/red either: the campaign itself isn't broken,
+  // only the gate check is. Info/blue is otherwise unused by any
+  // skip/deferred LogStatus, so it reads as its own category.
+  gate_unavailable: { bg: 'bg-[var(--color-info-bg)]', text: 'text-[var(--color-info-text)]', dot: 'bg-[var(--color-info)]' },
   // ─── EnrollmentStatus — `waiting` covers G6 wait-for-event holds ─────
   waiting: { bg: 'bg-[var(--color-info-bg)]', text: 'text-[var(--color-info-text)]', dot: 'bg-[var(--color-info)]' },
   up: { bg: 'bg-[var(--color-success-bg)]', text: 'text-[var(--color-success-text)]', dot: 'bg-[var(--color-success)]' },
@@ -66,14 +82,42 @@ const statusConfig: Record<string, { bg: string; text: string; dot: string }> = 
 }
 
 const fallback = { bg: 'bg-[var(--color-bg-subtle)]', text: 'text-[var(--color-text-secondary)]', dot: 'bg-[var(--color-text-muted)]' }
+
+const cfg = computed(() => statusConfig[props.status] || fallback)
+
+// This component renders three separate vocabularies through one widget:
+// the campaign_logs LogStatus set, the enrollment/broadcast/integration
+// lifecycle values (`active`, `draft`, `in_flight`, `scheduled`, ...) and
+// the health values (`up`, `down`, `degraded`). Only the first has an
+// owner — src/constants/logStatus.ts — and this is the app's highest-
+// impression status surface (LogsPage rows, ClientJourneyPage, the
+// Overview recent-logs list).
+//
+// The template used to derive its own text with `status.replace(/_/g,' ')`
+// plus CSS `capitalize`. That was a SECOND derivation of LogStatus display
+// text, and it only looked correct because every label in LOG_STATUSES
+// currently happens to be the title-case of its own snake_case value. The
+// two already disagreed in the DOM ('quiet hour deferred' here vs
+// 'Quiet Hour Deferred' everywhere else); give any status a label that is
+// not its own title-case — 'Freq. Capped', 'SMS Opt-Out' — and this badge
+// and the Channels row would print different names for the same status
+// with nothing failing.
+const isLogStatus = computed(() => props.status in LOG_STATUS_LABELS)
+
+// A curated LogStatus label is rendered EXACTLY as authored, so CSS
+// `capitalize` is applied only on the non-LogStatus path, where the
+// underscores-to-spaces fallback still needs it to read as a title.
+const label = computed(() =>
+  isLogStatus.value ? logStatusLabel(props.status) : props.status.replace(/_/g, ' '),
+)
 </script>
 
 <template>
   <span
-    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium capitalize"
-    :class="[(statusConfig[status] || fallback).bg, (statusConfig[status] || fallback).text]"
+    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
+    :class="[cfg.bg, cfg.text, { capitalize: !isLogStatus }]"
   >
-    <span class="h-1.5 w-1.5 rounded-full" :class="(statusConfig[status] || fallback).dot"></span>
-    {{ status.replace(/_/g, ' ') }}
+    <span class="h-1.5 w-1.5 rounded-full" :class="cfg.dot"></span>
+    {{ label }}
   </span>
 </template>

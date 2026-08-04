@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import ModalWrapper from '@/components/ModalWrapper.vue'
+import ErrorState from '@/components/ErrorState.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import {
@@ -25,6 +26,7 @@ const deleteOpen = computed({
 })
 
 const loading = ref(true)
+const error = ref<string | null>(null)
 const segments = ref<Segment[]>([])
 const showModal = ref(false)
 const saving = ref(false)
@@ -118,9 +120,14 @@ watch(() => form.value.name, (name) => {
 
 async function load() {
   loading.value = true
+  error.value = null
   try {
     segments.value = await fetchSegments()
-  } catch (e: any) { console.error('Failed to load segments', e) }
+  } catch (e: any) {
+    // Was console.error only, so a failed fetch rendered the "No segments yet"
+    // empty state — indistinguishable from a genuinely empty catalogue.
+    error.value = e.response?.data?.error || e.message || 'Failed to load segments'
+  }
   finally { loading.value = false }
 }
 onMounted(load)
@@ -182,7 +189,19 @@ async function handleEvaluate(slug: string) {
   evaluating.value = slug
   try {
     const result = await evaluateSegment(slug)
-    showToast(`Evaluation complete: ${result.evaluated} members evaluated.`, 'success')
+    // A partial failure returns 200 and lands here. Reporting the same
+    // green "Evaluation complete" over a run where memberships silently
+    // failed to persist is the toast equivalent of a confident zero.
+    const failed = result.failed ?? 0
+    if (failed > 0) {
+      showToast(
+        `Evaluation finished with errors: ${result.evaluated} evaluated, ${failed} membership change${failed === 1 ? '' : 's'} could not be saved.`,
+        'warning',
+        6000,
+      )
+    } else {
+      showToast(`Evaluation complete: ${result.evaluated} members evaluated.`, 'success')
+    }
     await load()
   } catch (e: any) {
     showToast(e.response?.data?.error || 'Failed to evaluate segment', 'error')
@@ -428,6 +447,14 @@ const totalMembers = computed(() =>
         <div class="skeleton h-3.5 w-16 ml-auto"></div>
       </div>
     </div>
+
+    <!-- Failed load — must outrank the empty branch below. -->
+    <ErrorState
+      v-else-if="error"
+      :message="error"
+      retryable
+      @retry="load()"
+    />
 
     <!-- Empty -->
     <div v-else-if="segments.length === 0" class="seg-empty">

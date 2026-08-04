@@ -61,7 +61,7 @@ function maskEndpointUrl(url: string): string {
 </script>
 
 <template>
-  <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-5 card-interactive group">
+  <div data-test="integration-card" class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-5 card-interactive group">
     <div class="flex items-start justify-between mb-4">
       <div class="flex items-center gap-3">
         <div class="flex items-center justify-center h-10 w-10 rounded-lg bg-[var(--color-primary-light)] text-[var(--color-primary)]">
@@ -87,6 +87,7 @@ function maskEndpointUrl(url: string): string {
       <StatusBadge :status="integration.status" />
       <span
         v-if="credentialStatus === 'full' && credentialEnvironment"
+        data-test="credential-status-chip"
         class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] border border-[var(--color-border)]"
         :title="`Credentials stored for ${credentialEnvironment}`"
       >
@@ -114,6 +115,19 @@ function maskEndpointUrl(url: string): string {
           <span :class="integration.last_test_success ? 'text-[var(--color-success)]' : 'text-[var(--color-error)]'">
             {{ integration.last_test_success ? 'Test passed' : 'Test failed' }}
           </span>
+        </span>
+        <!-- Surface WHY the Test button in the edit form is disabled at the
+             list level, so an operator doesn't have to open Edit and click
+             Test to learn it always answers not_supported
+             (tracardi_segment_tagger: POST /track would write real CDP
+             events on every click). -->
+        <span
+          v-else-if="integration.test_supported === false"
+          data-test="test-unsupported-badge"
+          class="flex items-center gap-1 text-[var(--color-text-tertiary)]"
+          :title="integration.test_unsupported_reason || 'No automated test is supported for this integration'"
+        >
+          Test not supported
         </span>
       </div>
     </div>

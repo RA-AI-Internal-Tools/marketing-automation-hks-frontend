@@ -2,6 +2,7 @@
 import { ref, onMounted, watch } from 'vue'
 import AnalyticsLayout from '@/components/AnalyticsLayout.vue'
 import MetricCard from '@/components/MetricCard.vue'
+import DegradedNotice from '@/components/DegradedNotice.vue'
 import { useAnalyticsStore } from '@/stores/analytics'
 import { fetchOrders } from '@/api/analytics'
 import { chartPalette, alpha } from '@/utils/chartColors'
@@ -51,6 +52,12 @@ function fmtCurrency(n: number): string {
     <div v-if="loading" class="text-center py-12 text-[var(--color-text-muted)]">Loading...</div>
     <div v-else-if="error" class="bg-[var(--color-error-bg)] border border-[var(--color-error-border)] text-[var(--color-error-text)] px-4 py-3 rounded-lg text-sm">{{ error }}</div>
     <div v-else-if="data" class="space-y-6">
+      <!-- Every figure on this page is CRM-sourced, so one notice covers it. -->
+      <DegradedNotice
+        v-if="data.crm_degraded"
+        source="crm"
+        affects="Revenue, AOV, order counts and the revenue trend"
+      />
       <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <MetricCard title="Total Revenue" :value="fmtCurrency(data.total_revenue)" :delta="data.total_revenue_delta" />
         <MetricCard title="AOV" :value="fmtCurrency(data.aov)" :delta="data.aov_delta" />
