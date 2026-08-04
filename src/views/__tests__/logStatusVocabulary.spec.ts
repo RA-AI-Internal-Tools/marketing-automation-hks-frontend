@@ -259,9 +259,42 @@ function parseBackendLogStatuses(src: string, file: string): Set<string> {
   // the file (not just inside the delimited block) and require it to equal
   // the in-block count. A mismatch means a LogStatus constant exists
   // outside the block this parser reads — most commonly a second,
-  // later `const (...)` group — and would otherwise be silently invisible
-  // to the backend/frontend comparison below.
-  const wholeFileCount = [...src.matchAll(/^\s*LogStatus\w+.*=\s*"/gm)].length
+  // later `const (...)` group, or a standalone `const LogStatusFoo = "..."`
+  // declaration outside any block — and would otherwise be silently
+  // invisible to the backend/frontend comparison below.
+  //
+  // `(?:const\s+)?` is required for the standalone-declaration case: a
+  // lone top-level `const LogStatusLone = "lone_thing"` starts with
+  // `const `, so the bare `^\s*LogStatus\w+` anchor (identifier must be
+  // the first token on the line) matches neither this regex nor the
+  // in-block one above, and the guard misses a brand-new backend value
+  // entirely — proven by mutation: a temp copy of campaign.go with
+  // exactly that line appended ran this spec green, 11/11, before this
+  // fix was added.
+  //
+  // Residual gaps, left as known limitations rather than silently assumed
+  // away:
+  //  - Non-string-literal assignments are invisible to both this regex and
+  //    the in-block value extractor above, since both require `=\s*"`
+  //    immediately after the identifier. `LogStatusAlias = LogStatusSent`
+  //    (aliasing an existing value) is harmless to miss. `LogStatusCombo =
+  //    statusPrefix + "combo"` is NOT harmless — it introduces a genuinely
+  //    new backend value while this guard reports all-clear — reproduced
+  //    green. Widening this cross-check alone to count non-quoted
+  //    assignments would not fix that: it would just create a NEW
+  //    mismatch against the (necessarily string-only) in-block extractor
+  //    for the harmless alias case, trading a silent miss for a false red
+  //    on legitimate code. Left unhandled; if backend authors start using
+  //    non-literal LogStatus values, this parser needs a real Go-aware
+  //    pass, not a regex tweak.
+  //  - A backtick raw string whose CONTENTS happen to contain a line
+  //    starting `LogStatusExample = "..."` (e.g. a doc comment reproduced
+  //    as a code sample) will false-RED this guard, naming a constant that
+  //    is not actually declared. Not handled — low probability in this
+  //    file today, but if this guard ever fails citing a constant that
+  //    does not appear to exist in campaign.go, check for that shape
+  //    before assuming the drift is real.
+  const wholeFileCount = [...src.matchAll(/^\s*(?:const\s+)?LogStatus\w+.*=\s*"/gm)].length
   expect(
     wholeFileCount,
     `found ${wholeFileCount} LogStatus constant declaration(s) across the whole file but only ` +

@@ -43,7 +43,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Best-effort sibling checkout of the backend repo so
+      # Best-effort checkout of the backend repo so
       # logStatusVocabulary.spec.ts's `backendVocabulary` block can compare
       # LOG_STATUSES against internal/model/campaign.go. This is read-only
       # access to a second private repo, which GITHUB_TOKEN cannot grant
@@ -51,6 +51,22 @@ jobs:
       # MA_BACKEND_RO_TOKEN secret. continue-on-error is deliberate: a
       # missing/unconfigured token must degrade this one guard, not fail
       # the whole unit-test job.
+      #
+      # `path` MUST resolve to a location under $GITHUB_WORKSPACE:
+      # actions/checkout@v4 validates `path` (input-helper.ts resolves it
+      # against githubWorkspacePath and throws if the result does not start
+      # with githubWorkspacePath + sep) before doing any auth or network
+      # work at all. `../marketing-automation-hks` resolves to a sibling of
+      # the workspace directory, not something inside it, so that form
+      # throws on every run regardless of the token — continue-on-error
+      # then just swallows that guaranteed failure. `backend-repo` (a
+      # subdirectory of the already-checked-out workspace) is the fix. It
+      # is safe to check out here: `npm ci` above only reads package.json/
+      # lockfile, vitest's `include` is scoped to `src/**/*.{test,spec}.
+      # {ts,tsx}` so nothing under backend-repo/ is ever collected as a
+      # test file, and actions/checkout's default clean only runs `git
+      # clean` inside the path it was given, not the parent workspace — it
+      # will not touch the frontend checkout next to it.
       - name: Checkout backend repo (for cross-repo LogStatus drift guard)
         id: backend_checkout
         continue-on-error: true
@@ -58,18 +74,38 @@ jobs:
         with:
           repository: RA-AI-Internal-Tools/marketing-automation-hks
           token: ${{ secrets.MA_BACKEND_RO_TOKEN }}
-          path: ../marketing-automation-hks
+          path: backend-repo
 
       # Make the outcome visible in both the Actions UI (::warning::) and
       # the job log, and only wire MA_BACKEND_REPO up when the checkout
       # actually succeeded — never let this guard silently disappear.
+      #
+      # The warning deliberately does NOT claim that configuring
+      # MA_BACKEND_RO_TOKEN is sufficient on its own: an empty/unset secret
+      # is one possible cause of a failed checkout, but a configured secret
+      # can still fail (wrong permissions, revoked token, repo renamed,
+      # transient network error) — `repository:` is pinned to
+      # RA-AI-Internal-Tools/marketing-automation-hks and checkout always
+      # sends the token as an `AUTHORIZATION: basic` header, so an empty
+      # token cannot silently check out the wrong repo, it just fails the
+      # authenticated fetch. We can cheaply tell "no secret configured"
+      # apart from "secret configured but checkout still failed" (without
+      # printing the secret itself), so the warning does that and points at
+      # the checkout step's own log for the exact error in the second case.
       - name: Report backend-sync guard status
+        env:
+          BACKEND_TOKEN_SET: ${{ secrets.MA_BACKEND_RO_TOKEN != '' }}
         run: |
           if [ "${{ steps.backend_checkout.outcome }}" = "success" ]; then
-            echo "MA_BACKEND_REPO=${{ github.workspace }}/../marketing-automation-hks" >> "$GITHUB_ENV"
+            echo "MA_BACKEND_REPO=${{ github.workspace }}/backend-repo" >> "$GITHUB_ENV"
             echo "Backend repo checked out — LogStatus drift guard is LIVE this run."
           else
-            echo "::warning::Backend repo checkout failed (or MA_BACKEND_RO_TOKEN is not configured) — the LOG_STATUSES <-> internal/model/campaign.go cross-repo drift guard (logStatusVocabulary.spec.ts, 'backendVocabulary') is SKIPPED this run, not checked. Configure the MA_BACKEND_RO_TOKEN secret (read-only PAT or deploy token for RA-AI-Internal-Tools/marketing-automation-hks) to enable it."
+            if [ "$BACKEND_TOKEN_SET" = "true" ]; then
+              REASON="MA_BACKEND_RO_TOKEN is configured but the checkout step still failed anyway (bad/expired token, missing read access to RA-AI-Internal-Tools/marketing-automation-hks, or a network error) — see the 'Checkout backend repo' step's own log above for the exact error, adding the secret again will not fix this by itself."
+            else
+              REASON="MA_BACKEND_RO_TOKEN is not configured (empty/unset) — set it to a read-only PAT or deploy token for RA-AI-Internal-Tools/marketing-automation-hks."
+            fi
+            echo "::warning::Backend repo checkout failed — the LOG_STATUSES <-> internal/model/campaign.go cross-repo drift guard (logStatusVocabulary.spec.ts, 'backendVocabulary') is SKIPPED this run, not checked. $REASON"
             echo "MA_SKIP_BACKEND_SYNC=1" >> "$GITHUB_ENV"
           fi
 
