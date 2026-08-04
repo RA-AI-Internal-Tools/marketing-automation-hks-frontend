@@ -9,9 +9,19 @@ import {
 import { LOG_STATUSES } from '../logStatus'
 
 /** Axios-shaped rejection. Header keys are lower-cased, as axios delivers. */
-function httpError(status: number, data: unknown, headers: Record<string, string> = {}) {
+function httpError(
+  status: number,
+  data: unknown,
+  headers: Record<string, string> = {},
+  url = '/api/integrations/credentials/ses/test',
+) {
   return {
     message: `Request failed with status code ${status}`,
+    // `config.url` is where axios puts the request URL. It is carried here so
+    // the route-agnosticism test below can differ ONLY by URL; without it that
+    // test compared two identical inputs and asserted determinism, not
+    // route-agnosticism.
+    config: { url },
     response: { status, data, headers },
   }
 }
@@ -65,8 +75,15 @@ describe('classifyTestProbeError', () => {
     // testIntegrationConnection) shares the same testLimiter, so the refusal
     // body is byte-identical. This asserts the classifier is route-agnostic:
     // it keys on the response, never the URL.
-    const provider = classifyTestProbeError(httpError(429, rateLimitBody(7)))
-    const byId = classifyTestProbeError(httpError(429, rateLimitBody(7)))
+    // The two inputs differ ONLY in config.url. If the classifier ever starts
+    // reading the URL, these diverge and this test fails — which is the whole
+    // claim. (Comparing two identical inputs would only assert determinism.)
+    const provider = classifyTestProbeError(
+      httpError(429, rateLimitBody(7), {}, '/api/integrations/credentials/ses/test'),
+    )
+    const byId = classifyTestProbeError(
+      httpError(429, rateLimitBody(7), {}, '/api/integrations/5/test'),
+    )
     expect(byId).toEqual(provider)
     expect(byId.status).toBe(INTEGRATION_TEST_STATUS.RATE_LIMITED)
     expect(byId.retryAfterSeconds).toBe(7)

@@ -227,6 +227,17 @@ function startRetryCountdown(seconds: number | undefined) {
 function clearRetryCountdown() {
   stopRetryTicker()
   retryAfterAt.value = null
+  // The banner sentence is frozen into `detail` at classification time
+  // (rateLimitedDetail), unlike the button label which reads the live
+  // retryAfterSeconds computed. So without this the button recovers to "Test
+  // connection" while the banner still reads "Try again in 7s." — drop the
+  // throttle result outright, since once the window has passed there is
+  // nothing left to report. Only the throttle result: a real ok/error/
+  // not_configured/not_supported outcome is still the last thing that
+  // happened and must survive.
+  if (testResult.value?.status === INTEGRATION_TEST_STATUS.RATE_LIMITED) {
+    testResult.value = null
+  }
 }
 
 // The throttle bucket is keyed per (principal, provider) server-side, so a
@@ -592,7 +603,15 @@ async function handleDelete() {
               role="status"
               :class="['text-xs px-3 py-2 rounded-lg border', testResultTone]"
             >
-              <strong class="capitalize">{{ testResult.status.replace('_', ' ') }}:</strong>
+              <!-- Falls back to the error vocabulary member rather than
+                   dereferencing `status` directly: the 200 path assigns the
+                   server's `status` through unvalidated, so an absent one used
+                   to throw HERE — before testResultTone's `status === undefined
+                   -> FAILURE_TONE` guard could colour anything — taking the
+                   whole banner down with an unhandled rejection. -->
+              <strong class="capitalize"
+                >{{ (testResult.status || INTEGRATION_TEST_STATUS.ERROR).replace('_', ' ') }}:</strong
+              >
               {{ testResult.detail }}
             </div>
 

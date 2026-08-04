@@ -201,6 +201,29 @@ describe('IntegrationForm', () => {
       expect(result.classes()).toContain('bg-[var(--color-warning-bg)]')
     })
 
+    // testResultTone guards `status === undefined -> FAILURE_TONE`, but that
+    // guard was unreachable-with-effect: the banner heading dereferenced
+    // `testResult.status.replace(...)` and threw first, taking the whole
+    // element down with an unhandled rejection. Reproduce the absent-status
+    // 200 and assert the guard's outcome is actually visible.
+    it('renders a 200 carrying no status as a failure instead of crashing the banner', async () => {
+      const auth = useAuthStore()
+      auth.$patch({ email: 'a@b.com', role: 'admin' })
+      ;(testIntegration as any).mockResolvedValueOnce({ detail: 'malformed upstream 200' })
+
+      const w = mountForm({ provider: 'openai' })
+      await flushPromises()
+      await w.find('[data-test="test-connection-btn"]').trigger('click')
+      await flushPromises()
+
+      const result = w.find('[data-test="test-result"]')
+      expect(result.exists()).toBe(true)
+      expect(result.classes()).toContain('text-[var(--color-error-text)]')
+      expect(result.classes()).toContain('bg-[var(--color-error-bg)]')
+      expect(result.text()).toContain('malformed upstream 200')
+      w.unmount()
+    })
+
     it('still renders a real probe failure ("error") as red', async () => {
       const auth = useAuthStore()
       auth.$patch({ email: 'a@b.com', role: 'admin' })
@@ -301,6 +324,37 @@ describe('IntegrationForm', () => {
 
       expect(w.find('[data-test="test-result"]').text()).toContain('Try again in 12s')
       w.unmount()
+    })
+
+    // The banner sentence is frozen into `detail` at classification time,
+    // while the button label reads the live retryAfterSeconds computed. Without
+    // clearRetryCountdown dropping the result, the button recovers to "Test
+    // connection" while the banner still reads "Try again in 3s."
+    it('clears the stale throttle banner once the retry window elapses', async () => {
+      vi.useFakeTimers()
+      try {
+        const auth = useAuthStore()
+        auth.$patch({ email: 'a@b.com', role: 'admin' })
+        ;(testIntegration as any).mockRejectedValueOnce(httpError(429, rateLimitBody(3)))
+
+        const w = mountForm({ provider: 'openai' })
+        await flushPromises()
+        await w.find('[data-test="test-connection-btn"]').trigger('click')
+        await flushPromises()
+
+        expect(w.find('[data-test="test-result"]').text()).toContain('Try again in 3s')
+
+        await vi.advanceTimersByTimeAsync(4000)
+        await w.vm.$nextTick()
+
+        // Button recovers AND the frozen sentence is gone — not one without
+        // the other, which is exactly the state this test exists to forbid.
+        expect(w.find('[data-test="test-connection-btn"]').text()).toContain('Test connection')
+        expect(w.find('[data-test="test-result"]').exists()).toBe(false)
+        w.unmount()
+      } finally {
+        vi.useRealTimers()
+      }
     })
 
     it('disables Test connection for the retry window and says how long', async () => {
