@@ -465,6 +465,15 @@ async function handleDelete() {
             </div>
 
             <!-- Test result -->
+            <!-- POST /credentials/:provider/test (probeProvider,
+                 internal/api/routes_integrations.go) answers exactly one of
+                 four `status` values: ok | error | not_configured |
+                 not_supported. not_configured means "no probe ran because
+                 the credential is empty" — not a failure, so it must not
+                 render in the same red as `error`. It is deliberately
+                 distinct from not_supported (grey, "no probe exists for this
+                 provider at all"): amber here says the operator can fix it
+                 by filling in the field above. -->
             <div
               v-if="testResult"
               data-test="test-result"
@@ -475,11 +484,27 @@ async function handleDelete() {
                   ? 'bg-[var(--color-success-bg)] border-[var(--color-success-border)] text-[var(--color-success-text)]'
                   : testResult.status === 'not_supported'
                     ? 'bg-[var(--color-bg-subtle)] border-[var(--color-border)] text-[var(--color-text-tertiary)]'
-                    : 'bg-[var(--color-error-bg)] border-[var(--color-error-border)] text-[var(--color-error-text)]',
+                    : testResult.status === 'not_configured'
+                      ? 'bg-[var(--color-warning-bg)] border-[var(--color-warning-border)] text-[var(--color-warning-text)]'
+                      : 'bg-[var(--color-error-bg)] border-[var(--color-error-border)] text-[var(--color-error-text)]',
               ]"
             >
               <strong class="capitalize">{{ testResult.status.replace('_', ' ') }}:</strong>
               {{ testResult.detail }}
+            </div>
+
+            <!-- Passive "why is Test disabled" note — visible before the
+                 operator ever clicks, not just after (see test-result above,
+                 which only appears post-click). Uses the DTO fields carried
+                 on the catalog row itself (test_supported /
+                 test_unsupported_reason), independent of whatever the last
+                 click returned. -->
+            <div
+              v-if="integration && integration.test_supported === false"
+              data-test="test-unsupported-note"
+              class="text-xs px-3 py-2 rounded-lg border bg-[var(--color-bg-subtle)] border-[var(--color-border)] text-[var(--color-text-tertiary)]"
+            >
+              Testing is not supported for this integration<template v-if="integration.test_unsupported_reason">: {{ integration.test_unsupported_reason }}</template>.
             </div>
           </div>
 

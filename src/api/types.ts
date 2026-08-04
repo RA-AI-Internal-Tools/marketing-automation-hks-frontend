@@ -537,6 +537,16 @@ export interface Integration {
   api_key_configured: boolean
   last_tested_at?: string
   last_test_success?: boolean
+  /**
+   * Whether POST /integrations/credentials/:provider/test can run a real
+   * probe for this provider. False means the endpoint always answers
+   * `not_supported` — the Test button should be disabled rather than let an
+   * operator click it and read that as an outage. Always present on the DTO
+   * (internal/api/routes_integrations.go: integrationDTO.TestSupported).
+   */
+  test_supported?: boolean
+  /** Populated only when test_supported is false; the catalog's recorded reason no probe exists. */
+  test_unsupported_reason?: string
   updated_at: string
   created_at: string
 }
