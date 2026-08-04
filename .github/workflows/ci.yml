@@ -52,6 +52,15 @@ jobs:
       # missing/unconfigured token must degrade this one guard, not fail
       # the whole unit-test job.
       #
+      # No `ref:` is pinned above, so this always checks out the backend's
+      # default-branch HEAD — the drift guard therefore compares against
+      # whatever is live on that branch right now, not a fixed commit. An
+      # unrelated backend commit landing on its default branch can flip an
+      # otherwise-unchanged frontend PR from green to red; that is inherent
+      # to a cross-repo drift guard, not a frontend regression, so do not
+      # read a newly-red run here as "something broke in this PR" without
+      # first checking what changed on the backend's default branch.
+      #
       # `path` MUST resolve to a location under $GITHUB_WORKSPACE:
       # actions/checkout@v4 validates `path` (input-helper.ts resolves it
       # against githubWorkspacePath and throws if the result does not start
@@ -92,6 +101,16 @@ jobs:
       # apart from "secret configured but checkout still failed" (without
       # printing the secret itself), so the warning does that and points at
       # the checkout step's own log for the exact error in the second case.
+      #
+      # One case this two-branch message gets wrong: on a pull_request run
+      # from a FORK, the secrets context is entirely empty regardless of
+      # what is actually configured on this repo, so
+      # `secrets.MA_BACKEND_RO_TOKEN != ''` is false and the message below
+      # will claim "not configured" even when the secret exists. This is
+      # effectively unreachable here — this is a private repo, so
+      # collaborators push branches directly rather than forking — but if
+      # that ever changes, do not trust the "not configured" branch of this
+      # message on a fork-originated run.
       - name: Report backend-sync guard status
         env:
           BACKEND_TOKEN_SET: ${{ secrets.MA_BACKEND_RO_TOKEN != '' }}
@@ -103,7 +122,7 @@ jobs:
             if [ "$BACKEND_TOKEN_SET" = "true" ]; then
               REASON="MA_BACKEND_RO_TOKEN is configured but the checkout step still failed anyway (bad/expired token, missing read access to RA-AI-Internal-Tools/marketing-automation-hks, or a network error) — see the 'Checkout backend repo' step's own log above for the exact error, adding the secret again will not fix this by itself."
             else
-              REASON="MA_BACKEND_RO_TOKEN is not configured (empty/unset) — set it to a read-only PAT or deploy token for RA-AI-Internal-Tools/marketing-automation-hks."
+              REASON="MA_BACKEND_RO_TOKEN is not configured (empty/unset) — set it to a fine-grained PAT with Contents:Read on RA-AI-Internal-Tools/marketing-automation-hks (or a classic PAT with 'repo' scope), stored as the MA_BACKEND_RO_TOKEN secret. An SSH deploy key will NOT work here: checkout's token: input is HTTPS basic auth only."
             fi
             echo "::warning::Backend repo checkout failed — the LOG_STATUSES <-> internal/model/campaign.go cross-repo drift guard (logStatusVocabulary.spec.ts, 'backendVocabulary') is SKIPPED this run, not checked. $REASON"
             echo "MA_SKIP_BACKEND_SYNC=1" >> "$GITHUB_ENV"

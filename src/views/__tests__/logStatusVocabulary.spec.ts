@@ -284,16 +284,24 @@ function parseBackendLogStatuses(src: string, file: string): Set<string> {
   //    assignments would not fix that: it would just create a NEW
   //    mismatch against the (necessarily string-only) in-block extractor
   //    for the harmless alias case, trading a silent miss for a false red
-  //    on legitimate code. Left unhandled; if backend authors start using
-  //    non-literal LogStatus values, this parser needs a real Go-aware
-  //    pass, not a regex tweak.
+  //    on legitimate code. A regex could likely be refined to separate the
+  //    two cases (e.g. widen to any RHS, then exclude a bare-identifier
+  //    RHS to keep the alias case quiet) but is deliberately left
+  //    unhandled: that refinement is fragile against a trailing comment on
+  //    the alias line, `iota`, or a multi-line RHS, and a false red here on
+  //    legitimate backend code is exactly the kind of failure that gets a
+  //    guard like this one disabled rather than fixed.
   //  - A backtick raw string whose CONTENTS happen to contain a line
   //    starting `LogStatusExample = "..."` (e.g. a doc comment reproduced
-  //    as a code sample) will false-RED this guard, naming a constant that
-  //    is not actually declared. Not handled — low probability in this
-  //    file today, but if this guard ever fails citing a constant that
-  //    does not appear to exist in campaign.go, check for that shape
-  //    before assuming the drift is real.
+  //    as a code sample) will false-RED this guard: the whole-file scan
+  //    below counts it as an extra declaration, producing the same "found
+  //    N ... but only M inside the block" count-mismatch message a real
+  //    undetected constant would produce, without naming any specific
+  //    constant. Not handled — low probability in this file today, but if
+  //    this guard ever fails with that count-mismatch message and
+  //    campaign.go does not obviously contain an extra LogStatus constant,
+  //    check for a raw string reproducing this shape before assuming the
+  //    drift is real.
   const wholeFileCount = [...src.matchAll(/^\s*(?:const\s+)?LogStatus\w+.*=\s*"/gm)].length
   expect(
     wholeFileCount,
