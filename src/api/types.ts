@@ -522,7 +522,14 @@ export interface PushSendResponse {
 // Integration types
 
 export type ProviderType = 'email' | 'sms' | 'push' | 'webhook' | 'crm' | 'analytics' | 'infrastructure' | 'ai'
-export type IntegrationStatus = 'connected' | 'degraded' | 'not_configured' | 'error' | 'disabled'
+// `configured` (credential present, unverified) and `misconfigured` are
+// already keyed in StatusBadge.vue's colour table (info/blue and
+// warning/amber respectively) — see IntegrationCard.vue:87. The backend's
+// asStatus() (internal/api/routes_integrations.go) currently only emits
+// `configured` on the wire for this pair (`misconfigured` collapses to
+// `error` there), but the union stays honest to what the DTO type allows a
+// caller to construct, not just today's asStatus() output.
+export type IntegrationStatus = 'connected' | 'configured' | 'degraded' | 'not_configured' | 'misconfigured' | 'error' | 'disabled'
 
 export interface Integration {
   id: number
