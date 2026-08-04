@@ -14,6 +14,7 @@ import PageHeader from '@/components/PageHeader.vue'
 import StatCard from '@/components/StatCard.vue'
 import { fetchChannelStats } from '@/api/dashboard'
 import { chartPalette, getDesignColor } from '@/utils/chartColors'
+import { CHANNEL_BREAKDOWN_STATUSES, logStatusLabel } from '@/constants/logStatus'
 import type { ChannelStats } from '@/api/types'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
@@ -39,18 +40,41 @@ const successRate = computed(() => {
   return total > 0 ? Math.round((totalSent.value / total) * 100) : 0
 })
 
+// Value-column colour per status. Keyed by the same LogStatus values as
+// CHANNEL_BREAKDOWN_STATUSES so adding a status to that list surfaces here
+// too rather than silently rendering unstyled.
+const valueClass: Record<string, string> = {
+  sent: 'text-[var(--color-success-text)]',
+  failed: 'text-[var(--color-error-text)]',
+  skipped: 'text-[var(--color-text-secondary)]',
+  frequency_capped: 'text-[var(--color-warning-text)]',
+  no_consent: 'text-[var(--color-warning-text)]',
+}
+
+// Every row on a per-channel card is a 1:1 count of ONE campaign_logs
+// status, and its label comes from the shared vocabulary — never a
+// hand-typed string. See src/constants/logStatus.ts.
+function breakdownRows(ch: ChannelStats) {
+  return CHANNEL_BREAKDOWN_STATUSES.map((status) => ({
+    status,
+    label: logStatusLabel(status),
+    value: (ch as unknown as Record<string, number>)[status] ?? 0,
+    cls: valueClass[status] ?? 'text-[var(--color-text-secondary)]',
+  }))
+}
+
 const chartData = computed(() => {
   const p = chartPalette()
   return {
     labels: channels.value.map((c) => c.channel.toUpperCase()),
     datasets: [
-      { label: 'Sent',        data: channels.value.map((c) => c.sent),              backgroundColor: p.success },
-      { label: 'Failed',      data: channels.value.map((c) => c.failed),            backgroundColor: p.error },
-      { label: 'Freq Capped', data: channels.value.map((c) => c.frequency_capped),  backgroundColor: p.warning },
+      { label: logStatusLabel('sent'),             data: channels.value.map((c) => c.sent),              backgroundColor: p.success },
+      { label: logStatusLabel('failed'),           data: channels.value.map((c) => c.failed),            backgroundColor: p.error },
+      { label: logStatusLabel('frequency_capped'), data: channels.value.map((c) => c.frequency_capped),  backgroundColor: p.warning },
       // No-consent uses a distinct orange-ish tint that isn't in the
       // 9-colour palette; pulled from --chart-10 so dark-mode keeps the
       // warning-adjacent-but-different semantic.
-      { label: 'No Consent',  data: channels.value.map((c) => c.no_consent),        backgroundColor: getDesignColor('--chart-10', '#f97316') },
+      { label: logStatusLabel('no_consent'),       data: channels.value.map((c) => c.no_consent),        backgroundColor: getDesignColor('--chart-10', '#f97316') },
     ],
   }
 })
@@ -90,11 +114,16 @@ const chartOptions = {
         <div v-for="ch in channels" :key="ch.channel" class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm p-5">
           <h3 class="text-sm font-semibold text-[var(--color-text-primary)] uppercase mb-3">{{ ch.channel }}</h3>
           <div class="space-y-2 text-sm">
-            <div class="flex justify-between"><span class="text-[var(--color-text-tertiary)]">Sent</span><span class="font-medium text-[var(--color-success-text)]">{{ ch.sent }}</span></div>
-            <div class="flex justify-between"><span class="text-[var(--color-text-tertiary)]">Failed</span><span class="font-medium text-[var(--color-error-text)]">{{ ch.failed }}</span></div>
-            <div class="flex justify-between"><span class="text-[var(--color-text-tertiary)]">Skipped</span><span class="font-medium text-[var(--color-text-secondary)]">{{ ch.skipped }}</span></div>
-            <div class="flex justify-between"><span class="text-[var(--color-text-tertiary)]">Freq Capped</span><span class="font-medium text-[var(--color-warning-text)]">{{ ch.frequency_capped }}</span></div>
-            <div class="flex justify-between"><span class="text-[var(--color-text-tertiary)]">No Consent</span><span class="font-medium text-[var(--color-warning-text)]">{{ ch.no_consent }}</span></div>
+            <div
+              v-for="row in breakdownRows(ch)"
+              :key="row.status"
+              class="flex justify-between"
+              data-test="channel-stat"
+              :data-status="row.status"
+            >
+              <span class="text-[var(--color-text-tertiary)]" data-test="channel-stat-label">{{ row.label }}</span>
+              <span class="font-medium" :class="row.cls">{{ row.value }}</span>
+            </div>
           </div>
         </div>
       </div>

@@ -23,6 +23,7 @@ import {
 import type { OverviewStats, DailyVolume, CampaignPerformance } from '@/api/types'
 import { useDashboardStore } from '@/stores/dashboard'
 import { useSortable } from '@/composables/useSortable'
+import { SUPPRESSED_ROLLUP_LABEL, suppressedRollupTitle } from '@/constants/logStatus'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
 
@@ -389,8 +390,18 @@ function pctLabel(n: number, total: number): string {
                 <th class="perf-th-sort" @click="toggleSort('total_failed')">
                   Failed <span v-if="sortKey === 'total_failed'" class="perf-sort-ind">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
                 </th>
-                <th class="perf-th-sort" @click="toggleSort('total_skipped')">
-                  Skipped <span v-if="sortKey === 'total_skipped'" class="perf-sort-ind">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+                <!-- NOT "Skipped". total_skipped is a roll-up of four
+                     campaign_logs statuses (see SUPPRESSED_STATUSES); the
+                     Channels page shows the single `skipped` status under
+                     that name. Two different sets must not share one word.
+                     Label + tooltip both derive from the shared vocabulary. -->
+                <th
+                  class="perf-th-sort"
+                  data-test="perf-col-suppressed"
+                  :title="suppressedRollupTitle()"
+                  @click="toggleSort('total_skipped')"
+                >
+                  {{ SUPPRESSED_ROLLUP_LABEL }} <span v-if="sortKey === 'total_skipped'" class="perf-sort-ind">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
                 </th>
                 <th class="perf-th-sort" @click="toggleSort('total_opened')" title="Opened (inbox + email)">
                   Opened <span v-if="sortKey === 'total_opened'" class="perf-sort-ind">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
