@@ -528,7 +528,10 @@ async function handleDelete() {
                 type="button"
                 data-test="test-connection-btn"
                 class="btn btn-ghost"
-                :disabled="testing || !providerKey"
+                :disabled="testing || !providerKey || integration?.test_supported === false"
+                :title="integration?.test_supported === false
+                  ? (integration.test_unsupported_reason || 'No automated test is supported for this integration')
+                  : undefined"
                 @click="handleTest"
               >
                 {{ testing ? 'Testing…' : 'Test connection' }}
