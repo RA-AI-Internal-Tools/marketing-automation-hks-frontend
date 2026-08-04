@@ -238,6 +238,170 @@ describe('IntegrationForm', () => {
     })
   })
 
+  // --- Fifth state: a throttled probe (2026-08) -----------------------------
+  // Both probe routes sit behind one `testLimiter` (5/min per principal +
+  // provider) in internal/api/routes_integrations.go. On refusal
+  // middleware.RateLimiterByKey answers 429 +
+  // {"error":"rate limit exceeded","reason":"rate_limited","retry_after":N}.
+  // The integration was never contacted, so this must NOT render as a failed
+  // test — the whole point of the change.
+
+  /** Axios-shaped rejection. `headers` keys are lower-cased, as axios does. */
+  function httpError(
+    status: number,
+    data: unknown,
+    headers: Record<string, string> = {},
+  ): unknown {
+    return {
+      message: `Request failed with status code ${status}`,
+      response: { status, data, headers },
+    }
+  }
+
+  function rateLimitBody(retryAfter?: number) {
+    return {
+      error: 'rate limit exceeded',
+      reason: 'rate_limited',
+      ...(retryAfter === undefined ? {} : { retry_after: retryAfter }),
+    }
+  }
+
+  async function clickTest(provider = 'openai') {
+    const auth = useAuthStore()
+    auth.$patch({ email: 'a@b.com', role: 'admin' })
+    const w = mountForm({ provider })
+    await flushPromises()
+    await w.find('[data-test="test-connection-btn"]').trigger('click')
+    await flushPromises()
+    return w
+  }
+
+  describe('rate-limited probe', () => {
+    it('renders a 429 as the throttled state, not as a failed test', async () => {
+      ;(testIntegration as any).mockRejectedValueOnce(httpError(429, rateLimitBody(12)))
+
+      const w = await clickTest()
+
+      const result = w.find('[data-test="test-result"]')
+      expect(result.exists()).toBe(true)
+      // The defining assertion: not the failure tone.
+      expect(result.classes()).not.toContain('text-[var(--color-error-text)]')
+      expect(result.classes()).not.toContain('bg-[var(--color-error-bg)]')
+      expect(result.classes()).toContain('text-[var(--color-info-text)]')
+      // And the operator is told it is a throttle, not a broken integration.
+      expect(result.text().toLowerCase()).toContain('rate limited')
+      expect(result.text()).not.toContain('rate limit exceeded')
+      w.unmount()
+    })
+
+    it('surfaces the retry hint from retry_after in the DOM', async () => {
+      ;(testIntegration as any).mockRejectedValueOnce(httpError(429, rateLimitBody(12)))
+
+      const w = await clickTest()
+
+      expect(w.find('[data-test="test-result"]').text()).toContain('Try again in 12s')
+      w.unmount()
+    })
+
+    it('disables Test connection for the retry window and says how long', async () => {
+      ;(testIntegration as any).mockRejectedValueOnce(httpError(429, rateLimitBody(30)))
+
+      const w = await clickTest()
+
+      const btn = w.find('[data-test="test-connection-btn"]')
+      expect(btn.attributes('disabled')).toBeDefined()
+      expect(btn.text()).toBe('Retry in 30s')
+      expect(btn.attributes('title')).toContain('30s')
+
+      // Clicking through the throttle must not burn another request — the
+      // middleware re-EXPIREs the bucket on refused requests too.
+      ;(testIntegration as any).mockClear()
+      await btn.trigger('click')
+      await flushPromises()
+      expect(testIntegration).not.toHaveBeenCalled()
+      w.unmount()
+    })
+
+    it('falls back to the Retry-After header when the body carries no retry_after', async () => {
+      ;(testIntegration as any).mockRejectedValueOnce(
+        httpError(429, rateLimitBody(), { 'retry-after': '45' }),
+      )
+
+      const w = await clickTest()
+
+      expect(w.find('[data-test="test-result"]').text()).toContain('Try again in 45s')
+      expect(w.find('[data-test="test-connection-btn"]').text()).toBe('Retry in 45s')
+      w.unmount()
+    })
+
+    it('leaves the button usable when a 429 carries no retry duration at all', async () => {
+      // Nothing to count down from. Showing the state without inventing a
+      // number beats disabling the button for a guessed interval.
+      ;(testIntegration as any).mockRejectedValueOnce(httpError(429, undefined))
+
+      const w = await clickTest()
+
+      const result = w.find('[data-test="test-result"]')
+      expect(result.classes()).toContain('text-[var(--color-info-text)]')
+      expect(result.text()).toContain('Try again in a moment')
+      const btn = w.find('[data-test="test-connection-btn"]')
+      expect(btn.attributes('disabled')).toBeUndefined()
+      expect(btn.text()).toBe('Test connection')
+      w.unmount()
+    })
+
+    // Discriminator guard: a suite that only ever feeds the handler a 429
+    // cannot tell whether the branch discriminates or just swallows every
+    // rejection into the throttled state.
+    it('still renders a genuine 500 as a failure', async () => {
+      ;(testIntegration as any).mockRejectedValueOnce(
+        httpError(500, { error: 'probe panicked' }),
+      )
+
+      const w = await clickTest()
+
+      const result = w.find('[data-test="test-result"]')
+      expect(result.classes()).toContain('text-[var(--color-error-text)]')
+      expect(result.classes()).not.toContain('text-[var(--color-info-text)]')
+      expect(result.text()).toContain('probe panicked')
+      expect(w.find('[data-test="test-connection-btn"]').attributes('disabled')).toBeUndefined()
+      w.unmount()
+    })
+
+    it('renders a network failure (no response) as a failure', async () => {
+      ;(testIntegration as any).mockRejectedValueOnce({ message: 'Network Error' })
+
+      const w = await clickTest()
+
+      const result = w.find('[data-test="test-result"]')
+      expect(result.classes()).toContain('text-[var(--color-error-text)]')
+      expect(result.text()).toContain('Network Error')
+      w.unmount()
+    })
+
+    it('drops the countdown when the form switches to another provider', async () => {
+      // The throttle bucket is keyed per (principal, provider) server-side, so
+      // provider A's lockout must not disable the button for provider B.
+      ;(testIntegration as any).mockRejectedValueOnce(httpError(429, rateLimitBody(30)))
+      const auth = useAuthStore()
+      auth.$patch({ email: 'a@b.com', role: 'admin' })
+
+      const w = mountForm({ provider: 'openai' })
+      await flushPromises()
+      await w.find('[data-test="test-connection-btn"]').trigger('click')
+      await flushPromises()
+      expect(w.find('[data-test="test-connection-btn"]').attributes('disabled')).toBeDefined()
+
+      await w.setProps({ provider: 'ses' })
+      await flushPromises()
+
+      const btn = w.find('[data-test="test-connection-btn"]')
+      expect(btn.attributes('disabled')).toBeUndefined()
+      expect(btn.text()).toBe('Test connection')
+      w.unmount()
+    })
+  })
+
   // --- Disabled Test button when the provider carries test_supported:false
 
   describe('test_supported / test_unsupported_reason', () => {

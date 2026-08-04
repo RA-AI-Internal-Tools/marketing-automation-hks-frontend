@@ -1,9 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import { XMarkIcon, EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
 import ConfirmDialog from './ConfirmDialog.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
+import {
+  INTEGRATION_TEST_STATUS,
+  classifyTestProbeError,
+  type IntegrationTestOutcome,
+} from '@/constants/integrationTestStatus'
 import {
   listCredentials,
   upsertCredential,
@@ -169,7 +174,96 @@ watch(environment, () => {
 // ---- Actions --------------------------------------------------------------
 const saving = ref(false)
 const testing = ref(false)
-const testResult = ref<{ status: string; detail: string } | null>(null)
+const testResult = ref<IntegrationTestOutcome | null>(null)
+
+// ---- Throttle countdown ---------------------------------------------------
+// Both probe routes are capped at 5 requests/minute per (principal, provider)
+// by `testLimiter` (internal/api/routes_integrations.go). On refusal the
+// middleware returns 429 + retry_after; we hold the button closed for that long
+// rather than only printing a message.
+//
+// Disabling is the right shape here for two reasons. (1) It matches how this
+// component already expresses "this action cannot succeed right now" — the
+// sandbox env tab and the Test button under test_supported:false are both
+// :disabled + :title, not prose. (2) It is not merely cosmetic: the middleware
+// runs `INCR` and then `EXPIRE key window` unconditionally, BEFORE the
+// `count > max` check, so every refused request refreshes the Redis TTL to the
+// full window. An operator hammering a still-enabled button would keep pushing
+// their own unlock further away and never understand why.
+//
+// The countdown only engages when the server actually supplied a duration.
+// A 429 with no retry_after leaves the button live and shows the message alone
+// — better than inventing a number that expires early into another refusal.
+const retryAfterAt = ref<number | null>(null)
+const nowMs = ref(Date.now())
+let retryTicker: ReturnType<typeof setInterval> | null = null
+
+function stopRetryTicker() {
+  if (retryTicker !== null) {
+    clearInterval(retryTicker)
+    retryTicker = null
+  }
+}
+
+const retryAfterSeconds = computed(() => {
+  if (retryAfterAt.value === null) return 0
+  return Math.max(0, Math.ceil((retryAfterAt.value - nowMs.value) / 1000))
+})
+const throttled = computed(() => retryAfterSeconds.value > 0)
+
+function startRetryCountdown(seconds: number | undefined) {
+  if (seconds === undefined) return
+  stopRetryTicker()
+  nowMs.value = Date.now()
+  retryAfterAt.value = nowMs.value + seconds * 1000
+  retryTicker = setInterval(() => {
+    nowMs.value = Date.now()
+    if (retryAfterAt.value !== null && nowMs.value >= retryAfterAt.value) {
+      clearRetryCountdown()
+    }
+  }, 1000)
+}
+
+function clearRetryCountdown() {
+  stopRetryTicker()
+  retryAfterAt.value = null
+}
+
+// The throttle bucket is keyed per (principal, provider) server-side, so a
+// countdown earned on provider A must not disable the button for provider B.
+// It deliberately DOES survive closing and reopening the modal on the same
+// provider — the server-side window does.
+watch(providerKey, () => clearRetryCountdown())
+onUnmounted(() => stopRetryTicker())
+
+// Tone per probe outcome, keyed by the shared vocabulary so a state cannot be
+// styled here under a name the vocabulary does not have. rate_limited gets the
+// info (blue) tokens already used elsewhere for transient, non-fault states
+// (StatusBadge: waiting / processing / gate_unavailable) — it is neither a
+// fault (red `error`) nor something the operator must supply (amber
+// `not_configured`); it is "come back shortly".
+//
+// The fallback below is load-bearing: `status` on the 200 path is whatever the
+// server sent, unvalidated, so an unrecognised value must read as a failure
+// rather than fall through to an unstyled div.
+const TEST_RESULT_TONES: Readonly<Record<string, string>> = Object.freeze({
+  [INTEGRATION_TEST_STATUS.OK]:
+    'bg-[var(--color-success-bg)] border-[var(--color-success-border)] text-[var(--color-success-text)]',
+  [INTEGRATION_TEST_STATUS.NOT_SUPPORTED]:
+    'bg-[var(--color-bg-subtle)] border-[var(--color-border)] text-[var(--color-text-tertiary)]',
+  [INTEGRATION_TEST_STATUS.NOT_CONFIGURED]:
+    'bg-[var(--color-warning-bg)] border-[var(--color-warning-border)] text-[var(--color-warning-text)]',
+  [INTEGRATION_TEST_STATUS.RATE_LIMITED]:
+    'bg-[var(--color-info-bg)] border-[var(--color-info-border)] text-[var(--color-info-text)]',
+  [INTEGRATION_TEST_STATUS.ERROR]:
+    'bg-[var(--color-error-bg)] border-[var(--color-error-border)] text-[var(--color-error-text)]',
+})
+const FAILURE_TONE = TEST_RESULT_TONES[INTEGRATION_TEST_STATUS.ERROR]!
+const testResultTone = computed(() => {
+  const status = testResult.value?.status
+  if (status === undefined) return FAILURE_TONE
+  return TEST_RESULT_TONES[status] ?? FAILURE_TONE
+})
 
 async function handleSave() {
   if (!auth.isAdmin) {
@@ -251,14 +345,24 @@ async function handleTest() {
     showToast('Admin role required', 'error')
     return
   }
+  // Belt to the :disabled brace. A click that the throttle would refuse must
+  // not reach the server at all: the middleware re-EXPIREs the bucket on every
+  // request it rejects, so an extra probe here lengthens the operator's wait.
+  if (throttled.value) return
   testing.value = true
   testResult.value = null
   try {
     testResult.value = await testIntegration(providerKey.value, environment.value)
-  } catch (e: any) {
-    testResult.value = {
-      status: 'failed',
-      detail: e.response?.data?.error || e.message || 'Request failed',
+  } catch (e: unknown) {
+    // classifyTestProbeError owns the 429-vs-everything-else decision. It
+    // answers `rate_limited` for a throttled probe (NOT a failed test — the
+    // integration was never contacted) and `error` for a genuine fault. Note
+    // src/api/client.ts's response interceptor branches on 401 only, so a 429
+    // arrives here untouched with its body and headers intact.
+    const outcome = classifyTestProbeError(e)
+    testResult.value = outcome
+    if (outcome.status === INTEGRATION_TEST_STATUS.RATE_LIMITED) {
+      startRetryCountdown(outcome.retryAfterSeconds)
     }
   } finally {
     testing.value = false
@@ -473,21 +577,20 @@ async function handleDelete() {
                  render in the same red as `error`. It is deliberately
                  distinct from not_supported (grey, "no probe exists for this
                  provider at all"): amber here says the operator can fix it
-                 by filling in the field above. -->
+                 by filling in the field above.
+
+                 A fifth outcome, rate_limited, exists only on the client: it
+                 is synthesised from the 429 the shared testLimiter returns
+                 (see src/constants/integrationTestStatus.ts), because a probe
+                 the throttle refused to run is not a probe result and the
+                 server therefore has no `status` to report. Blue, not red:
+                 nothing about the integration is broken. Tone lookup lives in
+                 <script> so the chain does not grow a branch per state. -->
             <div
               v-if="testResult"
               data-test="test-result"
               role="status"
-              :class="[
-                'text-xs px-3 py-2 rounded-lg border',
-                testResult.status === 'ok'
-                  ? 'bg-[var(--color-success-bg)] border-[var(--color-success-border)] text-[var(--color-success-text)]'
-                  : testResult.status === 'not_supported'
-                    ? 'bg-[var(--color-bg-subtle)] border-[var(--color-border)] text-[var(--color-text-tertiary)]'
-                    : testResult.status === 'not_configured'
-                      ? 'bg-[var(--color-warning-bg)] border-[var(--color-warning-border)] text-[var(--color-warning-text)]'
-                      : 'bg-[var(--color-error-bg)] border-[var(--color-error-border)] text-[var(--color-error-text)]',
-              ]"
+              :class="['text-xs px-3 py-2 rounded-lg border', testResultTone]"
             >
               <strong class="capitalize">{{ testResult.status.replace('_', ' ') }}:</strong>
               {{ testResult.detail }}
@@ -528,13 +631,15 @@ async function handleDelete() {
                 type="button"
                 data-test="test-connection-btn"
                 class="btn btn-ghost"
-                :disabled="testing || !providerKey || integration?.test_supported === false"
+                :disabled="testing || !providerKey || integration?.test_supported === false || throttled"
                 :title="integration?.test_supported === false
                   ? (integration.test_unsupported_reason || 'No automated test is supported for this integration')
-                  : undefined"
+                  : throttled
+                    ? `Rate limited — this integration allows 5 tests per minute. Try again in ${retryAfterSeconds}s.`
+                    : undefined"
                 @click="handleTest"
               >
-                {{ testing ? 'Testing…' : 'Test connection' }}
+                {{ testing ? 'Testing…' : throttled ? `Retry in ${retryAfterSeconds}s` : 'Test connection' }}
               </button>
               <button
                 v-if="auth.isAdmin"
