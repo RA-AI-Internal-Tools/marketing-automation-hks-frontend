@@ -522,7 +522,14 @@ export interface PushSendResponse {
 // Integration types
 
 export type ProviderType = 'email' | 'sms' | 'push' | 'webhook' | 'crm' | 'analytics' | 'infrastructure' | 'ai'
-export type IntegrationStatus = 'connected' | 'degraded' | 'not_configured' | 'error' | 'disabled'
+// `configured` (credential present, unverified) and `misconfigured` are
+// already keyed in StatusBadge.vue's colour table (info/blue and
+// warning/amber respectively) — see IntegrationCard.vue:87. The backend's
+// asStatus() (internal/api/routes_integrations.go) currently only emits
+// `configured` on the wire for this pair (`misconfigured` collapses to
+// `error` there), but the union stays honest to what the DTO type allows a
+// caller to construct, not just today's asStatus() output.
+export type IntegrationStatus = 'connected' | 'configured' | 'degraded' | 'not_configured' | 'misconfigured' | 'error' | 'disabled'
 
 export interface Integration {
   id: number
@@ -537,6 +544,16 @@ export interface Integration {
   api_key_configured: boolean
   last_tested_at?: string
   last_test_success?: boolean
+  /**
+   * Whether POST /integrations/credentials/:provider/test can run a real
+   * probe for this provider. False means the endpoint always answers
+   * `not_supported` — the Test button should be disabled rather than let an
+   * operator click it and read that as an outage. Always present on the DTO
+   * (internal/api/routes_integrations.go: integrationDTO.TestSupported).
+   */
+  test_supported?: boolean
+  /** Populated only when test_supported is false; the catalog's recorded reason no probe exists. */
+  test_unsupported_reason?: string
   updated_at: string
   created_at: string
 }

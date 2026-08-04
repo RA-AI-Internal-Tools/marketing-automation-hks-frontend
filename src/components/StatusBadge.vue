@@ -1,5 +1,8 @@
 <script setup lang="ts">
-defineProps<{ status: string }>()
+import { computed } from 'vue'
+import { LOG_STATUS_LABELS, logStatusLabel } from '@/constants/logStatus'
+
+const props = defineProps<{ status: string }>()
 
 const statusConfig: Record<string, { bg: string; text: string; dot: string }> = {
   active: { bg: 'bg-[var(--color-success-bg)]', text: 'text-[var(--color-success-text)]', dot: 'bg-[var(--color-success)]' },
@@ -79,14 +82,42 @@ const statusConfig: Record<string, { bg: string; text: string; dot: string }> = 
 }
 
 const fallback = { bg: 'bg-[var(--color-bg-subtle)]', text: 'text-[var(--color-text-secondary)]', dot: 'bg-[var(--color-text-muted)]' }
+
+const cfg = computed(() => statusConfig[props.status] || fallback)
+
+// This component renders three separate vocabularies through one widget:
+// the campaign_logs LogStatus set, the enrollment/broadcast/integration
+// lifecycle values (`active`, `draft`, `in_flight`, `scheduled`, ...) and
+// the health values (`up`, `down`, `degraded`). Only the first has an
+// owner — src/constants/logStatus.ts — and this is the app's highest-
+// impression status surface (LogsPage rows, ClientJourneyPage, the
+// Overview recent-logs list).
+//
+// The template used to derive its own text with `status.replace(/_/g,' ')`
+// plus CSS `capitalize`. That was a SECOND derivation of LogStatus display
+// text, and it only looked correct because every label in LOG_STATUSES
+// currently happens to be the title-case of its own snake_case value. The
+// two already disagreed in the DOM ('quiet hour deferred' here vs
+// 'Quiet Hour Deferred' everywhere else); give any status a label that is
+// not its own title-case — 'Freq. Capped', 'SMS Opt-Out' — and this badge
+// and the Channels row would print different names for the same status
+// with nothing failing.
+const isLogStatus = computed(() => props.status in LOG_STATUS_LABELS)
+
+// A curated LogStatus label is rendered EXACTLY as authored, so CSS
+// `capitalize` is applied only on the non-LogStatus path, where the
+// underscores-to-spaces fallback still needs it to read as a title.
+const label = computed(() =>
+  isLogStatus.value ? logStatusLabel(props.status) : props.status.replace(/_/g, ' '),
+)
 </script>
 
 <template>
   <span
-    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium capitalize"
-    :class="[(statusConfig[status] || fallback).bg, (statusConfig[status] || fallback).text]"
+    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
+    :class="[cfg.bg, cfg.text, { capitalize: !isLogStatus }]"
   >
-    <span class="h-1.5 w-1.5 rounded-full" :class="(statusConfig[status] || fallback).dot"></span>
-    {{ status.replace(/_/g, ' ') }}
+    <span class="h-1.5 w-1.5 rounded-full" :class="cfg.dot"></span>
+    {{ label }}
   </span>
 </template>

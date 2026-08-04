@@ -116,6 +116,19 @@ function maskEndpointUrl(url: string): string {
             {{ integration.last_test_success ? 'Test passed' : 'Test failed' }}
           </span>
         </span>
+        <!-- Surface WHY the Test button in the edit form is disabled at the
+             list level, so an operator doesn't have to open Edit and click
+             Test to learn it always answers not_supported
+             (tracardi_segment_tagger: POST /track would write real CDP
+             events on every click). -->
+        <span
+          v-else-if="integration.test_supported === false"
+          data-test="test-unsupported-badge"
+          class="flex items-center gap-1 text-[var(--color-text-tertiary)]"
+          :title="integration.test_unsupported_reason || 'No automated test is supported for this integration'"
+        >
+          Test not supported
+        </span>
       </div>
     </div>
 
