@@ -82,8 +82,20 @@ export const LOG_STATUS_LABELS: Readonly<Record<string, string>> = Object.freeze
  * that path only), whereas a curated label is rendered exactly as written
  * here — which is the whole point: a label like 'Freq. Capped' or
  * 'SMS Opt-Out' must survive intact.
+ *
+ * Object.hasOwn guards the bracket-index lookup below: LOG_STATUS_LABELS[value]
+ * on its own walks the prototype chain, so `value === 'constructor'` (or
+ * 'toString', 'valueOf', ...) would resolve to the inherited
+ * Object.prototype function — which is not nullish, so a bare
+ * `?? value.replace(...)` never fires and this would return a function
+ * where every caller expects a string. The `?? value.replace(...)` that
+ * remains below the hasOwn guard is a `noUncheckedIndexedAccess` narrowing
+ * formality (LOG_STATUS_LABELS[value] still types as `string | undefined`
+ * post-guard), not a second behavioural path — hasOwn already establishes
+ * the key is present.
  */
 export function logStatusLabel(value: string): string {
+  if (!Object.hasOwn(LOG_STATUS_LABELS, value)) return value.replace(/_/g, ' ')
   return LOG_STATUS_LABELS[value] ?? value.replace(/_/g, ' ')
 }
 
@@ -119,8 +131,15 @@ export type ChannelCountKey = {
  * that ChannelStats does not carry type-checked cleanly, passed every
  * test, and rendered a sixth row showing `0` for a field the backend never
  * sends — a fabricated statistic on an operator dashboard. Adding a status
- * to this list is now a vue-tsc error until the corresponding field is
- * added to ChannelStats in src/api/types.ts, which is the correct action.
+ * to this list is now a vue-tsc error until the corresponding REQUIRED
+ * field is added to ChannelStats in src/api/types.ts — "required" because
+ * ChannelCountKey excludes optional numeric fields by construction
+ * (`ChannelStats[K] extends number` is false for `number | undefined`), so
+ * an optional field added there still will not satisfy this list and the
+ * TS2322 will persist with no obvious cause. Whoever closes the
+ * `gate_unavailable` gap noted in DASHBOARD_UNRENDERED_STATUSES will hit
+ * this directly: the field must be `gate_unavailable: number`, not
+ * `gate_unavailable?: number`.
  */
 export const CHANNEL_BREAKDOWN_STATUSES: readonly ChannelCountKey[] = Object.freeze([
   'sent',

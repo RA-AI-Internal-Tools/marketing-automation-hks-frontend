@@ -199,9 +199,15 @@ const BACKEND_CANDIDATES = (
 // a skip.
 const SKIP_BACKEND_SYNC = process.env.MA_SKIP_BACKEND_SYNC === '1'
 if (SKIP_BACKEND_SYNC) {
-  console.warn(
-    '[logStatusVocabulary] MA_SKIP_BACKEND_SYNC=1 — the LOG_STATUSES ↔ ' +
-      'internal/model/campaign.go drift guard is DISABLED for this run.',
+  // console.warn is swallowed here: vitest's default reporter does not
+  // print module-scope console output to the terminal at all (verified —
+  // under `vitest run` a bare console.warn at this scope never reaches
+  // stdout/stderr). process.stderr.write bypasses that interception and
+  // is the one line in this file actually guaranteed to reach a human (or
+  // a CI log) running the suite with the flag set.
+  process.stderr.write(
+    '[logStatusVocabulary] MA_SKIP_BACKEND_SYNC=1 — the LOG_STATUSES <-> ' +
+      'internal/model/campaign.go drift guard is DISABLED for this run.\n',
   )
 }
 
@@ -212,6 +218,13 @@ if (SKIP_BACKEND_SYNC) {
  * /LogStatus\w+/, so unrelated references (helpers, switch arms, other
  * const groups) cannot inflate the set. Doc-comment lines inside the block
  * start with `//` and therefore never match the declaration pattern.
+ *
+ * Block-scoping is a defensible design choice on its own, but it is only
+ * safe paired with the whole-file cross-check below: without it, a
+ * LogStatus constant declared in a SECOND, later `const (...)` block (Go
+ * allows any number of const blocks) is invisible to this parser and the
+ * guard silently stops covering it — the exact failure mode this file
+ * exists to prevent, one level up.
  */
 function parseBackendLogStatuses(src: string, file: string): Set<string> {
   const marker = '// Log status constants.'
@@ -225,7 +238,11 @@ function parseBackendLogStatuses(src: string, file: string): Set<string> {
   expect(close, `unterminated const block after "${marker}" in ${file}`).toBeGreaterThan(open)
 
   const block = src.slice(open, close)
-  const values = [...block.matchAll(/^\s*LogStatus\w+\s*=\s*"([^"]+)"/gm)].map((m) => m[1])
+  // The `(?:\s+\w+)?` allows an optional Go type token between the
+  // identifier and `=` — e.g. `LogStatusTyped string = "typed_thing"` is a
+  // legal, type-annotated const declaration that the bare
+  // `LogStatus\w+\s*=` pattern silently skipped.
+  const values = [...block.matchAll(/^\s*LogStatus\w+(?:\s+\w+)?\s*=\s*"([^"]+)"/gm)].map((m) => m[1])
 
   // Non-vacuity: an empty or near-empty parse means the block's shape
   // changed and this guard has stopped guarding. Fail on the parse, not
@@ -237,12 +254,33 @@ function parseBackendLogStatuses(src: string, file: string): Set<string> {
 
   const set = new Set(values)
   expect(set.size, `duplicate LogStatus values in ${file}: ${values.join(', ')}`).toBe(values.length)
+
+  // Whole-file cross-check: count every LogStatus assignment anywhere in
+  // the file (not just inside the delimited block) and require it to equal
+  // the in-block count. A mismatch means a LogStatus constant exists
+  // outside the block this parser reads — most commonly a second,
+  // later `const (...)` group — and would otherwise be silently invisible
+  // to the backend/frontend comparison below.
+  const wholeFileCount = [...src.matchAll(/^\s*LogStatus\w+.*=\s*"/gm)].length
+  expect(
+    wholeFileCount,
+    `found ${wholeFileCount} LogStatus constant declaration(s) across the whole file but only ` +
+      `${values.length} inside the "${marker}" block in ${file} — a LogStatus constant exists ` +
+      `outside the delimited block and this guard is not reading it`,
+  ).toBe(values.length)
+
   return set
 }
 
-// The name carries the opt-out state because vitest's default reporter
-// swallows module-scope console output: a run with the guard disabled must
-// say so in the one place every reporter prints, the test's own name.
+// The name also carries the opt-out state, as a secondary signal for any
+// reporter/CI dashboard that lists individual (including skipped) test
+// names. It is NOT the primary signal: this repo's default `vitest run`
+// reporter prints neither module-scope console output nor skipped test
+// names — with the flag set, its entire visible trace is the
+// process.stderr.write line above and the "N skipped" count in the
+// summary totals (`Tests X passed | 1 skipped (X+1)`). Watch for that
+// count, or grep the stderr line; do not rely on this name appearing
+// anywhere in a default `vitest run`.
 const BACKEND_SYNC_NAME = SKIP_BACKEND_SYNC
   ? 'DISABLED by MA_SKIP_BACKEND_SYNC=1 — LOG_STATUSES is NOT checked against the backend LogStatus* constants'
   : 'LOG_STATUSES matches the backend LogStatus* constant block exactly (set MA_SKIP_BACKEND_SYNC=1 to disable)'
