@@ -14,12 +14,27 @@
 // gate_unavailable was entirely missing from StatusBadge). Adding a new
 // LogStatus should mean editing this file plus StatusBadge's
 // statusConfig — nothing else should need to enumerate the list again.
+//
+// "Must stay in sync" above is enforced, not aspirational: the
+// `backendVocabulary` block in src/views/__tests__/logStatusVocabulary.spec.ts
+// parses the `// Log status constants.` const block out of the backend
+// checkout and asserts set equality with LOG_STATUSES. It was written
+// because this list had silently fallen two statuses behind (`queued`,
+// written live by executor.go's logAndAdvance, and `unsubscribed`,
+// written by the provider-webhook classifier in routes_webhooks.go) with
+// every frontend test green.
+import type { ChannelStats } from '@/api/types'
+
 export interface LogStatusOption {
   value: string
   label: string
 }
 
 export const LOG_STATUSES: LogStatusOption[] = [
+  // Published to JetStream, awaiting async-worker dispatch. The worker
+  // transitions the row to sent/failed/skipped on ack, so this is the one
+  // genuinely non-terminal status in the list.
+  { value: 'queued', label: 'Queued' },
   { value: 'sent', label: 'Sent' },
   { value: 'delivered', label: 'Delivered' },
   { value: 'opened', label: 'Opened' },
@@ -27,6 +42,10 @@ export const LOG_STATUSES: LogStatusOption[] = [
   { value: 'bounced', label: 'Bounced' },
   { value: 'failed', label: 'Failed' },
   { value: 'complaint', label: 'Complaint' },
+  // Provider-reported opt-out, distinct from `complaint` (abuse report).
+  // The opt-out itself is applied separately by handleProviderUnsubscribe;
+  // this status only records that the signal arrived on this log row.
+  { value: 'unsubscribed', label: 'Unsubscribed' },
   { value: 'skipped', label: 'Skipped' },
   { value: 'frequency_capped', label: 'Frequency Capped' },
   { value: 'no_consent', label: 'No Consent' },
@@ -54,10 +73,36 @@ export const LOG_STATUS_LABELS: Readonly<Record<string, string>> = Object.freeze
  * MUST go through here. Hand-typed labels are how "frequency_capped" ended
  * up rendered as "Frequency Capped" in the LogsPage filter and "Freq
  * Capped" on the Channels page at the same time.
+ *
+ * The fallback is for the OTHER vocabularies that share the same widgets —
+ * enrollment/broadcast/integration lifecycle values such as `active`,
+ * `draft`, `in_flight`, `up`. Those have no curated label, so they keep
+ * the historical underscores-to-spaces derivation. Note that the fallback
+ * is title-cased by the caller (StatusBadge applies CSS `capitalize` on
+ * that path only), whereas a curated label is rendered exactly as written
+ * here — which is the whole point: a label like 'Freq. Capped' or
+ * 'SMS Opt-Out' must survive intact.
  */
 export function logStatusLabel(value: string): string {
   return LOG_STATUS_LABELS[value] ?? value.replace(/_/g, ' ')
 }
+
+/**
+ * The ChannelStats fields that carry a per-status count.
+ *
+ * Every non-`channel` field of the DTO is one COUNT(status = X) column
+ * emitted by Store.GetChannelStats, so "numeric field of ChannelStats" and
+ * "status the Channels page can break out" are the same set by
+ * construction.
+ *
+ * Optional fields are deliberately excluded (`ChannelStats[K] extends
+ * number` is false for `number | undefined`): a column the backend might
+ * not send cannot be rendered as a count without inventing a value for the
+ * missing case, which is exactly the fabrication this type exists to stop.
+ */
+export type ChannelCountKey = {
+  [K in keyof ChannelStats]-?: ChannelStats[K] extends number ? K : never
+}[keyof ChannelStats]
 
 /**
  * The statuses the Channels page breaks out individually, in render order.
@@ -66,8 +111,18 @@ export function logStatusLabel(value: string): string {
  * (internal/store/dashboard.go) — that query emits one COUNT per status
  * with no roll-up, so every entry here is a 1:1 count of a single
  * campaign_logs.status value.
+ *
+ * The `readonly ChannelCountKey[]` annotation is load-bearing, not
+ * decoration. "Break it out on Channels" is one of the three sanctioned
+ * ways to resolve the coverage test in logStatusVocabulary.spec.ts, and
+ * before this type existed it was the unguarded one: adding a status here
+ * that ChannelStats does not carry type-checked cleanly, passed every
+ * test, and rendered a sixth row showing `0` for a field the backend never
+ * sends — a fabricated statistic on an operator dashboard. Adding a status
+ * to this list is now a vue-tsc error until the corresponding field is
+ * added to ChannelStats in src/api/types.ts, which is the correct action.
  */
-export const CHANNEL_BREAKDOWN_STATUSES: readonly string[] = Object.freeze([
+export const CHANNEL_BREAKDOWN_STATUSES: readonly ChannelCountKey[] = Object.freeze([
   'sent',
   'failed',
   'skipped',
@@ -123,12 +178,25 @@ export function suppressedRollupTitle(): string {
  * This list exists so that adding a LogStatus to LOG_STATUSES forces a
  * conscious decision about where it appears on the dashboards — the
  * coverage test in logStatusVocabulary.spec.ts fails until the new status
- * is either broken out, folded into the roll-up, or named here.
+ * is either broken out, folded into the roll-up, or named here. That test
+ * iterates LOG_STATUSES, so on its own it only fires when someone edits
+ * this file; the backend-drift half of the guard is the
+ * `backendVocabulary` block in the same spec, which reads the backend's
+ * LogStatus* constants directly.
  *
  *   delivered / opened / clicked / bounced / complaint
  *     — engagement + provider feedback. The performance table derives
  *       Opened/Clicked from the delivered_at/opened_at/clicked_at
  *       timestamps, not from status, so they are not status buckets.
+ *   unsubscribed — provider-reported opt-out. Neither a send outcome nor a
+ *       suppression decision made by this platform: the send happened, and
+ *       the recipient responded. Belongs on a consent/deliverability view,
+ *       not in a send-outcome bucket. Filterable on LogsPage today.
+ *   queued — not an outcome at all; the row is mid-flight and the async
+ *       worker will overwrite it with sent/failed/skipped on ack. Counting
+ *       it in either aggregation would double-count rows that are about to
+ *       land in a real bucket, and the count would change under the reader
+ *       with no event having occurred.
  *   quiet_hour_deferred — deferred, not declined; the backend excludes it
  *       from both aggregations.
  *   gate_unavailable — KNOWN GAP, not a decision. The backend already
@@ -146,6 +214,8 @@ export const DASHBOARD_UNRENDERED_STATUSES: readonly string[] = Object.freeze([
   'clicked',
   'bounced',
   'complaint',
+  'unsubscribed',
+  'queued',
   'quiet_hour_deferred',
   'gate_unavailable',
 ])

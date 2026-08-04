@@ -15,6 +15,7 @@ import StatCard from '@/components/StatCard.vue'
 import { fetchChannelStats } from '@/api/dashboard'
 import { chartPalette, getDesignColor } from '@/utils/chartColors'
 import { CHANNEL_BREAKDOWN_STATUSES, logStatusLabel } from '@/constants/logStatus'
+import type { ChannelCountKey } from '@/constants/logStatus'
 import type { ChannelStats } from '@/api/types'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
@@ -40,10 +41,18 @@ const successRate = computed(() => {
   return total > 0 ? Math.round((totalSent.value / total) * 100) : 0
 })
 
-// Value-column colour per status. Keyed by the same LogStatus values as
-// CHANNEL_BREAKDOWN_STATUSES so adding a status to that list surfaces here
-// too rather than silently rendering unstyled.
-const valueClass: Record<string, string> = {
+// Value-column colour per status.
+//
+// `Record<ChannelCountKey, string>` — total over the count-carrying fields
+// of ChannelStats, with no `??` fallback at the call site — is what makes
+// the claim in this comment true rather than aspirational. It previously
+// read "adding a status to that list surfaces here too rather than
+// silently rendering unstyled" while `valueClass[status] ?? grey` did the
+// exact opposite: an unrecognised status was styled the same grey as
+// `skipped`, so a new status looked like a deliberate no-op. Now a new
+// count column on the DTO is a vue-tsc error here until someone picks a
+// colour for it.
+const valueClass: Record<ChannelCountKey, string> = {
   sent: 'text-[var(--color-success-text)]',
   failed: 'text-[var(--color-error-text)]',
   skipped: 'text-[var(--color-text-secondary)]',
@@ -54,12 +63,19 @@ const valueClass: Record<string, string> = {
 // Every row on a per-channel card is a 1:1 count of ONE campaign_logs
 // status, and its label comes from the shared vocabulary — never a
 // hand-typed string. See src/constants/logStatus.ts.
+//
+// `ch[status]` is a plain checked index: CHANNEL_BREAKDOWN_STATUSES is
+// typed `readonly ChannelCountKey[]`, so every status here is a required
+// numeric field of the DTO the backend actually sends. The previous
+// `(ch as unknown as Record<string, number>)[status] ?? 0` erased that
+// check and turned a status the DTO does not carry into a confident,
+// type-clean `0` on the dashboard.
 function breakdownRows(ch: ChannelStats) {
   return CHANNEL_BREAKDOWN_STATUSES.map((status) => ({
     status,
     label: logStatusLabel(status),
-    value: (ch as unknown as Record<string, number>)[status] ?? 0,
-    cls: valueClass[status] ?? 'text-[var(--color-text-secondary)]',
+    value: ch[status],
+    cls: valueClass[status],
   }))
 }
 
@@ -122,7 +138,7 @@ const chartOptions = {
               :data-status="row.status"
             >
               <span class="text-[var(--color-text-tertiary)]" data-test="channel-stat-label">{{ row.label }}</span>
-              <span class="font-medium" :class="row.cls">{{ row.value }}</span>
+              <span class="font-medium" :class="row.cls" data-test="channel-stat-value">{{ row.value }}</span>
             </div>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import StatusBadge from '../StatusBadge.vue'
-import { LOG_STATUSES } from '@/constants/logStatus'
+import { LOG_STATUSES, LOG_STATUS_LABELS, logStatusLabel } from '@/constants/logStatus'
 
 // The literal fallback triple from StatusBadge.vue — a status hits this
 // exactly when it has no entry in `statusConfig`. Asserting against the
@@ -24,9 +24,74 @@ describe('StatusBadge', () => {
     expect(w.classes()).toContain(FALLBACK_TEXT_CLASS)
   })
 
-  it('formats the label by replacing underscores with spaces', () => {
+  it('takes a LogStatus label from the shared vocabulary, verbatim', () => {
+    // Was `expect(w.text()).toBe('quiet hour deferred')` — the badge derived
+    // its own display text with replace(/_/g,' ') and leaned on CSS
+    // `capitalize`, so it disagreed with logStatusLabel() in the DOM while
+    // looking identical on screen. Asserting against the vocabulary is what
+    // makes a label like 'Freq. Capped' impossible to introduce on one
+    // surface only.
     const w = mount(StatusBadge, { props: { status: 'quiet_hour_deferred' } })
-    expect(w.text()).toBe('quiet hour deferred')
+    expect(w.text()).toBe(logStatusLabel('quiet_hour_deferred'))
+    expect(w.text()).toBe('Quiet Hour Deferred')
+    // Curated labels render exactly as authored — no CSS transform on top.
+    expect(w.classes()).not.toContain('capitalize')
+  })
+
+  it('keeps the underscores-to-spaces fallback for non-LogStatus vocabularies', () => {
+    // `in_flight` is an outbound-webhook delivery state, not a LogStatus:
+    // no curated label exists, so the historical derivation (plus CSS
+    // capitalize to title it) must survive.
+    expect('in_flight' in LOG_STATUS_LABELS).toBe(false)
+    const w = mount(StatusBadge, { props: { status: 'in_flight' } })
+    expect(w.text()).toBe('in flight')
+    expect(w.classes()).toContain('capitalize')
+  })
+
+  it('does not regress the non-LogStatus values it also renders', () => {
+    // Enrollment / broadcast / integration / health vocabularies that share
+    // this widget. Enumerated from statusConfig; each must still render its
+    // own name, not fall through to something else.
+    const cases: Record<string, string> = {
+      active: 'active',
+      completed: 'completed',
+      cancelled: 'cancelled',
+      expired: 'expired',
+      waiting: 'waiting',
+      up: 'up',
+      down: 'down',
+      degraded: 'degraded',
+      inactive: 'inactive',
+      ok: 'ok',
+      disabled: 'disabled',
+      pending: 'pending',
+      connected: 'connected',
+      not_configured: 'not configured',
+      configured: 'configured',
+      misconfigured: 'misconfigured',
+      error: 'error',
+      processing: 'processing',
+      in_flight: 'in flight',
+      retrying: 'retrying',
+      paused: 'paused',
+      draft: 'draft',
+      scheduled: 'scheduled',
+      running: 'running',
+    }
+    for (const [status, expected] of Object.entries(cases)) {
+      // Tripwire: if one of these is ever promoted into LOG_STATUSES it
+      // acquires a curated label and belongs in the vocabulary test
+      // instead, not in this raw-derivation list.
+      expect(
+        status in LOG_STATUS_LABELS,
+        `"${status}" is now a LogStatus — move it out of this fallback list`,
+      ).toBe(false)
+      const w = mount(StatusBadge, { props: { status } })
+      expect(w.text(), `non-LogStatus "${status}" changed its rendered text`).toBe(expected)
+      expect(w.classes(), `non-LogStatus "${status}" lost its statusConfig colour`).not.toContain(
+        FALLBACK_TEXT_CLASS,
+      )
+    }
   })
 
   describe('gate_unavailable', () => {

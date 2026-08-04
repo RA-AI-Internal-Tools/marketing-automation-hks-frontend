@@ -22,12 +22,28 @@
  *
  * Every assertion below derives its expectations from
  * src/constants/logStatus.ts rather than hardcoding label strings, so a
- * status added to the backend vocabulary fails these tests until both
- * dashboards have been told what to do with it.
+ * status added to LOG_STATUSES fails these tests until both dashboards
+ * have been told what to do with it.
+ *
+ * That is a frontend-only property, and on its own it is not the one the
+ * header used to advertise ("a status added to the BACKEND vocabulary
+ * fails these tests"): the coverage test iterates LOG_STATUSES, so it only
+ * fires when someone edits that file. It was claiming a backend-sync
+ * guarantee while LOG_STATUSES sat two statuses behind
+ * internal/model/campaign.go — `queued`, written live by executor.go's
+ * logAndAdvance, and `unsubscribed`, written by the provider-webhook
+ * classifier — with all 287 tests green. The `backendVocabulary` block
+ * below closes that gap by reading the backend constants directly; the
+ * chain "backend const block → LOG_STATUSES → dashboard bucket → rendered
+ * label" is only unbroken with both halves present.
  */
+import { readFileSync, existsSync } from 'node:fs'
+import path from 'node:path'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
+import StatusBadge from '@/components/StatusBadge.vue'
+import type { ChannelStats } from '@/api/types'
 import {
   LOG_STATUSES,
   LOG_STATUS_LABELS,
@@ -86,9 +102,11 @@ vi.mock('vue-router', () => ({
   RouterLink: { template: '<a><slot /></a>' },
 }))
 
-// A single channel carrying a non-zero count in every bucket, so no row can
-// be hidden by a falsy value.
-const CHANNEL_ROW = {
+// A single channel carrying a distinct non-zero count in every bucket, so
+// no row can be hidden by a falsy value and no row can pass a value
+// assertion by coincidence. Typed as ChannelStats so the fixture cannot
+// drift from the DTO the page actually consumes.
+const CHANNEL_ROW: ChannelStats = {
   channel: 'email',
   sent: 7,
   failed: 3,
@@ -127,6 +145,138 @@ beforeEach(() => {
   vi.clearAllMocks()
   fetchChannelStats.mockResolvedValue([CHANNEL_ROW])
   fetchCampaignPerformance.mockResolvedValue([PERF_ROW])
+})
+
+// ── 0. Backend vocabulary sync ───────────────────────────────────────────
+
+// The backend is a sibling checkout. This is not a new assumption invented
+// for this test: package.json's `generate-types` script already reads
+// ../marketing-automation-hks/docs/swagger.json to regenerate the API
+// types. MA_BACKEND_REPO overrides the location for non-standard layouts.
+//
+// Located by walking up from cwd to the package.json that identifies this
+// repo, rather than from import.meta.url — under the vitest transform
+// import.meta.url is not a file: URL and fileURLToPath throws. If the walk
+// fails it returns cwd, which simply makes the candidate paths below not
+// exist, and the test fails loudly listing what it searched. There is no
+// path through this function that lets the guard pass without reading the
+// backend.
+function resolveFrontendRoot(): string {
+  let dir = process.cwd()
+  for (let i = 0; i < 8; i++) {
+    const pkg = path.join(dir, 'package.json')
+    if (existsSync(pkg)) {
+      try {
+        if (JSON.parse(readFileSync(pkg, 'utf8')).name === 'marketing-automation-hks-frontend') {
+          return dir
+        }
+      } catch {
+        // Unparseable package.json — keep walking.
+      }
+    }
+    const parent = path.dirname(dir)
+    if (parent === dir) break
+    dir = parent
+  }
+  return process.cwd()
+}
+
+const FRONTEND_ROOT = resolveFrontendRoot()
+
+const BACKEND_CANDIDATES = (
+  process.env.MA_BACKEND_REPO
+    ? [process.env.MA_BACKEND_REPO]
+    : [
+        path.resolve(FRONTEND_ROOT, '..', 'marketing-automation-hks'),
+        path.resolve(FRONTEND_ROOT, '..', 'backend'),
+      ]
+).map((root) => path.join(root, 'internal', 'model', 'campaign.go'))
+
+// Explicit, visible opt-out for environments without the backend checked
+// out. Deliberately NOT the default: a guard that quietly disappears when
+// its input is missing is the failure mode this whole block exists to
+// close, so absent this flag a missing backend is a loud test FAILURE, not
+// a skip.
+const SKIP_BACKEND_SYNC = process.env.MA_SKIP_BACKEND_SYNC === '1'
+if (SKIP_BACKEND_SYNC) {
+  console.warn(
+    '[logStatusVocabulary] MA_SKIP_BACKEND_SYNC=1 — the LOG_STATUSES ↔ ' +
+      'internal/model/campaign.go drift guard is DISABLED for this run.',
+  )
+}
+
+/**
+ * Extract the string values of the `// Log status constants.` const block.
+ *
+ * Scoped to that one block rather than grepping the whole file for
+ * /LogStatus\w+/, so unrelated references (helpers, switch arms, other
+ * const groups) cannot inflate the set. Doc-comment lines inside the block
+ * start with `//` and therefore never match the declaration pattern.
+ */
+function parseBackendLogStatuses(src: string, file: string): Set<string> {
+  const marker = '// Log status constants.'
+  const start = src.indexOf(marker)
+  expect(start, `${file} no longer contains the "${marker}" marker`).toBeGreaterThanOrEqual(0)
+
+  const open = src.indexOf('const (', start)
+  expect(open, `no "const (" block follows "${marker}" in ${file}`).toBeGreaterThan(start)
+
+  const close = src.indexOf('\n)', open)
+  expect(close, `unterminated const block after "${marker}" in ${file}`).toBeGreaterThan(open)
+
+  const block = src.slice(open, close)
+  const values = [...block.matchAll(/^\s*LogStatus\w+\s*=\s*"([^"]+)"/gm)].map((m) => m[1])
+
+  // Non-vacuity: an empty or near-empty parse means the block's shape
+  // changed and this guard has stopped guarding. Fail on the parse, not
+  // silently on a trivially-satisfied set comparison.
+  expect(
+    values.length,
+    `parsed only ${values.length} LogStatus constants from ${file} — the const block shape changed and this guard is no longer reading it`,
+  ).toBeGreaterThan(8)
+
+  const set = new Set(values)
+  expect(set.size, `duplicate LogStatus values in ${file}: ${values.join(', ')}`).toBe(values.length)
+  return set
+}
+
+// The name carries the opt-out state because vitest's default reporter
+// swallows module-scope console output: a run with the guard disabled must
+// say so in the one place every reporter prints, the test's own name.
+const BACKEND_SYNC_NAME = SKIP_BACKEND_SYNC
+  ? 'DISABLED by MA_SKIP_BACKEND_SYNC=1 — LOG_STATUSES is NOT checked against the backend LogStatus* constants'
+  : 'LOG_STATUSES matches the backend LogStatus* constant block exactly (set MA_SKIP_BACKEND_SYNC=1 to disable)'
+
+describe('backendVocabulary', () => {
+  it.skipIf(SKIP_BACKEND_SYNC)(BACKEND_SYNC_NAME, () => {
+    const file = BACKEND_CANDIDATES.find((p) => existsSync(p))
+    if (!file) {
+      expect.fail(
+        'Cannot locate the backend LogStatus vocabulary, so LOG_STATUSES cannot be ' +
+          'checked for drift. Searched:\n  ' +
+          BACKEND_CANDIDATES.join('\n  ') +
+          '\nSet MA_BACKEND_REPO=/path/to/marketing-automation-hks, or set ' +
+          'MA_SKIP_BACKEND_SYNC=1 to run without this guard (and lose drift detection).',
+      )
+    }
+
+    const backend = parseBackendLogStatuses(readFileSync(file, 'utf8'), file)
+    const frontend = new Set(LOG_STATUSES.map((s) => s.value))
+
+    const missing = [...backend].filter((v) => !frontend.has(v)).sort()
+    const extra = [...frontend].filter((v) => !backend.has(v)).sort()
+
+    expect(
+      missing,
+      `campaign_logs statuses the backend can write but LOG_STATUSES does not know about — ` +
+        `they are unfilterable on LogsPage and unbucketed on both dashboards: ${missing.join(', ')}`,
+    ).toEqual([])
+
+    expect(
+      extra,
+      `LOG_STATUSES claims statuses the backend has no constant for: ${extra.join(', ')}`,
+    ).toEqual([])
+  })
 })
 
 // ── 1. The vocabulary itself ─────────────────────────────────────────────
@@ -168,11 +318,16 @@ describe('LogStatus vocabulary', () => {
 
   it('never names the roll-up after one of its own members', () => {
     // This is the #117 invariant, stated at the vocabulary level.
+    // Compared case- and whitespace-insensitively: "Skipped " and "skipped"
+    // are the same word to a reader, so they must be the same collision to
+    // this test. An exact-string comparison would hand out a green tick for
+    // a trailing space.
+    const norm = (s: string) => s.trim().toLowerCase()
     for (const { value, label } of LOG_STATUSES) {
       expect(
-        SUPPRESSED_ROLLUP_LABEL,
+        norm(SUPPRESSED_ROLLUP_LABEL),
         `the roll-up is labelled "${SUPPRESSED_ROLLUP_LABEL}", which is also the label of the single status "${value}"`,
-      ).not.toBe(label)
+      ).not.toBe(norm(label))
     }
     // Non-vacuity: the roll-up really does contain more than one status, so
     // the assertion above is constraining something real.
@@ -192,6 +347,42 @@ describe('Channels page status labels', () => {
       const row = rows.find((r) => r.attributes('data-status') === status)
       expect(row, `Channels page renders no row for status "${status}"`).toBeTruthy()
       expect(row!.get('[data-test="channel-stat-label"]').text()).toBe(logStatusLabel(status))
+
+      // The VALUE, not just the label. Without this, a status broken out
+      // here that the backend never sends rendered a confident `0` — a
+      // fabricated statistic on an operator dashboard, with the row count
+      // and label assertions above both still green. The fixture carries a
+      // distinct non-zero count per bucket, so `0` (or any other row's
+      // number) fails.
+      const rendered = row!.get('[data-test="channel-stat-value"]').text().trim()
+      expect(
+        rendered,
+        `Channels row "${status}" does not render the count the backend supplied`,
+      ).toBe(String(CHANNEL_ROW[status]))
+      expect(Number(rendered), `Channels row "${status}" rendered a fabricated zero`).toBeGreaterThan(0)
+    }
+  })
+})
+
+// ── 2b. StatusBadge — the highest-impression status surface ──────────────
+
+describe('StatusBadge status labels', () => {
+  it('renders every LogStatus with the shared vocabulary label, character for character', async () => {
+    // StatusBadge is used by LogsPage rows, ClientJourneyPage and the
+    // Overview recent-logs list, so it puts a status name in front of more
+    // operators than either dashboard. It used to derive its own text
+    // (`status.replace(/_/g,' ')` + CSS `capitalize`), which agreed with
+    // logStatusLabel() only because every label happens to be the
+    // title-case of its own snake_case value — and already disagreed in
+    // the DOM. Nothing pinned that, so #117 was reproducible on a third
+    // surface. `.text()` returns the DOM text, before any CSS transform,
+    // which is precisely what makes this assertion bite.
+    for (const { value } of LOG_STATUSES) {
+      const w = mount(StatusBadge, { props: { status: value } })
+      expect(
+        w.text().trim(),
+        `StatusBadge renders its own display text for "${value}" instead of the shared label`,
+      ).toBe(logStatusLabel(value))
     }
   })
 })
@@ -203,10 +394,11 @@ describe('Campaign performance roll-up column', () => {
     const w = await mountOverview()
     const th = w.get('[data-test="perf-col-suppressed"]')
     expect(th.text()).toContain(SUPPRESSED_ROLLUP_LABEL)
+    // Normalised: "Skipped " must not buy a pass that "Skipped" would not.
     expect(
-      th.text().trim(),
+      th.text().trim().toLowerCase(),
       'the roll-up column is still named after a single LogStatus',
-    ).not.toBe(logStatusLabel('skipped'))
+    ).not.toBe(logStatusLabel('skipped').trim().toLowerCase())
   })
 
   it('discloses its membership in the column tooltip', async () => {
@@ -226,9 +418,14 @@ describe('Channels and campaign performance agree on vocabulary', () => {
     const channels = await mountChannels()
     const overview = await mountOverview()
 
+    // Normalised on both sides: two labels a reader would call the same
+    // word must collide here regardless of case or stray whitespace.
+    // Comparing raw strings would let "Skipped " through.
+    const norm = (s: string) => s.trim().toLowerCase()
+
     const channelLabels = channels
       .findAll('[data-test="channel-stat-label"]')
-      .map((n) => n.text().trim())
+      .map((n) => norm(n.text()))
     // Non-vacuity: if the Channels page stopped rendering labels entirely,
     // the disjointness check below would pass for the wrong reason.
     expect(channelLabels.length).toBe(CHANNEL_BREAKDOWN_STATUSES.length)
@@ -239,7 +436,7 @@ describe('Channels and campaign performance agree on vocabulary', () => {
       channelLabels,
       `"${rollupHeader}" labels a ${SUPPRESSED_STATUSES.length}-status roll-up on the campaign-performance table, ` +
         'but the Channels page uses that same word for a single status over the same rows',
-    ).not.toContain(rollupHeader)
+    ).not.toContain(norm(rollupHeader))
   })
 
   it('renders the identical label for any status both pages name', async () => {
