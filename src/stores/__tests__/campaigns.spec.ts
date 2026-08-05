@@ -60,7 +60,7 @@ describe('campaigns store', () => {
 
     expect(store.loading).toBe(false)
     expect(store.campaigns).toHaveLength(2)
-    expect(store.campaigns[0].id).toBe(1)
+    expect(store.campaigns[0]!.id).toBe(1)
     expect(store.error).toBeNull()
   })
 
@@ -118,8 +118,9 @@ describe('campaigns store', () => {
     await store.load()
     await store.update(1, { name: 'new' } as CampaignRequest)
 
-    expect(store.campaigns[0].name).toBe('new')
-    expect(store.campaigns[1].name).toBe('unrelated')
+    expect(store.campaigns).toHaveLength(2)
+    expect(store.campaigns[0]!.name).toBe('new')
+    expect(store.campaigns[1]!.name).toBe('unrelated')
   })
 
   it('update() noop when id is not in the list (store created out-of-band)', async () => {
@@ -135,7 +136,7 @@ describe('campaigns store', () => {
     // push new rows. That behaviour is correct (other tabs load() themselves)
     // but worth pinning so nobody "fixes" it by also pushing.
     expect(store.campaigns).toHaveLength(1)
-    expect(store.campaigns[0].id).toBe(1)
+    expect(store.campaigns[0]!.id).toBe(1)
   })
 
   it('remove() filters the row out on success', async () => {
@@ -171,7 +172,8 @@ describe('campaigns store', () => {
     const result = await store.toggle(1)
 
     expect(result).toEqual({ is_active: false })
-    expect(store.campaigns[0].is_active).toBe(false)
+    expect(store.campaigns).toHaveLength(1)
+    expect(store.campaigns[0]!.is_active).toBe(false)
   })
 
   it('get() returns single fetched campaign and does not mutate list', async () => {

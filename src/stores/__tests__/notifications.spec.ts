@@ -11,8 +11,8 @@ describe('notifications store', () => {
     s.push({ type: 'info', title: 'Hello' })
     expect(s.items.length).toBe(1)
     expect(s.unreadCount).toBe(1)
-    expect(s.items[0].id).toBeTruthy()
-    expect(s.items[0].read).toBe(false)
+    expect(s.items[0]!.id).toBeTruthy()
+    expect(s.items[0]!.read).toBe(false)
   })
 
   it('markRead flips only the matching item', () => {
@@ -39,13 +39,17 @@ describe('notifications store', () => {
     const r = s.recent(5)
     expect(r.length).toBe(5)
     // Newest first — the last push's title should lead.
-    expect(r[0].title).toBe('N9')
+    expect(r[0]!.title).toBe('N9')
   })
 
   it('ingestSseEvent maps campaign_completed to a success notification', () => {
     const s = useNotificationsStore()
     s.ingestSseEvent({ type: 'campaign_completed', payload: { id: 42, name: 'Spring' } })
-    expect(s.items[0].type).toBe('success')
-    expect(s.items[0].href).toBe('/campaigns/42')
+    // One event in, exactly one notification out — pinned so an
+    // ingest that drops (or duplicates) the event fails here rather
+    // than throwing a TypeError on the next line.
+    expect(s.items).toHaveLength(1)
+    expect(s.items[0]!.type).toBe('success')
+    expect(s.items[0]!.href).toBe('/campaigns/42')
   })
 })

@@ -242,7 +242,22 @@ function parseBackendLogStatuses(src: string, file: string): Set<string> {
   // identifier and `=` — e.g. `LogStatusTyped string = "typed_thing"` is a
   // legal, type-annotated const declaration that the bare
   // `LogStatus\w+\s*=` pattern silently skipped.
-  const values = [...block.matchAll(/^\s*LogStatus\w+(?:\s+\w+)?\s*=\s*"([^"]+)"/gm)].map((m) => m[1])
+  const values = [...block.matchAll(/^\s*LogStatus\w+(?:\s+\w+)?\s*=\s*"([^"]+)"/gm)].map((m) => {
+    const value = m[1]
+    // Capture group 1 is not optional in the pattern above, so a match
+    // always carries it. Throw rather than `.filter(Boolean)`: a future
+    // edit that makes the group optional would otherwise silently SHRINK
+    // `values`, which would quietly weaken both the >8 non-vacuity floor
+    // and the whole-file count cross-check below — the exact class of
+    // silent-degradation failure this whole guard exists to prevent.
+    if (value === undefined) {
+      throw new Error(
+        `LogStatus declaration matched in ${file} but capture group 1 was empty — ` +
+          `the extraction regex in this spec has been edited and no longer captures the value`,
+      )
+    }
+    return value
+  })
 
   // Non-vacuity: an empty or near-empty parse means the block's shape
   // changed and this guard has stopped guarding. Fail on the parse, not

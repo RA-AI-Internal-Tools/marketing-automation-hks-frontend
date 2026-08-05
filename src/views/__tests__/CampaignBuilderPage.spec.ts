@@ -124,7 +124,7 @@ describe('CampaignEditorPage (Campaign Builder)', () => {
     await flushPromises()
 
     expect(createCampaign).toHaveBeenCalledTimes(1)
-    const req = createCampaign.mock.calls[0][0]
+    const req = createCampaign.mock.calls[0]![0]
     expect(req.use_sto).toBe(true)
     expect(req.quiet_hours).toEqual({ start: '22:00', end: '07:00', timezone: 'Europe/London' })
     expect(req.name).toBe('Test')
@@ -143,7 +143,10 @@ describe('CampaignEditorPage (Campaign Builder)', () => {
     await vm.handleSubmit()
     await flushPromises()
 
-    const req = createCampaign.mock.calls[0][0]
+    // Same precondition the sibling test above pins: without it a save that
+    // never fires reaches the assertions as a TypeError, not a diff.
+    expect(createCampaign).toHaveBeenCalledTimes(1)
+    const req = createCampaign.mock.calls[0]![0]
     expect(req.use_sto).toBe(false)
     expect(req.quiet_hours).toBeUndefined()
   })

@@ -10,8 +10,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 
-const create = vi.fn(() => Promise.resolve({ id: 4 }))
-const update = vi.fn(() => Promise.resolve({ id: 4 }))
+// The rest parameters are load-bearing, not decoration: the store methods
+// below forward their arguments into these spies, and a `vi.fn(() => ...)`
+// declares a ZERO-argument signature, so `create(...a)` is a type error
+// (TS2556) — and every `create.mock.calls[0]` assertion in this file is
+// reading arguments the spy's own type says it can never receive.
+const create = vi.fn((..._args: unknown[]) => Promise.resolve({ id: 4 }))
+const update = vi.fn((..._args: unknown[]) => Promise.resolve({ id: 4 }))
 const get = vi.fn()
 const push = vi.fn()
 
@@ -25,9 +30,9 @@ vi.mock('vue-router', () => ({
 
 vi.mock('@/stores/templates', () => ({
   useTemplatesStore: () => ({
-    create: (...a: any[]) => create(...a),
-    update: (...a: any[]) => update(...a),
-    get: (...a: any[]) => get(...a),
+    create: (...a: unknown[]) => create(...a),
+    update: (...a: unknown[]) => update(...a),
+    get: (...a: unknown[]) => get(...a),
   }),
 }))
 
