@@ -58,6 +58,8 @@ interface NavItem {
   to: string
   icon: any
   adminOnly?: boolean
+  /** Backed by an endpoint gated to admin+editor. Hidden from viewers. */
+  analyticsOnly?: boolean
 }
 
 interface NavSection {
@@ -94,20 +96,20 @@ const allSections: NavSection[] = [
     label: 'Intelligence',
     defaultOpen: false,
     items: [
-      { name: 'Executive', to: '/analytics/executive', icon: PresentationChartBarIcon },
+      { name: 'Executive', to: '/analytics/executive', icon: PresentationChartBarIcon, analyticsOnly: true },
       { name: 'Cart activity', to: '/cart-activity', icon: ShoppingCartIcon },
-      { name: 'Acquisition', to: '/analytics/acquisition', icon: GlobeAltIcon },
-      { name: 'Funnel', to: '/analytics/funnel', icon: FunnelIcon },
-      { name: 'Clients', to: '/analytics/clients', icon: UserGroupIcon },
-      { name: 'Products', to: '/analytics/products', icon: CubeIcon },
-      { name: 'Payments', to: '/analytics/payments', icon: CreditCardIcon },
-      { name: 'Orders', to: '/analytics/orders', icon: ShoppingCartIcon },
-      { name: 'Retention', to: '/analytics/retention', icon: ArrowPathIcon },
-      { name: 'Data health', to: '/analytics/data-health', icon: ServerStackIcon },
-      { name: 'Attribution', to: '/analytics/attribution', icon: LinkIcon },
-      { name: 'Churn risk', to: '/analytics/churn', icon: ExclamationTriangleIcon },
-      { name: 'RFM segments', to: '/analytics/rfm', icon: UserGroupIcon },
-      { name: 'Cohorts & LTV', to: '/analytics/cohort', icon: UserGroupIcon },
+      { name: 'Acquisition', to: '/analytics/acquisition', icon: GlobeAltIcon, analyticsOnly: true },
+      { name: 'Funnel', to: '/analytics/funnel', icon: FunnelIcon, analyticsOnly: true },
+      { name: 'Clients', to: '/analytics/clients', icon: UserGroupIcon, analyticsOnly: true },
+      { name: 'Products', to: '/analytics/products', icon: CubeIcon, analyticsOnly: true },
+      { name: 'Payments', to: '/analytics/payments', icon: CreditCardIcon, analyticsOnly: true },
+      { name: 'Orders', to: '/analytics/orders', icon: ShoppingCartIcon, analyticsOnly: true },
+      { name: 'Retention', to: '/analytics/retention', icon: ArrowPathIcon, analyticsOnly: true },
+      { name: 'Data health', to: '/analytics/data-health', icon: ServerStackIcon, analyticsOnly: true },
+      { name: 'Attribution', to: '/analytics/attribution', icon: LinkIcon, analyticsOnly: true },
+      { name: 'Churn risk', to: '/analytics/churn', icon: ExclamationTriangleIcon, analyticsOnly: true },
+      { name: 'RFM segments', to: '/analytics/rfm', icon: UserGroupIcon, analyticsOnly: true },
+      { name: 'Cohorts & LTV', to: '/analytics/cohort', icon: UserGroupIcon, analyticsOnly: true },
       { name: 'Journey', to: '/analytics/journey', icon: MapIcon },
     ],
   },
@@ -135,12 +137,24 @@ const allSections: NavSection[] = [
   },
 ]
 
+// `analyticsOnly` items are backed by endpoints gated to admin+editor, so a
+// viewer who clicks one is bounced straight back to the overview by the router.
+// Hiding them keeps the sidebar honest about what this session can actually
+// open. `auth.isEditor` is true for admin AND editor — it names the capability,
+// not the role.
+//
+// Deliberately NOT marked: Journey and Scheduled reports, whose endpoints
+// (/api/dashboard/*, GET /api/reports) are ungated, and Cart activity and
+// Campaign funnel, which are not analytics routes at all. Marking those would
+// hide data a viewer is still allowed to read.
 const sections = computed(() =>
   allSections
     .filter(s => !s.adminOnly || auth.isAdmin)
     .map(s => ({
       ...s,
-      items: s.items.filter(i => !i.adminOnly || auth.isAdmin),
+      items: s.items.filter(i =>
+        (!i.adminOnly || auth.isAdmin) && (!i.analyticsOnly || auth.isEditor),
+      ),
     }))
 )
 

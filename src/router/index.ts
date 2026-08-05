@@ -215,25 +215,25 @@ const router = createRouter({
       path: '/analytics/executive',
       name: 'analytics-executive',
       component: () => import('@/views/analytics/ExecutivePage.vue'),
-      meta: { title: 'Executive Analytics' },
+      meta: { requiresAnalytics: true, title: 'Executive Analytics' },
     },
     {
       path: '/analytics/acquisition',
       name: 'analytics-acquisition',
       component: () => import('@/views/analytics/AcquisitionPage.vue'),
-      meta: { title: 'Acquisition' },
+      meta: { requiresAnalytics: true, title: 'Acquisition' },
     },
     {
       path: '/analytics/funnel',
       name: 'analytics-funnel',
       component: () => import('@/views/analytics/FunnelPage.vue'),
-      meta: { title: 'Funnel' },
+      meta: { requiresAnalytics: true, title: 'Funnel' },
     },
     {
       path: '/analytics/clients',
       name: 'analytics-clients',
       component: () => import('@/views/analytics/ClientsPage.vue'),
-      meta: { title: 'Clients Analytics' },
+      meta: { requiresAnalytics: true, title: 'Clients Analytics' },
     },
     {
       path: '/analytics/users',
@@ -243,31 +243,31 @@ const router = createRouter({
       path: '/analytics/products',
       name: 'analytics-products',
       component: () => import('@/views/analytics/ProductsPage.vue'),
-      meta: { title: 'Products' },
+      meta: { requiresAnalytics: true, title: 'Products' },
     },
     {
       path: '/analytics/payments',
       name: 'analytics-payments',
       component: () => import('@/views/analytics/PaymentsPage.vue'),
-      meta: { title: 'Payments' },
+      meta: { requiresAnalytics: true, title: 'Payments' },
     },
     {
       path: '/analytics/orders',
       name: 'analytics-orders',
       component: () => import('@/views/analytics/OrdersPage.vue'),
-      meta: { title: 'Orders' },
+      meta: { requiresAnalytics: true, title: 'Orders' },
     },
     {
       path: '/analytics/retention',
       name: 'analytics-retention',
       component: () => import('@/views/analytics/RetentionPage.vue'),
-      meta: { title: 'Retention' },
+      meta: { requiresAnalytics: true, title: 'Retention' },
     },
     {
       path: '/analytics/data-health',
       name: 'analytics-data-health',
       component: () => import('@/views/analytics/DataHealthPage.vue'),
-      meta: { title: 'Data Health' },
+      meta: { requiresAnalytics: true, title: 'Data Health' },
     },
     {
       path: '/analytics/reports',
@@ -279,25 +279,25 @@ const router = createRouter({
       path: '/analytics/attribution',
       name: 'analytics-attribution',
       component: () => import('@/views/analytics/AttributionPage.vue'),
-      meta: { title: 'Attribution' },
+      meta: { requiresAnalytics: true, title: 'Attribution' },
     },
     {
       path: '/analytics/churn',
       name: 'analytics-churn',
       component: () => import('@/views/analytics/ChurnPage.vue'),
-      meta: { title: 'Churn Risk' },
+      meta: { requiresAnalytics: true, title: 'Churn Risk' },
     },
     {
       path: '/analytics/rfm',
       name: 'analytics-rfm',
       component: () => import('@/views/analytics/RFMPage.vue'),
-      meta: { title: 'RFM Segmentation' },
+      meta: { requiresAnalytics: true, title: 'RFM Segmentation' },
     },
     {
       path: '/analytics/cohort',
       name: 'analytics-cohort',
       component: () => import('@/views/analytics/CohortPage.vue'),
-      meta: { title: 'Cohorts & LTV' },
+      meta: { requiresAnalytics: true, title: 'Cohorts & LTV' },
     },
     {
       path: '/analytics/journey',
@@ -336,6 +336,23 @@ router.beforeEach((to) => {
   }
   // Write-access routes (admin or editor only)
   if (to.meta.requiresWrite && role !== 'admin' && role !== 'editor') {
+    return { name: 'overview' }
+  }
+  // Analytics: admin or editor, READ-only.
+  //
+  // Same allow-list as requiresWrite but deliberately a separate flag, because
+  // requiresWrite also arms the production confirmation below. Reusing it here
+  // would pop a "you are about to change production" dialog on every dashboard
+  // click, and a confirmation that fires on ordinary reads is one operators
+  // learn to dismiss without reading — which is the whole point of the guard,
+  // gone.
+  //
+  // This mirrors the server: /api/analytics/* is gated to admin+editor. Without
+  // it a viewer still sees the sidebar entry and reaches a page that renders
+  // nothing but 403s. That was already true for Churn Risk and Cohorts & LTV,
+  // whose endpoints have been admin+editor for longer than this flag has
+  // existed.
+  if (to.meta.requiresAnalytics && role !== 'admin' && role !== 'editor') {
     return { name: 'overview' }
   }
   // Production guard: confirm ONCE per session before entering write routes
