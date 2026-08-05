@@ -20,6 +20,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Runs FIRST, deliberately: it establishes that the type-check below
+      # means something before that type-check is allowed to report green.
+      # Two arms, both proven to fail when violated:
+      #   A. no project-less `--noEmit` type-check anywhere in package.json
+      #      or these workflows (see the comment on the next step);
+      #   B. every source file on disk is claimed by a project referenced
+      #      from tsconfig.json. Arm B is what would have caught the real
+      #      historical defect: all 38 spec files plus src/test-setup.ts
+      #      belonged to no project, so `--build` walked past them and a
+      #      planted type error in a spec still exited 0.
+      - name: Type-check guard (prove the type-check is not vacuous)
+        run: npm run type-check:guard
+
       - name: Type check
         # NOT --noEmit: this repo's root tsconfig.json is solution-style
         # (`"files": []` + `references`), so `vue-tsc --noEmit` matches zero
@@ -28,6 +41,11 @@ jobs:
         # `npm run type-check` (called from `npm run build` below) actually
         # runs — this step must use the same command or it is not checking
         # anything.
+        #
+        # `references` now covers four projects, not two: tsconfig.node.json
+        # (*.config.ts), tsconfig.app.json (env.d.ts + src, minus tests),
+        # tsconfig.vitest.json (the spec files + src/test-setup.ts) and
+        # tsconfig.e2e.json (e2e/**). This one command checks all of them.
         run: npx vue-tsc --build
 
   test:
@@ -128,8 +146,22 @@ jobs:
             echo "MA_SKIP_BACKEND_SYNC=1" >> "$GITHUB_ENV"
           fi
 
-      - name: Run unit tests
-        run: npx vitest run
+      # `--coverage` is deliberate. vitest.config.ts has carried coverage
+      # thresholds since the suite was created, but no workflow ever passed
+      # `--coverage`, so those thresholds had never once been evaluated —
+      # a strict-looking gate that gated nothing. They are now set to the
+      # measured floor (see the comment in vitest.config.ts) and enforced
+      # here, so a coverage REGRESSION fails this job.
+      #
+      # No `continue-on-error` and no `|| true`: this must be able to turn
+      # the job red, or wiring it up would just be theatre.
+      #
+      # The suite also fails closed on zero collection — `vitest run` with a
+      # non-matching include exits 1 with "No test files found", and
+      # `passWithNoTests: false` is now pinned explicitly in vitest.config.ts
+      # — so a glob that silently stops matching cannot pass this step.
+      - name: Run unit tests (with coverage thresholds enforced)
+        run: npx vitest run --coverage
 
   build:
     runs-on: ubuntu-latest

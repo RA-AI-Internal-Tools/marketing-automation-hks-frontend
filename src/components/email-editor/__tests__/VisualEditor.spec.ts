@@ -45,7 +45,7 @@ describe('VisualEditor', () => {
     expect((grapesjs as any).init).toHaveBeenCalledTimes(1)
     // Initial MJML should be seeded (default fallback since modelValue is empty).
     expect(editorStub.setComponents).toHaveBeenCalledTimes(1)
-    const seed = editorStub.setComponents.mock.calls[0][0]
+    const seed = editorStub.setComponents.mock.calls[0]![0]
     expect(String(seed)).toContain('<mjml>')
   })
 
@@ -61,7 +61,11 @@ describe('VisualEditor', () => {
 
   it('wires an update listener that feeds the v-model', () => {
     const w = mount(VisualEditor, { props: { modelValue: '' } })
-    const [evt, cb] = editorStub.on.mock.calls[0]
+    // Pin that a listener was registered at all before destructuring the
+    // first call's arguments — otherwise a component that stops calling
+    // `on()` fails with an opaque destructuring TypeError.
+    expect(editorStub.on).toHaveBeenCalled()
+    const [evt, cb] = editorStub.on.mock.calls[0]!
     expect(evt).toBe('update')
     // Trigger the registered callback; the component should emit update:modelValue.
     cb()

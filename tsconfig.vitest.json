@@ -1,0 +1,49 @@
+// TSConfig for the vitest unit-test sources.
+//
+// WHY THIS FILE EXISTS: tsconfig.app.json deliberately EXCLUDES every spec
+// file (`src/**/__tests__/*`, `src/**/*.spec.ts`, `src/**/*.test.ts`,
+// `src/test-setup.ts`). Without this project those files belonged to no
+// tsconfig at all, so `vue-tsc --build` walked past them and vitest
+// transpiled them without ever type-checking them — a planted
+// `const x: number = "a string"` in a spec file left `vue-tsc --build` at
+// exit 0. This project is referenced from the root tsconfig.json, so
+// `vue-tsc --build` (and therefore `npm run type-check`, `npm run build`
+// and the CI `typecheck` job) now covers them.
+//
+// `"exclude": []` is load-bearing: it cancels tsconfig.app.json's exclude
+// list. Without it this project would inherit those exclusions and match
+// zero files — i.e. it would look armed and check nothing.
+//
+// Only the test files themselves are listed in `include`; the src modules
+// they import are pulled in transitively and are also checked by
+// tsconfig.app.json.
+//
+// EXPECTED COSMETIC EFFECT OF THAT OVERLAP: a type error in a src file that
+// any spec imports is printed TWICE by `vue-tsc --build` — once per project
+// that owns it. Two identical lines are one error, not two. This is the
+// standard create-vue app/vitest project split; de-duplicating it would mean
+// making tsconfig.app.json `composite` and emitting declarations, which this
+// repo does not do.
+{
+  "extends": "./tsconfig.app.json",
+  "include": [
+    "env.d.ts",
+    "src/**/__tests__/*",
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "src/test-setup.ts"
+  ],
+  "exclude": [],
+  "compilerOptions": {
+    // Node types are genuinely required, not a convenience:
+    // src/views/__tests__/logStatusVocabulary.spec.ts imports node:fs /
+    // node:path and reads process.env for the cross-repo LogStatus drift
+    // guard. With the inherited `"types": []` that spec alone produces 8
+    // spurious TS2307/TS2591 errors.
+    "types": ["node"],
+
+    // `vue-tsc --build` produces a .tsbuildinfo file for incremental
+    // type-checking. Specified here to keep it out of the root directory.
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.vitest.tsbuildinfo"
+  }
+}

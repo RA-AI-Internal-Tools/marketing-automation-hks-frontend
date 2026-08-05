@@ -126,7 +126,7 @@ describe('analytics pages surface backend degradation flags', () => {
 
     const found = notices(w)
     expect(found.length).toBe(1)
-    expect(found[0].props('source')).toBe('crm')
+    expect(found[0]!.props('source')).toBe('crm')
     expect(w.text()).toContain('Revenue, orders and conversion rate could not be loaded')
     // The whole point: the $0 on screen must be explicitly disowned.
     expect(w.text()).toContain('they are not zero')
@@ -141,7 +141,7 @@ describe('analytics pages surface backend degradation flags', () => {
     // Half-degraded must stay half-degraded: the CRM revenue figures are
     // fine here and must not be discredited by a page-level banner.
     expect(found.length).toBe(1)
-    expect(found[0].props('source')).toBe('tracardi')
+    expect(found[0]!.props('source')).toBe('tracardi')
     expect(w.text()).toContain('Traffic, active clients and conversion rate could not be loaded')
     expect(w.text()).not.toContain('Revenue, orders and conversion rate could not be loaded')
   })

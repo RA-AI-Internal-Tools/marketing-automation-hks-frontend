@@ -1,3 +1,21 @@
+// Solution-style root config: it owns no files itself (`"files": []`) and
+// exists only to point `tsc`/`vue-tsc` at the real projects below.
+//
+// CONSEQUENCE YOU MUST KNOW ABOUT: because this file matches zero input
+// files, `vue-tsc --noEmit` / `tsc --noEmit` type-check NOTHING here and
+// exit 0 unconditionally, however broken the code is. Only `--build`
+// follows `references`. Always use `npm run type-check` (= `vue-tsc
+// --build`). `npm run type-check:guard` (scripts/guard-typecheck.mjs, run as
+// its own CI step) fails if a project-less `--noEmit` invocation is ever
+// reintroduced into package.json or the CI workflows, and also fails if any
+// source file stops belonging to one of the projects below.
+//
+// Every source file in the repo must belong to exactly one referenced
+// project below, or it is silently unchecked:
+//   tsconfig.node.json   -> *.config.ts (vite, vitest, playwright, eslint)
+//   tsconfig.app.json    -> env.d.ts + src/**, minus the test files
+//   tsconfig.vitest.json -> the test files tsconfig.app.json excludes
+//   tsconfig.e2e.json    -> e2e/**
 {
   "files": [],
   "references": [
@@ -6,6 +24,12 @@
     },
     {
       "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.vitest.json"
+    },
+    {
+      "path": "./tsconfig.e2e.json"
     }
   ]
 }
