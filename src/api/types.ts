@@ -135,6 +135,12 @@ export interface DailyVolume {
   date: string
   sent: number
   failed: number
+  // The third series the backend has been sending and nobody plotted.
+  // internal/store/dashboard.go:262 + the GetDailyVolume SELECT at :274.
+  // Required for the same reason as on ChannelStats: the column is a
+  // COUNT, so it is always present, and an optional here would let a
+  // missing field render as a confident zero.
+  gate_unavailable: number
 }
 
 export interface HealthCheck {

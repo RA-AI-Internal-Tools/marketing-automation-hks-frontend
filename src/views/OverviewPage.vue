@@ -121,6 +121,33 @@ const chartData = computed(() => {
         pointHoverBorderColor: p.textInverse,
         pointHoverBorderWidth: 2,
       },
+      {
+        // The backend has been sending this series since GetDailyVolume
+        // gained the column; nothing plotted it. Over time is the most
+        // useful shape for an infra fault — a spike is an incident with a
+        // date on it, which neither the Channels row nor the per-campaign
+        // column can show.
+        //
+        // `fill: false` on purpose. The two series above are stacked areas
+        // reading as volume; this is not volume, it is a fault count, and
+        // the healthy value is a flat zero. An area fill at zero paints a
+        // band along the axis that reads as "some baseline amount of this
+        // is normal". A line at zero reads as nothing happening, which is
+        // the truth.
+        label: logStatusLabel('gate_unavailable'),
+        data: volume.value.map((d) => d.gate_unavailable),
+        borderColor: p.info,
+        backgroundColor: alpha(p.info, 0.12),
+        fill: false,
+        borderDash: [4, 3],
+        tension: 0.35,
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: p.info,
+        pointHoverBorderColor: p.textInverse,
+        pointHoverBorderWidth: 2,
+      },
     ],
   }
 })

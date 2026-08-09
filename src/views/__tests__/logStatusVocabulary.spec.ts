@@ -59,6 +59,9 @@ import {
 
 const fetchChannelStats = vi.fn()
 const fetchCampaignPerformance = vi.fn()
+// A vi.fn() like its two siblings, rather than a fixed arrow, so a single
+// test can supply real rows without changing what every other test sees.
+const fetchDailyVolume = vi.fn()
 
 vi.mock('@/api/dashboard', () => ({
   fetchChannelStats: (...a: any[]) => fetchChannelStats(...a),
@@ -72,7 +75,7 @@ vi.mock('@/api/dashboard', () => ({
       completed_enrollments: 4,
       cancelled_enrollments: 1,
     }),
-  fetchDailyVolume: () => Promise.resolve([]),
+  fetchDailyVolume: (...a: any[]) => fetchDailyVolume(...a),
 }))
 
 vi.mock('@/api/revenue_attribution', () => ({
@@ -91,9 +94,17 @@ vi.mock('@/stores/dashboard', () => ({
 
 // Charts are irrelevant to label text and drag in canvas APIs happy-dom
 // does not provide.
+// The Line stub declares `data` as a prop so a test can read the datasets
+// the page actually built. Without the prop declaration Vue puts it in
+// attrs and `props('data')` returns undefined, which would make the chart
+// assertions below silently vacuous rather than failing.
 vi.mock('vue-chartjs', () => ({
   Bar: { name: 'Bar', template: '<div class="chart-stub" />' },
-  Line: { name: 'Line', template: '<div class="chart-stub" />' },
+  Line: {
+    name: 'Line',
+    props: ['data', 'options'],
+    template: '<div class="chart-stub" />',
+  },
 }))
 
 vi.mock('vue-router', () => ({
@@ -155,6 +166,9 @@ beforeEach(() => {
   vi.clearAllMocks()
   fetchChannelStats.mockResolvedValue([CHANNEL_ROW])
   fetchCampaignPerformance.mockResolvedValue([PERF_ROW])
+  // Empty by default — every existing assertion in this file is about labels
+  // and columns, not the volume chart.
+  fetchDailyVolume.mockResolvedValue([])
 })
 
 // ── 0. Backend vocabulary sync ───────────────────────────────────────────
@@ -518,6 +532,37 @@ describe('Campaign performance roll-up column', () => {
   // OverviewPage.vue and the whole suite would stay green: nothing else
   // reaches into that table by name. CHANNEL_BREAKDOWN_STATUSES covers the
   // Channels page only.
+  // The daily-volume chart is the third place the backend serves
+  // gate_unavailable (internal/store/dashboard.go:262, counted at :274) and
+  // the third place nothing plotted it. Over time is the shape that matters
+  // for an infra fault: a spike is an incident with a date on it, which
+  // neither the Channels row nor the per-campaign column can show.
+  it('plots gate_unavailable as its own series on the volume chart', async () => {
+    fetchDailyVolume.mockResolvedValue([
+      { date: '2026-08-08', sent: 5, failed: 1, gate_unavailable: 41 },
+      { date: '2026-08-09', sent: 6, failed: 2, gate_unavailable: 43 },
+    ])
+    const w = await mountOverview()
+
+    const chart = w.findComponent({ name: 'Line' })
+    expect(chart.exists(), 'the volume chart did not mount').toBe(true)
+
+    const datasets = (chart.props('data') as any).datasets
+    // Non-vacuity: if `data` ever stops reaching the stub this reads
+    // undefined, and every assertion below would pass on an empty find.
+    expect(Array.isArray(datasets), 'chart data.datasets is not an array').toBe(true)
+
+    const series = datasets.find(
+      (d: any) => d.label === logStatusLabel('gate_unavailable'),
+    )
+    expect(series, 'no gate_unavailable series on the volume chart').toBeTruthy()
+    // Values come from the DTO, in order, not from a placeholder.
+    expect(series.data).toEqual([41, 43])
+    // Not an area fill: the healthy value is a flat zero, and a filled band
+    // along the axis reads as "some baseline amount of this is normal".
+    expect(series.fill, 'the fault series is filled like a volume series').toBe(false)
+  })
+
   it('shows gate_unavailable as its OWN column, separate from the roll-up', async () => {
     const w = await mountOverview()
 
