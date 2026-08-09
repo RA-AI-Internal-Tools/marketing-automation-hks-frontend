@@ -39,6 +39,11 @@
  */
 import { readFileSync, existsSync } from 'node:fs'
 import path from 'node:path'
+import {
+  backendCandidates,
+  SKIP_BACKEND_SYNC,
+  warnBackendSyncDisabled,
+} from '@/api/__tests__/backendRepo'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
@@ -173,65 +178,16 @@ beforeEach(() => {
 
 // ── 0. Backend vocabulary sync ───────────────────────────────────────────
 
-// The backend is a sibling checkout. This is not a new assumption invented
-// for this test: package.json's `generate-types` script already reads
-// ../marketing-automation-hks/docs/swagger.json to regenerate the API
-// types. MA_BACKEND_REPO overrides the location for non-standard layouts.
-//
-// Located by walking up from cwd to the package.json that identifies this
-// repo, rather than from import.meta.url — under the vitest transform
-// import.meta.url is not a file: URL and fileURLToPath throws. If the walk
-// fails it returns cwd, which simply makes the candidate paths below not
-// exist, and the test fails loudly listing what it searched. There is no
-// path through this function that lets the guard pass without reading the
-// backend.
-function resolveFrontendRoot(): string {
-  let dir = process.cwd()
-  for (let i = 0; i < 8; i++) {
-    const pkg = path.join(dir, 'package.json')
-    if (existsSync(pkg)) {
-      try {
-        if (JSON.parse(readFileSync(pkg, 'utf8')).name === 'marketing-automation-hks-frontend') {
-          return dir
-        }
-      } catch {
-        // Unparseable package.json — keep walking.
-      }
-    }
-    const parent = path.dirname(dir)
-    if (parent === dir) break
-    dir = parent
-  }
-  return process.cwd()
-}
+// Backend location, the opt-out flag and its stderr announcement all live in
+// src/api/__tests__/backendRepo.ts, shared with the DTO-drift guard. They were
+// duplicated here first; a second hand-written copy of "where is the backend"
+// is precisely the drift these guards exist to catch, so there is now one.
+const BACKEND_CANDIDATES = backendCandidates('internal', 'model', 'campaign.go')
 
-const FRONTEND_ROOT = resolveFrontendRoot()
-
-const BACKEND_CANDIDATES = (
-  process.env.MA_BACKEND_REPO
-    ? [process.env.MA_BACKEND_REPO]
-    : [
-        path.resolve(FRONTEND_ROOT, '..', 'marketing-automation-hks'),
-        path.resolve(FRONTEND_ROOT, '..', 'backend'),
-      ]
-).map((root) => path.join(root, 'internal', 'model', 'campaign.go'))
-
-// Explicit, visible opt-out for environments without the backend checked
-// out. Deliberately NOT the default: a guard that quietly disappears when
-// its input is missing is the failure mode this whole block exists to
-// close, so absent this flag a missing backend is a loud test FAILURE, not
-// a skip.
-const SKIP_BACKEND_SYNC = process.env.MA_SKIP_BACKEND_SYNC === '1'
 if (SKIP_BACKEND_SYNC) {
-  // console.warn is swallowed here: vitest's default reporter does not
-  // print module-scope console output to the terminal at all (verified —
-  // under `vitest run` a bare console.warn at this scope never reaches
-  // stdout/stderr). process.stderr.write bypasses that interception and
-  // is the one line in this file actually guaranteed to reach a human (or
-  // a CI log) running the suite with the flag set.
-  process.stderr.write(
-    '[logStatusVocabulary] MA_SKIP_BACKEND_SYNC=1 — the LOG_STATUSES <-> ' +
-      'internal/model/campaign.go drift guard is DISABLED for this run.\n',
+  warnBackendSyncDisabled(
+    'logStatusVocabulary',
+    'LOG_STATUSES <-> internal/model/campaign.go',
   )
 }
 
