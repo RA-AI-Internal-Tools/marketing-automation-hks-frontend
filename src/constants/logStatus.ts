@@ -49,6 +49,23 @@ export const LOG_STATUSES: LogStatusOption[] = [
   { value: 'skipped', label: 'Skipped' },
   { value: 'frequency_capped', label: 'Frequency Capped' },
   { value: 'no_consent', label: 'No Consent' },
+  // NOT a synonym for no_consent, and the distinction is the whole point of
+  // the status existing. `no_consent` means MA holds a consent row for this
+  // client and it says no — the person was asked and declined.
+  // `no_consent_record` means MA holds NO row at all: nobody ever asked.
+  // Collapsing the two reads as "1,054 customers refused marketing" when the
+  // truth is "we never obtained consent from them", which is a different
+  // problem with a different fix (see marketing-automation-hks#57).
+  //
+  // Filterable separately on LogsPage for that reason. On the two dashboards
+  // it is NOT broken out, because the backend does not serve it separately:
+  // GetChannelStats folds it into the `no_consent` column
+  // (`IN ('no_consent','no_consent_record')`, internal/store/dashboard.go:178)
+  // and GetCampaignPerformance includes it in total_skipped (line 224). It is
+  // therefore in SUPPRESSED_STATUSES below and deliberately absent from
+  // CHANNEL_BREAKDOWN_STATUSES — adding it there would be a vue-tsc error
+  // anyway, since ChannelStats has no such field.
+  { value: 'no_consent_record', label: 'No Consent Record' },
   { value: 'condition_not_met', label: 'Condition Not Met' },
   { value: 'quiet_hour_deferred', label: 'Quiet Hour Deferred' },
   // The gate (frequency cap / consent / condition checks) could not be
@@ -147,6 +164,11 @@ export const CHANNEL_BREAKDOWN_STATUSES: readonly ChannelCountKey[] = Object.fre
   'skipped',
   'frequency_capped',
   'no_consent',
+  // Added when the gap described below was closed. It goes LAST deliberately:
+  // the four before it are outcomes the platform decided, this one is the
+  // platform admitting it could not decide, and a reader scanning the column
+  // order should meet it after the real outcomes rather than among them.
+  'gate_unavailable',
 ])
 
 /**
@@ -173,6 +195,12 @@ export const SUPPRESSED_STATUSES: readonly string[] = Object.freeze([
   'condition_not_met',
   'frequency_capped',
   'no_consent',
+  // Mirrors the backend's IN (...) list exactly, which is this module's
+  // contract: internal/store/dashboard.go:224 counts
+  // ('skipped','condition_not_met','frequency_capped','no_consent','no_consent_record')
+  // into total_skipped. Omitting it here would make this list claim a
+  // membership the roll-up column does not actually have.
+  'no_consent_record',
 ])
 
 /**
@@ -218,14 +246,13 @@ export function suppressedRollupTitle(): string {
  *       with no event having occurred.
  *   quiet_hour_deferred — deferred, not declined; the backend excludes it
  *       from both aggregations.
- *   gate_unavailable — KNOWN GAP, not a decision. The backend already
- *       serves it (ChannelStats.gate_unavailable and
- *       CampaignPerformance.total_gate_unavailable in
- *       internal/store/dashboard.go) precisely so an infra blind spot
- *       stops hiding inside a benign bucket, but neither the frontend
- *       ChannelStats/CampaignPerformance type nor either page surfaces it
- *       yet. Rendering it is tracked separately from the label collision
- *       this module fixes.
+ *
+ * `gate_unavailable` used to be listed here as a KNOWN GAP. It is not a gap
+ * any more: it is broken out on Channels and shown on the performance table,
+ * so it now lives in CHANNEL_BREAKDOWN_STATUSES. Do not add it back here —
+ * the two lists are unioned by the coverage test, so a status present in both
+ * still "accounts", and the duplicate would read as a deliberate decision not
+ * to render something that is in fact rendered.
  */
 export const DASHBOARD_UNRENDERED_STATUSES: readonly string[] = Object.freeze([
   'delivered',
@@ -236,5 +263,4 @@ export const DASHBOARD_UNRENDERED_STATUSES: readonly string[] = Object.freeze([
   'unsubscribed',
   'queued',
   'quiet_hour_deferred',
-  'gate_unavailable',
 ])

@@ -31,6 +31,18 @@ const statusConfig: Record<string, { bg: string; text: string; dot: string }> = 
   skipped: { bg: 'bg-[var(--color-bg-subtle)]', text: 'text-[var(--color-text-tertiary)]', dot: 'bg-[var(--color-text-muted)]' },
   frequency_capped: { bg: 'bg-[var(--color-warning-bg)]', text: 'text-[var(--color-warning-text)]', dot: 'bg-[var(--color-warning)]' },
   no_consent: { bg: 'bg-[var(--color-warning-bg)]', text: 'text-[var(--color-warning-text)]', dot: 'bg-[var(--color-warning)]' },
+  // `no_consent_record`: MA holds NO consent row for this client, as opposed
+  // to holding one that says no. Same amber as `no_consent` on purpose —
+  // both are "the gate ran and correctly declined", which is what the colour
+  // encodes, and the two are already folded into one column by the backend
+  // (GetChannelStats counts them together). The distinction that matters is
+  // carried by the LABEL, not the hue: an operator reading "No Consent
+  // Record" needs to know nobody was ever asked, which is an acquisition
+  // problem, not "they said no", which is a preference to respect.
+  // Giving it a separate colour would imply a separate severity it does not
+  // have — unlike gate_unavailable below, which is genuinely a different
+  // KIND of outcome (we failed to decide) and is coloured accordingly.
+  no_consent_record: { bg: 'bg-[var(--color-warning-bg)]', text: 'text-[var(--color-warning-text)]', dot: 'bg-[var(--color-warning)]' },
   condition_not_met: { bg: 'bg-[var(--color-bg-subtle)]', text: 'text-[var(--color-text-tertiary)]', dot: 'bg-[var(--color-text-muted)]' },
   quiet_hour_deferred: { bg: 'bg-[var(--color-warning-bg)]', text: 'text-[var(--color-warning-text)]', dot: 'bg-[var(--color-warning)]' },
   // `gate_unavailable`: the frequency-cap/consent/condition gate could not

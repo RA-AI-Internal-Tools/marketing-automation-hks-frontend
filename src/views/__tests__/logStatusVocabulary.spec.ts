@@ -43,7 +43,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import StatusBadge from '@/components/StatusBadge.vue'
-import type { ChannelStats } from '@/api/types'
+import type { ChannelStats, CampaignPerformance } from '@/api/types'
 import {
   LOG_STATUSES,
   LOG_STATUS_LABELS,
@@ -113,13 +113,23 @@ const CHANNEL_ROW: ChannelStats = {
   skipped: 5,
   frequency_capped: 11,
   no_consent: 9001,
+  gate_unavailable: 13,
 }
 
-const PERF_ROW = {
+// Typed as CampaignPerformance for the same reason CHANNEL_ROW is typed as
+// ChannelStats: so the fixture cannot drift from the DTO the page consumes.
+// It was previously an untyped object literal, and that gap had teeth — when
+// total_gate_unavailable was added as a required field, `vue-tsc --build`
+// stayed green here while OverviewPage threw
+// "Cannot read properties of undefined (reading 'toLocaleString')" on mount,
+// taking three unrelated assertions down with it. A type error at the
+// fixture is the cheap version of that failure.
+const PERF_ROW: CampaignPerformance = {
   campaign_slug: 'welcome',
   total_sent: 7,
   total_failed: 3,
   total_skipped: 9022,
+  total_gate_unavailable: 17,
   total_opened: 2,
   total_clicked: 1,
   enrollments: 10,
@@ -502,6 +512,34 @@ describe('Campaign performance roll-up column', () => {
     for (const status of SUPPRESSED_STATUSES) {
       expect(title, `tooltip hides member "${status}"`).toContain(logStatusLabel(status))
     }
+  })
+
+  // Without this, the gate_unavailable column could be deleted from
+  // OverviewPage.vue and the whole suite would stay green: nothing else
+  // reaches into that table by name. CHANNEL_BREAKDOWN_STATUSES covers the
+  // Channels page only.
+  it('shows gate_unavailable as its OWN column, separate from the roll-up', async () => {
+    const w = await mountOverview()
+
+    const th = w.get('[data-test="perf-col-gate-unavailable"]')
+    expect(th.text()).toContain(logStatusLabel('gate_unavailable'))
+
+    // The value is rendered from the DTO, not fabricated: PERF_ROW carries a
+    // distinctive 17 that appears nowhere else in the fixture.
+    const cell = w.get('[data-test="perf-cell-gate-unavailable"]')
+    expect(cell.text()).toBe('17')
+
+    // And it is genuinely NOT inside the roll-up. total_skipped is 9022 in
+    // the fixture; if someone folded gate_unavailable back in, the roll-up
+    // cell would move and this would catch it.
+    expect(
+      th.text().trim().toLowerCase(),
+      'the infra-fault column is being labelled as the suppression roll-up',
+    ).not.toBe(SUPPRESSED_ROLLUP_LABEL.trim().toLowerCase())
+    expect(
+      SUPPRESSED_STATUSES,
+      'gate_unavailable must never join the suppression roll-up — it is not a decision',
+    ).not.toContain('gate_unavailable')
   })
 })
 
