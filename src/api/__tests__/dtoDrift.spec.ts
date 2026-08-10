@@ -33,6 +33,28 @@
  * why the non-vacuity floors below matter: if the naming convention ever
  * diverges the intersection empties out, and this file would pass while
  * checking nothing. It fails instead.
+ *
+ * WHEN THIS RUNS — the limitation that matters most, and it is not logical
+ * ------------------------------------------------------------------------
+ * This guard only executes on a push to THIS repo. The drift it detects is
+ * introduced by a commit to the OTHER one. So at the moment a backend struct
+ * gains a field, nothing here runs, and this repo's last CI run stays green
+ * for as long as nobody touches the frontend.
+ *
+ * That is not hypothetical either, and it is not a risk this file introduces —
+ * it is issue #26, opened because exactly this happened to the sibling guard
+ * (`logStatusVocabulary.spec.ts`): `main` was red for days after the backend
+ * added `LogStatusNoConsentRecord`, while every CI run on record was green,
+ * because all of them predated the backend commit.
+ *
+ * This file inherits that verbatim. It narrows the window in which a dropped
+ * field can go unnoticed — the next frontend push will catch it — but it does
+ * NOT close it. Closing it needs a trigger this repo does not have: a
+ * scheduled run, or a dispatch from the backend's CI. Whoever fixes #26 fixes
+ * both guards at once; do not fix it for one and assume the other is covered.
+ *
+ * Stated here rather than only in the PR description because the PR is not
+ * what the next maintainer reads.
  */
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs'
 import path from 'node:path'
