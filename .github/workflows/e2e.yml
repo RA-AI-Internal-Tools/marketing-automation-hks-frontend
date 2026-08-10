@@ -4,6 +4,13 @@ name: E2E
 # tests auto-skip when E2E_EMAIL / E2E_PASSWORD secrets aren't present,
 # so forks and pre-setup branches don't fail. Kept separate from ci.yml
 # so a broken deploy doesn't block typecheck/build PRs.
+#
+# NOTE: that skip has never been what happened here. Both E2E_EMAIL and
+# E2E_PASSWORD ARE configured on this repository, so the suite has always been
+# armed and genuinely running. It has also never passed — see issue #27 and
+# the preflight step below before concluding anything from this file's history.
+# The workflow is currently `disabled_inactivity`; re-enabling it without
+# fixing the network path only restores nightly noise.
 
 on:
   workflow_dispatch:
@@ -27,6 +34,57 @@ jobs:
       E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
       E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
     steps:
+      # PREFLIGHT. Deliberately the FIRST step — it needs no checkout, no node
+      # and no browsers, so an unreachable target costs at most ~20s (the curl
+      # --max-time) instead of burning the whole 15-minute budget. Measured
+      # against the real target from a machine with no route: 20.0s, exit 1.
+      #
+      # WHY (issue #27): this suite ran 89 times between 2026-04-15 and
+      # 2026-07-12 and passed exactly 0 of them. Every failure was the same —
+      # `page.goto: net::ERR_ABORTED` on all 48 tests, ~35s each, because a
+      # GitHub-hosted runner has no route to ma.internal.hksglobal.group
+      # (1.16.2.60 answers on the corporate network and over the tailnet, and
+      # returns nothing at all from the public internet).
+      #
+      # The important part is how that DEGRADED. 48 tests x 35s is ~28 minutes
+      # against `timeout-minutes: 15`, so once the suite grew past ~25 specs it
+      # stopped being able to finish even its failures and started being killed
+      # at the wall — and the GitHub API reports a timeout as `cancelled`. All
+      # 56 of those runs have a duration of exactly 15 minutes. So the signal
+      # went from a red X that named the error, to an ambiguous "cancelled"
+      # that reads like somebody pressed a button, to nothing at all once
+      # GitHub disabled the schedule for inactivity. It got quieter as it got
+      # worse.
+      #
+      # This step does NOT make the suite pass. There is no public URL for this
+      # app; that needs a self-hosted runner or a stack stood up in-job, which
+      # is issue #27's open decision. What it does is make the next failure
+      # legible in one line instead of requiring someone to download a log
+      # archive and notice that 48 identical navigation errors mean "no route".
+      #
+      # E2E_BASE_URL is read from the job-level `env:` block, never interpolated
+      # into this shell with ${{ }} — see the note on that block above.
+      - name: Preflight — E2E_BASE_URL must be reachable from this runner
+        run: |
+          set -uo pipefail
+          echo "Target: ${E2E_BASE_URL}"
+          code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "${E2E_BASE_URL}/" 2>preflight.err)" || code=""
+          : "${code:=000}"
+          echo "HTTP status: ${code}"
+          if [ -s preflight.err ]; then
+            # curl's connection-level diagnostic. Safe to print: it describes
+            # DNS/TCP/TLS against a URL, and carries no credential.
+            echo "curl: $(tr -d '\r' < preflight.err | head -1)"
+          fi
+          if [ "${code}" = "000" ]; then
+            echo "::error title=E2E base URL unreachable from this runner::Target did not answer (no HTTP status). A GitHub-hosted runner cannot reach the internal MA host. This is issue #27 - the suite has never passed for this reason. Fix the network path (self-hosted runner, or stand the stack up in-job and point E2E_BASE_URL at localhost); do not just raise the timeout."
+            exit 1
+          fi
+          case "${code}" in
+            2*|3*) echo "Reachable - proceeding." ;;
+            *)     echo "::warning title=E2E base URL answered ${code}::Reachable but not a success status. Proceeding so Playwright can report the detail, but expect failures." ;;
+          esac
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
