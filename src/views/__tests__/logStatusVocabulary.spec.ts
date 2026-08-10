@@ -357,7 +357,47 @@ describe('backendVocabulary', () => {
 
 describe('LogStatus vocabulary', () => {
   it('gives every status exactly one label, and no two statuses share one', () => {
-    expect(LOG_STATUSES.length).toBeGreaterThan(0)
+    // NAME THE MEMBERS. `expect(LOG_STATUSES.length).toBeGreaterThan(0)` used
+    // to stand here, and it is the weakest assertion in this file: a loop over
+    // a shrinking list cannot notice the shrinking, and `> 0` accepts one.
+    //
+    // WHY THIS MATTERS MORE THAN IT LOOKS. The real protection against a
+    // vanishing status is `backendVocabulary`, which diffs this list against
+    // internal/model/campaign.go. THAT GUARD IS SKIPPED IN CI — MA_BACKEND_RO_TOKEN
+    // is unset, so every run takes the MA_SKIP_BACKEND_SYNC path (see #24/#26).
+    //
+    // Measured 2026-08-10: deleting `gate_unavailable` from LOG_STATUSES *and*
+    // from DASHBOARD_UNRENDERED_STATUSES together —
+    //   locally, backend checkout present : FAIL (backendVocabulary catches it)
+    //   with MA_SKIP_BACKEND_SYNC=1, i.e. CI: 12 passed, 1 skipped, GREEN
+    // gate_unavailable is the field #20 was opened for. It could be deleted
+    // outright and CI would not notice.
+    //
+    // So this list is the token-independent floor. It protects the vocabulary
+    // on the runs that actually happen. Adding a status is free; losing one
+    // fails and says which.
+    const EXPECTED_STATUSES = [
+      'queued',
+      'sent',
+      'delivered',
+      'failed',
+      'skipped',
+      'condition_not_met',
+      'frequency_capped',
+      'no_consent',
+      'no_consent_record',
+      'gate_unavailable',
+    ]
+    const present = new Set(LOG_STATUSES.map((s) => s.value))
+    expect(
+      EXPECTED_STATUSES.filter((s) => !present.has(s)),
+      'these statuses vanished from LOG_STATUSES. The label loop below only ' +
+        'iterates what survived, so it cannot see this, and backendVocabulary ' +
+        'is skipped whenever MA_BACKEND_RO_TOKEN is unset. If a status was ' +
+        'retired deliberately, delete it here in the same commit and say why.\n' +
+        'Present: ' + [...present].sort().join(', '),
+    ).toEqual([])
+
     for (const { value, label } of LOG_STATUSES) {
       expect(LOG_STATUS_LABELS[value], `no label for ${value}`).toBe(label)
       expect(logStatusLabel(value)).toBe(label)
@@ -405,7 +445,20 @@ describe('LogStatus vocabulary', () => {
     }
     // Non-vacuity: the roll-up really does contain more than one status, so
     // the assertion above is constraining something real.
-    expect(SUPPRESSED_STATUSES.length).toBeGreaterThan(1)
+    //
+    // Named rather than counted (`> 1` allowed three of the five to leave).
+    // SUPPRESSED_STATUSES mirrors the backend's IN (...) list at
+    // internal/store/dashboard.go:224 — what total_skipped actually counts. A
+    // member quietly leaving does not make the UI look wrong; it makes the
+    // roll-up disagree with the column it claims to mirror, which is the kind
+    // of drift nobody reports because both numbers still look plausible.
+    expect(
+      ['skipped', 'condition_not_met', 'frequency_capped', 'no_consent', 'no_consent_record'].filter(
+        (s) => !SUPPRESSED_STATUSES.includes(s),
+      ),
+      'these left SUPPRESSED_STATUSES, so the UI roll-up no longer matches the ' +
+        'backend total_skipped IN (...) list it mirrors. Change both sides or neither.',
+    ).toEqual([])
   })
 })
 
