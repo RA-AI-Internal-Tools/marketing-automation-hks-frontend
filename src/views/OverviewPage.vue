@@ -23,7 +23,7 @@ import {
 import type { OverviewStats, DailyVolume, CampaignPerformance } from '@/api/types'
 import { useDashboardStore } from '@/stores/dashboard'
 import { useSortable } from '@/composables/useSortable'
-import { SUPPRESSED_ROLLUP_LABEL, suppressedRollupTitle } from '@/constants/logStatus'
+import { SUPPRESSED_ROLLUP_LABEL, suppressedRollupTitle, logStatusLabel } from '@/constants/logStatus'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
 
@@ -118,6 +118,33 @@ const chartData = computed(() => {
         pointRadius: 0,
         pointHoverRadius: 5,
         pointHoverBackgroundColor: p.error,
+        pointHoverBorderColor: p.textInverse,
+        pointHoverBorderWidth: 2,
+      },
+      {
+        // The backend has been sending this series since GetDailyVolume
+        // gained the column; nothing plotted it. Over time is the most
+        // useful shape for an infra fault — a spike is an incident with a
+        // date on it, which neither the Channels row nor the per-campaign
+        // column can show.
+        //
+        // `fill: false` on purpose. The two series above are stacked areas
+        // reading as volume; this is not volume, it is a fault count, and
+        // the healthy value is a flat zero. An area fill at zero paints a
+        // band along the axis that reads as "some baseline amount of this
+        // is normal". A line at zero reads as nothing happening, which is
+        // the truth.
+        label: logStatusLabel('gate_unavailable'),
+        data: volume.value.map((d) => d.gate_unavailable),
+        borderColor: p.info,
+        backgroundColor: alpha(p.info, 0.12),
+        fill: false,
+        borderDash: [4, 3],
+        tension: 0.35,
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: p.info,
         pointHoverBorderColor: p.textInverse,
         pointHoverBorderWidth: 2,
       },
@@ -403,6 +430,22 @@ function pctLabel(n: number, total: number): string {
                 >
                   {{ SUPPRESSED_ROLLUP_LABEL }} <span v-if="sortKey === 'total_skipped'" class="perf-sort-ind">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
                 </th>
+                <!-- Deliberately its own column and NOT folded into the
+                     roll-up beside it. The roll-up is four business outcomes
+                     — the platform decided not to send. This is the platform
+                     failing to decide, which is an operational fault someone
+                     has to act on. Adding it to the roll-up would restore
+                     exactly the blind spot the backend added the field to
+                     remove: an infrastructure failure reading as a customer
+                     choice. Zero is the normal, healthy value here. -->
+                <th
+                  class="perf-th-sort"
+                  data-test="perf-col-gate-unavailable"
+                  title="Gate could not be evaluated — an infrastructure fault, not a customer decision. Not counted in the suppressed roll-up."
+                  @click="toggleSort('total_gate_unavailable')"
+                >
+                  {{ logStatusLabel('gate_unavailable') }} <span v-if="sortKey === 'total_gate_unavailable'" class="perf-sort-ind">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+                </th>
                 <th class="perf-th-sort" @click="toggleSort('total_opened')" title="Opened (inbox + email)">
                   Opened <span v-if="sortKey === 'total_opened'" class="perf-sort-ind">{{ sortDir === 'asc' ? '↑' : '↓' }}</span>
                 </th>
@@ -426,6 +469,13 @@ function pctLabel(n: number, total: number): string {
                 <td class="num-pos">{{ c.total_sent.toLocaleString() }}</td>
                 <td class="num-neg">{{ c.total_failed.toLocaleString() }}</td>
                 <td class="num-muted">{{ c.total_skipped.toLocaleString() }}</td>
+                <!-- No `?? 0`: total_gate_unavailable is a REQUIRED field on
+                     CampaignPerformance because the backend always emits it.
+                     A nullish fallback here would silently render 0 for a
+                     field the API had stopped sending, which is the
+                     fabricated-statistic failure this dashboard has already
+                     been bitten by once. -->
+                <td :class="c.total_gate_unavailable > 0 ? 'num-neg' : 'num-muted'" data-test="perf-cell-gate-unavailable">{{ c.total_gate_unavailable.toLocaleString() }}</td>
                 <td>{{ (c.total_opened ?? 0).toLocaleString() }}</td>
                 <td class="num-accent">{{ (c.total_clicked ?? 0).toLocaleString() }}</td>
                 <td>{{ c.enrollments.toLocaleString() }}</td>
@@ -433,7 +483,7 @@ function pctLabel(n: number, total: number): string {
                 <td class="num-muted">{{ pctLabel(c.completions, c.enrollments) }}</td>
               </tr>
               <tr v-if="campaigns.length === 0">
-                <td colspan="9" class="perf-empty">No campaign data yet.</td>
+                <td colspan="10" class="perf-empty">No campaign data yet.</td>
               </tr>
             </tbody>
           </table>

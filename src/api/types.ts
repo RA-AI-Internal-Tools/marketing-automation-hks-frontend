@@ -105,6 +105,14 @@ export interface ChannelStats {
   skipped: number
   frequency_capped: number
   no_consent: number
+  // REQUIRED, not optional, and that is load-bearing. CHANNEL_BREAKDOWN_STATUSES
+  // is typed `readonly ChannelCountKey[]`, and ChannelCountKey is "the required
+  // numeric fields of this interface" — `ChannelStats[K] extends number` is
+  // false for `number | undefined`, so an optional field here would silently
+  // fail to satisfy that list and produce a TS2322 with no obvious cause.
+  // The backend emits it unconditionally: internal/store/dashboard.go:161,
+  // `GateUnavailable int64 \`json:"gate_unavailable"\`` with no omitempty.
+  gate_unavailable: number
 }
 
 export interface CampaignPerformance {
@@ -117,12 +125,22 @@ export interface CampaignPerformance {
   total_clicked?: number
   enrollments: number
   completions: number
+  // Infrastructure could not evaluate the gate — NOT a customer decision and
+  // NOT part of total_skipped, which is a roll-up of four business outcomes.
+  // Emitted unconditionally by internal/store/dashboard.go:201.
+  total_gate_unavailable: number
 }
 
 export interface DailyVolume {
   date: string
   sent: number
   failed: number
+  // The third series the backend has been sending and nobody plotted.
+  // internal/store/dashboard.go:262 + the GetDailyVolume SELECT at :274.
+  // Required for the same reason as on ChannelStats: the column is a
+  // COUNT, so it is always present, and an optional here would let a
+  // missing field render as a confident zero.
+  gate_unavailable: number
 }
 
 export interface HealthCheck {

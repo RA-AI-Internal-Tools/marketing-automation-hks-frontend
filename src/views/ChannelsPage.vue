@@ -58,6 +58,12 @@ const valueClass: Record<ChannelCountKey, string> = {
   skipped: 'text-[var(--color-text-secondary)]',
   frequency_capped: 'text-[var(--color-warning-text)]',
   no_consent: 'text-[var(--color-warning-text)]',
+  // `info`, deliberately, and matching StatusBadge.vue's colour for the same
+  // status. The warning tint above means "we decided not to send" — a policy
+  // outcome. This one means "we could not decide", which is an operational
+  // fault of ours and not a statement about the customer, so it must not
+  // share the palette of the consent/frequency decisions sitting next to it.
+  gate_unavailable: 'text-[var(--color-info-text)]',
 }
 
 // Every row on a per-channel card is a 1:1 count of ONE campaign_logs

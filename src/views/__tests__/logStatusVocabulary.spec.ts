@@ -39,11 +39,16 @@
  */
 import { readFileSync, existsSync } from 'node:fs'
 import path from 'node:path'
+import {
+  backendCandidates,
+  SKIP_BACKEND_SYNC,
+  warnBackendSyncDisabled,
+} from '@/api/__tests__/backendRepo'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import StatusBadge from '@/components/StatusBadge.vue'
-import type { ChannelStats } from '@/api/types'
+import type { ChannelStats, CampaignPerformance } from '@/api/types'
 import {
   LOG_STATUSES,
   LOG_STATUS_LABELS,
@@ -59,6 +64,9 @@ import {
 
 const fetchChannelStats = vi.fn()
 const fetchCampaignPerformance = vi.fn()
+// A vi.fn() like its two siblings, rather than a fixed arrow, so a single
+// test can supply real rows without changing what every other test sees.
+const fetchDailyVolume = vi.fn()
 
 vi.mock('@/api/dashboard', () => ({
   fetchChannelStats: (...a: any[]) => fetchChannelStats(...a),
@@ -72,7 +80,7 @@ vi.mock('@/api/dashboard', () => ({
       completed_enrollments: 4,
       cancelled_enrollments: 1,
     }),
-  fetchDailyVolume: () => Promise.resolve([]),
+  fetchDailyVolume: (...a: any[]) => fetchDailyVolume(...a),
 }))
 
 vi.mock('@/api/revenue_attribution', () => ({
@@ -91,9 +99,17 @@ vi.mock('@/stores/dashboard', () => ({
 
 // Charts are irrelevant to label text and drag in canvas APIs happy-dom
 // does not provide.
+// The Line stub declares `data` as a prop so a test can read the datasets
+// the page actually built. Without the prop declaration Vue puts it in
+// attrs and `props('data')` returns undefined, which would make the chart
+// assertions below silently vacuous rather than failing.
 vi.mock('vue-chartjs', () => ({
   Bar: { name: 'Bar', template: '<div class="chart-stub" />' },
-  Line: { name: 'Line', template: '<div class="chart-stub" />' },
+  Line: {
+    name: 'Line',
+    props: ['data', 'options'],
+    template: '<div class="chart-stub" />',
+  },
 }))
 
 vi.mock('vue-router', () => ({
@@ -113,13 +129,23 @@ const CHANNEL_ROW: ChannelStats = {
   skipped: 5,
   frequency_capped: 11,
   no_consent: 9001,
+  gate_unavailable: 13,
 }
 
-const PERF_ROW = {
+// Typed as CampaignPerformance for the same reason CHANNEL_ROW is typed as
+// ChannelStats: so the fixture cannot drift from the DTO the page consumes.
+// It was previously an untyped object literal, and that gap had teeth — when
+// total_gate_unavailable was added as a required field, `vue-tsc --build`
+// stayed green here while OverviewPage threw
+// "Cannot read properties of undefined (reading 'toLocaleString')" on mount,
+// taking three unrelated assertions down with it. A type error at the
+// fixture is the cheap version of that failure.
+const PERF_ROW: CampaignPerformance = {
   campaign_slug: 'welcome',
   total_sent: 7,
   total_failed: 3,
   total_skipped: 9022,
+  total_gate_unavailable: 17,
   total_opened: 2,
   total_clicked: 1,
   enrollments: 10,
@@ -145,69 +171,23 @@ beforeEach(() => {
   vi.clearAllMocks()
   fetchChannelStats.mockResolvedValue([CHANNEL_ROW])
   fetchCampaignPerformance.mockResolvedValue([PERF_ROW])
+  // Empty by default — every existing assertion in this file is about labels
+  // and columns, not the volume chart.
+  fetchDailyVolume.mockResolvedValue([])
 })
 
 // ── 0. Backend vocabulary sync ───────────────────────────────────────────
 
-// The backend is a sibling checkout. This is not a new assumption invented
-// for this test: package.json's `generate-types` script already reads
-// ../marketing-automation-hks/docs/swagger.json to regenerate the API
-// types. MA_BACKEND_REPO overrides the location for non-standard layouts.
-//
-// Located by walking up from cwd to the package.json that identifies this
-// repo, rather than from import.meta.url — under the vitest transform
-// import.meta.url is not a file: URL and fileURLToPath throws. If the walk
-// fails it returns cwd, which simply makes the candidate paths below not
-// exist, and the test fails loudly listing what it searched. There is no
-// path through this function that lets the guard pass without reading the
-// backend.
-function resolveFrontendRoot(): string {
-  let dir = process.cwd()
-  for (let i = 0; i < 8; i++) {
-    const pkg = path.join(dir, 'package.json')
-    if (existsSync(pkg)) {
-      try {
-        if (JSON.parse(readFileSync(pkg, 'utf8')).name === 'marketing-automation-hks-frontend') {
-          return dir
-        }
-      } catch {
-        // Unparseable package.json — keep walking.
-      }
-    }
-    const parent = path.dirname(dir)
-    if (parent === dir) break
-    dir = parent
-  }
-  return process.cwd()
-}
+// Backend location, the opt-out flag and its stderr announcement all live in
+// src/api/__tests__/backendRepo.ts, shared with the DTO-drift guard. They were
+// duplicated here first; a second hand-written copy of "where is the backend"
+// is precisely the drift these guards exist to catch, so there is now one.
+const BACKEND_CANDIDATES = backendCandidates('internal', 'model', 'campaign.go')
 
-const FRONTEND_ROOT = resolveFrontendRoot()
-
-const BACKEND_CANDIDATES = (
-  process.env.MA_BACKEND_REPO
-    ? [process.env.MA_BACKEND_REPO]
-    : [
-        path.resolve(FRONTEND_ROOT, '..', 'marketing-automation-hks'),
-        path.resolve(FRONTEND_ROOT, '..', 'backend'),
-      ]
-).map((root) => path.join(root, 'internal', 'model', 'campaign.go'))
-
-// Explicit, visible opt-out for environments without the backend checked
-// out. Deliberately NOT the default: a guard that quietly disappears when
-// its input is missing is the failure mode this whole block exists to
-// close, so absent this flag a missing backend is a loud test FAILURE, not
-// a skip.
-const SKIP_BACKEND_SYNC = process.env.MA_SKIP_BACKEND_SYNC === '1'
 if (SKIP_BACKEND_SYNC) {
-  // console.warn is swallowed here: vitest's default reporter does not
-  // print module-scope console output to the terminal at all (verified —
-  // under `vitest run` a bare console.warn at this scope never reaches
-  // stdout/stderr). process.stderr.write bypasses that interception and
-  // is the one line in this file actually guaranteed to reach a human (or
-  // a CI log) running the suite with the flag set.
-  process.stderr.write(
-    '[logStatusVocabulary] MA_SKIP_BACKEND_SYNC=1 — the LOG_STATUSES <-> ' +
-      'internal/model/campaign.go drift guard is DISABLED for this run.\n',
+  warnBackendSyncDisabled(
+    'logStatusVocabulary',
+    'LOG_STATUSES <-> internal/model/campaign.go',
   )
 }
 
@@ -502,6 +482,65 @@ describe('Campaign performance roll-up column', () => {
     for (const status of SUPPRESSED_STATUSES) {
       expect(title, `tooltip hides member "${status}"`).toContain(logStatusLabel(status))
     }
+  })
+
+  // Without this, the gate_unavailable column could be deleted from
+  // OverviewPage.vue and the whole suite would stay green: nothing else
+  // reaches into that table by name. CHANNEL_BREAKDOWN_STATUSES covers the
+  // Channels page only.
+  // The daily-volume chart is the third place the backend serves
+  // gate_unavailable (internal/store/dashboard.go:262, counted at :274) and
+  // the third place nothing plotted it. Over time is the shape that matters
+  // for an infra fault: a spike is an incident with a date on it, which
+  // neither the Channels row nor the per-campaign column can show.
+  it('plots gate_unavailable as its own series on the volume chart', async () => {
+    fetchDailyVolume.mockResolvedValue([
+      { date: '2026-08-08', sent: 5, failed: 1, gate_unavailable: 41 },
+      { date: '2026-08-09', sent: 6, failed: 2, gate_unavailable: 43 },
+    ])
+    const w = await mountOverview()
+
+    const chart = w.findComponent({ name: 'Line' })
+    expect(chart.exists(), 'the volume chart did not mount').toBe(true)
+
+    const datasets = (chart.props('data') as any).datasets
+    // Non-vacuity: if `data` ever stops reaching the stub this reads
+    // undefined, and every assertion below would pass on an empty find.
+    expect(Array.isArray(datasets), 'chart data.datasets is not an array').toBe(true)
+
+    const series = datasets.find(
+      (d: any) => d.label === logStatusLabel('gate_unavailable'),
+    )
+    expect(series, 'no gate_unavailable series on the volume chart').toBeTruthy()
+    // Values come from the DTO, in order, not from a placeholder.
+    expect(series.data).toEqual([41, 43])
+    // Not an area fill: the healthy value is a flat zero, and a filled band
+    // along the axis reads as "some baseline amount of this is normal".
+    expect(series.fill, 'the fault series is filled like a volume series').toBe(false)
+  })
+
+  it('shows gate_unavailable as its OWN column, separate from the roll-up', async () => {
+    const w = await mountOverview()
+
+    const th = w.get('[data-test="perf-col-gate-unavailable"]')
+    expect(th.text()).toContain(logStatusLabel('gate_unavailable'))
+
+    // The value is rendered from the DTO, not fabricated: PERF_ROW carries a
+    // distinctive 17 that appears nowhere else in the fixture.
+    const cell = w.get('[data-test="perf-cell-gate-unavailable"]')
+    expect(cell.text()).toBe('17')
+
+    // And it is genuinely NOT inside the roll-up. total_skipped is 9022 in
+    // the fixture; if someone folded gate_unavailable back in, the roll-up
+    // cell would move and this would catch it.
+    expect(
+      th.text().trim().toLowerCase(),
+      'the infra-fault column is being labelled as the suppression roll-up',
+    ).not.toBe(SUPPRESSED_ROLLUP_LABEL.trim().toLowerCase())
+    expect(
+      SUPPRESSED_STATUSES,
+      'gate_unavailable must never join the suppression roll-up — it is not a decision',
+    ).not.toContain('gate_unavailable')
   })
 })
 
