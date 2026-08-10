@@ -374,21 +374,44 @@ describe('LogStatus vocabulary', () => {
     // outright and CI would not notice.
     //
     // So this list is the token-independent floor. It protects the vocabulary
-    // on the runs that actually happen. Adding a status is free; losing one
-    // fails and says which.
+    // on the runs that actually happen.
+    //
+    // IT NAMES ALL SIXTEEN, NOT A SUBSET — and that is a correction. The first
+    // version of this list named ten: the statuses touched by the
+    // gate_unavailable work. That is the same defect this file exists to
+    // catch, one level up. A floor covering 10 of 16 leaves the other six
+    // exactly as unprotected as the `> 0` length check it replaced, while
+    // reading like full coverage. Measured 2026-08-10: `opened`, `clicked`,
+    // `bounced`, `complaint`, `unsubscribed` and `quiet_hour_deferred` could
+    // each be deleted from LOG_STATUSES with CI green, because
+    // backendVocabulary — the only thing that would have caught them — is
+    // skipped on every run for want of MA_BACKEND_RO_TOKEN.
+    //
+    // The check is now BIDIRECTIONAL, which is what keeps the list from
+    // silently narrowing again. Deleting a status fails and names it; adding
+    // one also fails, telling you to name it here. Both are a one-line edit in
+    // the same commit, and that is the point — the floor cannot drift behind
+    // the vocabulary the way it just did.
     const EXPECTED_STATUSES = [
       'queued',
       'sent',
       'delivered',
+      'opened',
+      'clicked',
+      'bounced',
       'failed',
+      'complaint',
+      'unsubscribed',
       'skipped',
-      'condition_not_met',
       'frequency_capped',
       'no_consent',
       'no_consent_record',
+      'condition_not_met',
+      'quiet_hour_deferred',
       'gate_unavailable',
     ]
     const present = new Set(LOG_STATUSES.map((s) => s.value))
+
     expect(
       EXPECTED_STATUSES.filter((s) => !present.has(s)),
       'these statuses vanished from LOG_STATUSES. The label loop below only ' +
@@ -396,6 +419,15 @@ describe('LogStatus vocabulary', () => {
         'is skipped whenever MA_BACKEND_RO_TOKEN is unset. If a status was ' +
         'retired deliberately, delete it here in the same commit and say why.\n' +
         'Present: ' + [...present].sort().join(', '),
+    ).toEqual([])
+
+    expect(
+      [...present].filter((s) => !EXPECTED_STATUSES.includes(s)).sort(),
+      'LOG_STATUSES gained statuses this floor does not name, so they are not ' +
+        'protected by it — losing them later would go unnoticed on exactly the ' +
+        'runs backendVocabulary is skipped. Add them to EXPECTED_STATUSES in ' +
+        'the same commit. This direction exists because the list previously ' +
+        'named 10 of 16 and read like full coverage.',
     ).toEqual([])
 
     for (const { value, label } of LOG_STATUSES) {
