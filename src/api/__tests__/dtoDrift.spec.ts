@@ -141,12 +141,35 @@ describe('API DTO drift', () => {
     expect(ts.size, 'parsed no TS interfaces from types.ts — the parser broke').toBeGreaterThan(5)
 
     const shared = [...go.keys()].filter((n) => ts.has(n)).sort()
+
+    // NAME THE PAIRS, do not just count them.
+    //
+    // Matching is by name, so this guard only covers structs that share a name
+    // with an interface: 6 of the 22 Go structs parsed today. A bare
+    // `toBeGreaterThan(3)` accepts that falling to 4 — a third of the coverage
+    // gone, silently, still green. Renaming a struct on either side is exactly
+    // how that happens, and it is invisible in a count.
+    //
+    // Adding a pair is free. Losing one now fails and says which. If a struct
+    // is deliberately retired or renamed, edit this list in the same commit and
+    // say why in the message.
+    const EXPECTED_PAIRS = [
+      'CampaignFunnelStats',
+      'CampaignPerformance',
+      'ChannelStats',
+      'DailyVolume',
+      'OverviewStats',
+      'VariantPerformance',
+    ]
     expect(
-      shared.length,
-      'no Go struct name matches any interface name in types.ts. This guard ' +
-        'matches by name, so an empty intersection means it is checking ' +
-        'nothing — most likely the naming convention diverged.',
-    ).toBeGreaterThan(3)
+      EXPECTED_PAIRS.filter((n) => !shared.includes(n)),
+      'these Go structs no longer pair with a same-named interface in ' +
+        'types.ts, so their fields are no longer compared at all — the guard ' +
+        'silently stopped covering them. Most likely one side was renamed. ' +
+        'Either restore the name, or update EXPECTED_PAIRS deliberately.\n' +
+        'Currently paired: ' +
+        (shared.join(', ') || '(none)'),
+    ).toEqual([])
 
     const drift: string[] = []
     for (const structName of shared) {
