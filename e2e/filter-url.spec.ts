@@ -48,14 +48,32 @@ test.describe('URL-synced filters', () => {
     await expect(page).toHaveURL(/\/enrollments/)
     await expect(page.locator('body')).toBeVisible()
 
+    // ASSERT that a filter control rendered — do not branch on it.
+    //
+    // This used to read:
+    //
+    //     const count = await selects.count()
+    //     if (count > 0) {
+    //       await page.reload()
+    //       await expect(page).toHaveURL(/status=active/)
+    //     }
+    //
+    // which passed in precisely the case worth catching. If /enrollments
+    // errored out and rendered no filter UI at all, `count` was 0, the block
+    // was skipped, and the test reported green — while the two assertions
+    // above it prove nothing either: `toHaveURL` matches the URL `goto` just
+    // set regardless of what the app did with it, and `body` is visible on an
+    // error page too. A broken page produced a passing test.
+    //
+    // The comment even stated the right intent — "at least one select renders
+    // — page hasn't errored out" — and then made the only real assertion
+    // conditional on that observation instead of asserting it.
     const selects = page.locator('select')
-    const count = await selects.count()
-    if (count > 0) {
-      // At least one select renders — page hasn't errored out. Soft check:
-      // URL query is preserved on reload.
-      await page.reload()
-      await expect(page).toHaveURL(/status=active/)
-    }
+    await expect(selects.first()).toBeVisible()
+
+    // URL query survives a reload.
+    await page.reload()
+    await expect(page).toHaveURL(/status=active/)
   })
 
   test('/audit-logs accepts URL query and preserves on back/forward', async ({ page }) => {
